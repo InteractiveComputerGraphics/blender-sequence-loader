@@ -1,7 +1,7 @@
 import bpy
 import meshio
 import numpy as np
-
+from bpy.app.handlers import persistent
 
 class particle_importer:
     def __init__(self, path, name, start_file_num, end_file_num, extension):
@@ -111,7 +111,7 @@ class particle_importer:
                 "no attributes avaible, all particles will be rendered as the same color"
             )
         #        particles.foreach_set("velocity", [0]*3*len(mesh.points))
-
+    @persistent
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
         frame_number = frame_number % self.end_file_num - 1

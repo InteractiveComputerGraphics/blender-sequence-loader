@@ -7,6 +7,10 @@ class importer:
         pass
     def __call__(self):
         pass
+    def create(self):
+        pass
+    def __del__(self):
+        pass
     def get_render_attributes(self):
         pass
     def set_render_attribute(self):
