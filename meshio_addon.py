@@ -15,47 +15,33 @@ file_seq_items = []
 file_seq = []
 
 
-
-
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
-
+def ShowMessageBox(message="", title="Message Box", icon="INFO"):
     def draw(self, context):
         self.layout.label(text=message)
+
     print(message)
-    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-
-
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 
 def update_path(self, context):
     global file_seq_items
     global file_seq
-    file_seq_items=[("Manual", "Manual, use pattern above", "")]
+    file_seq_items = [("Manual", "Manual, use pattern above", "")]
     p = context.scene.my_tool.path
     f = fileseq.findSequencesOnDisk(p)
     if not f:
-        ShowMessageBox("animation sequences not detected",icon="ERROR")
+        ShowMessageBox("animation sequences not detected", icon="ERROR")
         print("animation sequences not detected")
         return
     if len(f) >= 20:
-        message="There is something wrong in this folder, too many file sequences detected.\n  \
+        message = "There is something wrong in this folder, too many file sequences detected.\n\
         The problem could be the pattern is not recognized correctly, please sepcify the pattern manually."
-        ShowMessageBox("message",icon="ERROR")
+        ShowMessageBox("message", icon="ERROR")
         print(message)
         return
     for seq in f:
-        file_seq_items.append((seq.basename(),seq.basename(),""))
+        file_seq_items.append((seq.basename(), seq.basename(), ""))
         file_seq.append(seq)
-
-    
-
-
-
-    
-
-
-
-
 
 
 def render_attribute_callback(self, context):
@@ -75,29 +61,28 @@ def set_color_fields(self, context):
     else:
         importer.set_render_attribute(None)
 
-def file_seq_callback(self,context):
-    return file_seq_items
-    
 
-def file_seq_update(self,context):
-    file_seq_items_name=context.scene.my_tool.fileseq
-    ind=0
+def file_seq_callback(self, context):
+    return file_seq_items
+
+
+def file_seq_update(self, context):
+    file_seq_items_name = context.scene.my_tool.fileseq
+    ind = 0
     p = context.scene.my_tool.path
     global file_seq
 
-
-    f=None
-    if file_seq_items_name=="Manual":
+    f = None
+    if file_seq_items_name == "Manual":
         try:
-            pattern=context.scene.my_tool.pattern
-            f=fileseq.findSequenceOnDisk(p+"\\"+pattern)
+            pattern = context.scene.my_tool.pattern
+            f = fileseq.findSequenceOnDisk(p + "\\" + pattern)
         except:
-            ShowMessageBox("can't find this sequence: "+pattern,icon="ERROR")
-            # print()
+            ShowMessageBox("can't find this sequence: " + pattern, icon="ERROR")
     else:
         for i, files in enumerate(file_seq):
-            if file_seq_items_name==files.basename():
-                f=files
+            if file_seq_items_name == files.basename():
+                f = files
                 break
 
     if f:
@@ -128,8 +113,6 @@ def file_seq_update(self,context):
     return
 
 
-
-
 class MyProperties(bpy.types.PropertyGroup):
 
     path: bpy.props.StringProperty(
@@ -140,7 +123,7 @@ class MyProperties(bpy.types.PropertyGroup):
     )
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
-        description = "Please choose the file sequences you want",
+        description="Please choose the file sequences you want",
         items=file_seq_callback,
         update=file_seq_update,
     )
@@ -154,12 +137,23 @@ class MyProperties(bpy.types.PropertyGroup):
         description="choose particles or mesh",
         items=[("mesh", "Add Mesh", ""), ("particle", "Add Particles", "")],
     )
+    # used_type: bpy.props.IntProperty(name="used_type",min=0,max=3,default=0)
     render: bpy.props.EnumProperty(
-        name="render",
+        name="Color Field",
         description="choose attributes used for rendering",
         items=render_attribute_callback,
         update=set_color_fields,
     )
+
+    min_value:bpy.props.FloatProperty(
+        name= "Min",
+        description = "min value of this property"
+    )
+    max_value:bpy.props.FloatProperty(
+        name= "Max",
+        description = "max value of this property"
+    )
+
 
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
@@ -178,15 +172,81 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         layout.prop(mytool, "pattern")
         layout.prop(mytool, "fileseq")
 
-        layout.prop(mytool, "name")
+
         layout.prop(mytool, "start")
         layout.prop(mytool, "end")
-        layout.prop(mytool, "extension")
         layout.prop(mytool, "type")
 
         layout.operator("meshio_loader.load")
-        layout.prop(mytool, "render")
-        layout.operator("meshio_loader.render")
+       
+        # layout.operator("meshio_loader.render")
+
+class PARTICLE_PT_panel(bpy.types.Panel):
+    bl_label = "Particles Settings"
+    bl_idname = "PARTICLE_PT_panel"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "New Tab"
+    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+
+    def draw(self, context):
+        t=context.scene.my_tool.type
+        if t!="particle":
+            return
+        else:
+            scene = context.scene
+            mytool = scene.my_tool
+            layout = self.layout
+            layout.prop(mytool, "render")
+            layout.prop(mytool, "min_value")
+            layout.prop(mytool, "max_value")
+            layout.operator("particle.clear")
+            
+
+
+class MESH_PT_panel(bpy.types.Panel):
+    bl_label = "Mesh Settings"
+    bl_idname = "MESH_PT_panel"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "New Tab"
+    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+
+    def draw(self, context):
+        t=context.scene.my_tool.type
+        if t!="Mesh":
+            pass
+        else:
+            print("todo: mesh settins")
+            pass
+
+
+def update_min_max(self, context):
+    global importer
+    if not importer:
+        return
+    min_v,  max_v =importer.get_minmax()
+    context.scene.my_tool.min_value=min_v
+    context.scene.my_tool.max_value=max_v
+    
+
+
+class particle_OT_clear(bpy.types.Operator):
+    bl_label = "Remove Sequence"
+    bl_idname = "particle.clear"
+    def execute(self, context):
+        global importer
+        if importer:
+            importer.clear()
+        if len(bpy.app.handlers.frame_change_post)==2:
+            bpy.app.handlers.frame_change_post.clear()
+        else:
+            print("something wrong, it should contain only 2 object in frame change handler.")
+        return {"FINISHED"}
+
+
+
+
 
 
 class meshio_loader_OT_load(bpy.types.Operator):
@@ -210,6 +270,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 importer = None
             importer = particle_importer(path, name, begin, end, extension)
             bpy.app.handlers.frame_change_post.append(importer)
+            bpy.app.handlers.frame_change_post.append(update_min_max)
 
         if mytool.type == "type1":
             #  For now only used to test how it works
@@ -217,19 +278,14 @@ class meshio_loader_OT_load(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class meshio_loader_OT_render(bpy.types.Operator):
-    bl_label = "Render Sequences"
-    bl_idname = "meshio_loader.render"
-
-    def execute(self, context):
-        return {"FINISHED"}
-
 
 classes = [
     MyProperties,
     MESHIO_IMPORT_PT_main_panel,
     meshio_loader_OT_load,
-    meshio_loader_OT_render,
+    PARTICLE_PT_panel,
+    MESH_PT_panel,
+    particle_OT_clear,
 ]
 
 

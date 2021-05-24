@@ -15,6 +15,8 @@ class particle_importer:
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
         self.init_particles()
+        self.min_v=0
+        self.max_v=0
 
     def init_particles(self):
         bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
@@ -111,6 +113,10 @@ class particle_importer:
                 "no attributes avaible, all particles will be rendered as the same color"
             )
         #        particles.foreach_set("velocity", [0]*3*len(mesh.points))
+
+
+
+
     @persistent
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
@@ -157,7 +163,9 @@ class particle_importer:
                     #  extend the attribute to 3-element np array, and store it in velocity attribute
                     vel_att = np.zeros((particle_num, 3))
                     vel_att[:, :b] = mesh.point_data[att_str]
-                    print(np.max(np.linalg.norm(vel_att, axis=1)))
+                    # print(np.max(np.linalg.norm(vel_att, axis=1)))
+                    self.min_v = np.min(np.linalg.norm(vel_att, axis=1))
+                    self.max_v = np.max(np.linalg.norm(vel_att, axis=1))
                     particles.foreach_set("velocity", vel_att.ravel())
             elif len(mesh.point_data[att_str].shape) == 1:
                 #  extend the attribute to 3-element np array, and store it in velocity attribute
@@ -166,7 +174,9 @@ class particle_importer:
                 )
                 vel_att = np.zeros((particle_num, 3))
                 vel_att[:, :1] = point_data_reshape
-                print(np.max(np.linalg.norm(vel_att, axis=1)))
+                # print(np.max(np.linalg.norm(vel_att, axis=1)))
+                self.min_v=np.min(np.linalg.norm(vel_att, axis=1))
+                self.max_v=np.max(np.linalg.norm(vel_att, axis=1))
                 particles.foreach_set("velocity", vel_att.ravel())
 
     #        self.emitterObject.particle_systems[0].settings.frame_end = 0 # !! so velocity has no effect on the position any more, and velocity can be used for rendering
@@ -184,3 +194,34 @@ class particle_importer:
             print(
                 "attributes error: this attributs is not available in 1st frame of file"
             )
+
+
+    def get_minmax(self):
+        return self.min_v, self.max_v
+
+    def clear(self):
+        bpy.ops.object.select_all(action='DESELECT')
+        if self.emitterObject:
+            self.emitterObject.select_set(True)
+            bpy.ops.object.delete()
+            self.emitterObject=None
+        if self.sphereObj:
+            bpy.data.meshes.remove(self.sphereObj.data)
+            # This doesn't work
+            # self.sphereObj.select_set(True)
+            # bpy.ops.object.delete()
+            self.sphereObj=None
+
+
+
+        for p in bpy.data.particles:
+            if p.users == 0:
+                bpy.data.particles.remove(p)
+        for m in bpy.data.meshes:
+            if m.users == 0:
+                bpy.data.meshes.remove(m)
+        for m in bpy.data.materials:
+            if m.users == 0:
+                bpy.data.materials.remove(m)
+    def __del__(self):
+        self.clear()
