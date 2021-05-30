@@ -1,13 +1,13 @@
-# bl_info = {
-#     "name": "MeshioImporterTool",
-#     "description": "Importer for meshio supported mesh files.",
-#     "author": "Hantao Hui",
-#     "version": (1, 0),
-#     "blender": (2, 90, 0),
-#     "warning": "",
-#     "support": "COMMUNITY",
-#     "category": "Import-Export",
-# }
+bl_info = {
+    "name": "MeshioImporterTool",
+    "description": "Importer for meshio supported mesh files.",
+    "author": "Hantao Hui",
+    "version": (1, 0),
+    "blender": (2, 90, 0),
+    "warning": "",
+    "support": "COMMUNITY",
+    "category": "Import-Export",
+}
 
 import bpy
 import bmesh
@@ -34,12 +34,19 @@ def clear_screen():
     import os
     os.system("cls")
 
+def check_type(fs):
+    mesh=meshio.read(fs)
+    if mesh.cells[0].type == "vertex":
+        return "particle"
+    elif mesh.cells[0].type == "triangle":
+        return "mesh"
+
 '''
 ====================Importer Classes=====================================
 '''
 
 class particle_importer:
-    def __init__(self, fileseq, rotation= np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]])):
+    def __init__(self, fileseq, rotation= np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]),emitter_obj_name=None,sphere_obj_name=None,material_name=None):
 
         # self.path=path
         self.fileseq=fileseq
@@ -50,7 +57,12 @@ class particle_importer:
         self.max_v = 0 # the max value of this attribute
         self.emitterObject =None
         self.sphereObj = None
-        self.init_particles()
+        if not emitter_obj_name or not sphere_obj_name or not material_name:
+            self.init_particles()
+        else:
+            self.emitterObject=bpy.data.objects[emitter_obj_name]
+            self.sphereObj=bpy.data.objects[sphere_obj_name]
+            self.material=bpy.data.materials[material_name]
   
     def init_particles(self):
         # create emitter object
@@ -514,6 +526,15 @@ class importer_properties(bpy.types.PropertyGroup):
         name="radius", description="radius of particles",default=0.01,update=update_particle_radius,min=0,precision=6
     )
 
+    # the final used fileseq, needed when reloading the .blender file
+    init: bpy.props.BoolProperty(name="Initlized",default=False)
+    used_fs :bpy.props.StringProperty(name="Used File Sequence") 
+    
+    particle_emitter_obj_name: bpy.props.StringProperty(name="Particle Emitter Obj Name") 
+    particle_sphere_obj_name: bpy.props.StringProperty(name="Particle Sphere Obj Name") 
+    particle_material_name : bpy.props.StringProperty(name="Particle Material Obj Name")
+
+
 def update_min_max(self, context):
     global importer
     if not importer:
@@ -603,6 +624,7 @@ class particle_OT_clear(bpy.types.Operator):
             importer.clear()
         bpy.app.handlers.frame_change_post.clear()
         importer=None
+        mytool.init=False
         return {"FINISHED"}
 
 
@@ -619,12 +641,21 @@ class meshio_loader_OT_load(bpy.types.Operator):
         fs=mytool.fileseq
         if fs=="Manual":
             fs=mytool.path+'\\'+mytool.pattern
+        # save the status when reopen the .blend file
+        mytool.used_fs = fs
+        
         fs=fileseq.findSequenceOnDisk(fs)
 
         if mytool.type == "particle":
             if importer:
                 bpy.ops.sequence.clear()
+             
             importer = particle_importer(fs)
+
+            mytool.particle_emitter_obj_name=importer.emitterObject.name
+            mytool.particle_sphere_obj_name=importer.sphereObj.name
+            mytool.particle_material_name=importer.material.name
+            
             bpy.app.handlers.frame_change_post.append(importer)
             bpy.app.handlers.frame_change_post.append(update_min_max)
 
@@ -633,6 +664,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 bpy.ops.sequence.clear()
             importer = mesh_importer(fs)
             bpy.app.handlers.frame_change_post.append(importer)
+        
+        mytool.init=True
         return {"FINISHED"}
 
 
@@ -653,12 +686,36 @@ classes = [
     particle_OT_clear,
 ]
 
+@persistent
+def load_post(scene):
+    mytool = bpy.context.scene.my_tool
+    global importer
+    if mytool.init:
+        fs=fileseq.findSequenceOnDisk(mytool.used_fs)
+        if importer:
+            bpy.ops.sequence.clear()
+        file_type=check_type(fs[0])
+        if file_type=='particle':
+            importer=particle_importer(fs,emitter_obj_name=mytool.particle_emitter_obj_name,sphere_obj_name=mytool.particle_sphere_obj_name,material_name=mytool.particle_material_name)
+            bpy.app.handlers.frame_change_post.append(importer)
+            bpy.app.handlers.frame_change_post.append(update_min_max)
+        elif file_type=='mesh':
+            importer=mesh_importer(fs)
+            bpy.app.handlers.frame_change_post.append(importer)
+
+        
+
+    mytool.init=True
+    
+
+
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=importer_properties)
+    bpy.app.handlers.load_post.append(load_post)
 
 
 def unregister():
