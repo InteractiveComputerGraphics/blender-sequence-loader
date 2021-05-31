@@ -624,7 +624,7 @@ class particle_OT_clear(bpy.types.Operator):
             importer.clear()
         bpy.app.handlers.frame_change_post.clear()
         importer=None
-        mytool.init=False
+        context.scene.my_tool.init=False
         return {"FINISHED"}
 
 
