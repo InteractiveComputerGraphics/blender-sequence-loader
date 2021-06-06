@@ -1,13 +1,13 @@
-bl_info = {
-    "name": "MeshioImporterTool",
-    "description": "Importer for meshio supported mesh files.",
-    "author": "Hantao Hui",
-    "version": (1, 0),
-    "blender": (2, 90, 0),
-    "warning": "",
-    "support": "COMMUNITY",
-    "category": "Import-Export",
-}
+# bl_info = {
+#     "name": "MeshioImporterTool",
+#     "description": "Importer for meshio supported mesh files.",
+#     "author": "Hantao Hui",
+#     "version": (1, 0),
+#     "blender": (2, 90, 0),
+#     "warning": "",
+#     "support": "COMMUNITY",
+#     "category": "Import-Export",
+# }
 
 import bpy
 import bmesh
@@ -386,6 +386,7 @@ class mesh_importer:
 '''
 
 importer = None
+importer_list= []
 file_seq = []
 
 '''
@@ -405,7 +406,7 @@ def callback_fileseq(self, context):
 
 def update_path(self, context):
     global file_seq
-    p = context.scene.my_tool.path
+    p = context.scene.my_tool.importer.path
     f = fileseq.findSequencesOnDisk(p)
     if not f:
         show_message_box("animation sequences not detected", icon="ERROR")
@@ -423,22 +424,22 @@ def update_path(self, context):
 
 def update_color_fields(self, context):
     scene = context.scene
-    mytool = scene.my_tool
-    if mytool.render != "None":
-        importer.set_color_attribute(mytool.render)
+    importer_prop = scene.my_tool.importer
+    if importer_prop.render != "None":
+        importer.set_color_attribute(importer_prop.render)
     else:
         importer.set_color_attribute(None)
 
 def update_fileseq(self, context):
-    file_seq_items_name = context.scene.my_tool.fileseq
+    file_seq_items_name = context.scene.my_tool.importer.fileseq
     ind = 0
-    p = context.scene.my_tool.path
+    p = context.scene.my_tool.importer.path
     global file_seq
 
     f = None
     if file_seq_items_name == "Manual":
         try:
-            pattern = context.scene.my_tool.pattern
+            pattern = context.scene.my_tool.importer.pattern
             f = fileseq.findSequenceOnDisk(p + "\\" + pattern)
         except:
             show_message_box("can't find this sequence: " + pattern, icon="ERROR")
@@ -459,15 +460,15 @@ def update_fileseq(self, context):
                 print("unsupport multi-cell files")
                 return
 
-            # context.scene.my_tool.name = f.basename()
-            context.scene.my_tool.start = f.start()
-            context.scene.my_tool.end = f.end()
-            # context.scene.my_tool.extension = f.extension()
+            # context.scene.my_tool.importer.name = f.basename()
+            # context.scene.my_tool.importer.start = f.start()
+            # context.scene.my_tool.importer.end = f.end()
+            # context.scene.my_tool.importer.extension = f.extension()
             if mesh.cells[0].type == "vertex":
-                context.scene.my_tool.type = "particle"
+                context.scene.my_tool.importer.type = "particle"
             else:
                 # print("todo: it should be triangle mesh here")
-                context.scene.my_tool.type = "mesh"
+                context.scene.my_tool.importer.type = "mesh"
         except:
             show_message_box("can't find mesh info from the file: "+p[0])
     return
@@ -476,7 +477,7 @@ def update_particle_radius(self,context):
     global importer
     if not isinstance(importer, particle_importer):
         show_message_box("The importer is not correct")
-    r = context.scene.my_tool.particle_radius
+    r = context.scene.my_tool.importer.particle_radius
     importer.set_radius(r) 
 
 
@@ -502,8 +503,8 @@ class importer_properties(bpy.types.PropertyGroup):
     pattern: bpy.props.StringProperty(name="Pattern")
     # name: bpy.props.StringProperty(name="Name")
     # extension: bpy.props.StringProperty(name="Extension")
-    start: bpy.props.IntProperty(name="start", default=0)
-    end: bpy.props.IntProperty(name="end", default=0)
+    # start: bpy.props.IntProperty(name="start", default=0)
+    # end: bpy.props.IntProperty(name="end", default=0)
     type: bpy.props.EnumProperty(
         name="Type",
         description="choose particles or mesh",
@@ -540,12 +541,112 @@ def update_min_max(self, context):
     if not importer:
         return
     min_v, max_v = importer.get_minmax()
-    context.scene.my_tool.min_value = min_v
-    context.scene.my_tool.max_value = max_v
+    context.scene.my_tool.importer.min_value = min_v
+    context.scene.my_tool.importer.max_value = max_v
+
+
+class color_attribtue(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name='color attr')
+
+
+
+class imported_seq_properties(bpy.types.PropertyGroup):
+    pattern: bpy.props.StringProperty(name='pattern', description="pattern, using absolute path",default='test')
+    used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)
+    all_attributes: bpy.props.CollectionProperty(type=color_attribtue)
+    start : bpy.props.IntProperty(name='start', description='start frame number')
+    end : bpy.props.IntProperty(name='end', description='end frame number')
+    length: bpy.props.IntProperty(name='length', description='total frame number')
+    attribute_count: bpy.props.IntProperty(name='attribute count',description='the number of all avaiable attributes')
+
+class tool_properties(bpy.types.PropertyGroup):
+    importer: bpy.props.PointerProperty(type=importer_properties)
+    imported: bpy.props.CollectionProperty(type=imported_seq_properties)
+    imported_num: bpy.props.IntProperty(name='imported count',description='the number of all imported sequences',default=0)
+
+
+
+
+
+
+
+
 
 '''
 ====================Addon Panels=====================================
 '''
+
+class SEQUENCE_UL_list(bpy.types.UIList):
+    # The draw_item function is called for each item of the collection that is visible in the list.
+    #   data is the RNA object containing the collection,
+    #   item is the current drawn item of the collection,
+    #   icon is the "computed" icon for the item (as an integer, because some objects like materials or textures
+    #   have custom icons ID, which are not available as enum items).
+    #   active_data is the RNA object containing the active property for the collection (i.e. integer pointing to the
+    #   active item of the collection).
+    #   active_propname is the name of the active property (use 'getattr(active_data, active_propname)').
+    #   index is index of the current item in the collection.
+    #   flt_flag is the result of the filtering process for this item.
+    #   Note: as index and flt_flag are optional arguments, you do not have to use/declare them here if you don't
+    #         need them.
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+        ob = data
+        slot = item
+        ma=item
+        # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            # You should always start your row layout by a label (icon + text), or a non-embossed text field,
+            # this will also make the row easily selectable in the list! The later also enables ctrl-click rename.
+            # We use icon_value of label, as our given icon is an integer value, not an enum ID.
+            # Note "data" names should never be translated!
+            if ma:
+                layout.prop(ma, "pattern",text='Pattern: ',emboss=False)
+                # , emboss=False, icon_value=icon)
+                # , )
+            else:
+                layout.label(text="", translate=False, icon_value=icon)
+    #     # 'GRID' layout type should be as compact as possible (typically a single icon!).
+    #     #  deal with this later
+    #     # elif self.layout_type in {'GRID'}:
+    #     #     layout.alignment = 'CENTER'
+    #     #     layout.label(text="", icon_value=icon)
+
+
+
+
+
+
+class sequence_list_panel(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "Sequences"
+    bl_idname = "SEQUENCES_PT_list"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = "UI"
+    bl_category = "Meshio Importer"
+    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+
+
+
+    def draw(self, context):
+        layout = self.layout
+
+        # imported = context.scene.my_tool.imported
+        imported_num = context.scene.my_tool.imported_num
+        # template_list now takes two new args.
+        # The first one is the identifier of the registered UIList to use (if you want only the default list,
+        # with no custom draw code, use "UI_UL_list").
+        layout.template_list("SEQUENCE_UL_list", "", context.scene.my_tool, 'imported', context.scene.my_tool, "imported_num")
+                                            # data ,  item, icon,          active_data,    active_propname              
+        # The second one can usually be left as an empty string.
+        # It's an additional ID used to distinguish lists in case you
+        # use the same list several times in a given area.
+
+
+
+
+
+
+
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     bl_label = "Import Panel"
@@ -557,58 +658,59 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        mytool = scene.my_tool
+        importer_prop = scene.my_tool.importer
 
-        layout.prop(mytool, "path")
-        layout.prop(mytool, "pattern")
-        layout.prop(mytool, "fileseq")
+        layout.prop(importer_prop, "path")
+        layout.prop(importer_prop, "pattern")
+        layout.prop(importer_prop, "fileseq")
 
-        layout.prop(mytool, "start")
-        layout.prop(mytool, "end")
-        layout.prop(mytool, "type")
+        # layout.prop(importer_prop, "start",emboss=False)
+        # layout.prop(importer_prop, "end",emboss=False)
+        layout.prop(importer_prop, "type")
 
         layout.operator("sequence.load")
         layout.operator("sequence.clear")
+        layout.operator("test.test")
 
 
-class PARTICLE_PT_panel(bpy.types.Panel):
-    bl_label = "Particles Settings"
-    bl_idname = "PARTICLE_PT_panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Meshio Importer"
-    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+# class PARTICLE_PT_panel(bpy.types.Panel):
+#     bl_label = "Particles Settings"
+#     bl_idname = "PARTICLE_PT_panel"
+#     bl_space_type = "VIEW_3D"
+#     bl_region_type = "UI"
+#     bl_category = "Meshio Importer"
+#     bl_parent_id = "MESHIO_IMPORT_PT_panel"
 
-    def draw(self, context):
-        t = context.scene.my_tool.type
-        if t != "particle":
-            return
-        else:
-            scene = context.scene
-            mytool = scene.my_tool
-            layout = self.layout
-            layout.prop(mytool, "render")
-            layout.prop(mytool, "min_value")
-            layout.prop(mytool, "max_value")
-            layout.prop(mytool, "particle_radius")
+#     def draw(self, context):
+#         t = context.scene.my_tool.importer.type
+#         if t != "particle":
+#             return
+#         else:
+#             scene = context.scene
+#             importer_prop = scene.my_tool.importer
+#             layout = self.layout
+#             layout.prop(importer_prop, "render")
+#             layout.prop(importer_prop, "min_value")
+#             layout.prop(importer_prop, "max_value")
+#             layout.prop(importer_prop, "particle_radius")
 
 
 
-class MESH_PT_panel(bpy.types.Panel):
-    bl_label = "Mesh Settings"
-    bl_idname = "MESH_PT_panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Meshio Importer"
-    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+# class MESH_PT_panel(bpy.types.Panel):
+#     bl_label = "Mesh Settings"
+#     bl_idname = "MESH_PT_panel"
+#     bl_space_type = "VIEW_3D"
+#     bl_region_type = "UI"
+#     bl_category = "Meshio Importer"
+#     bl_parent_id = "MESHIO_IMPORT_PT_panel"
 
-    def draw(self, context):
-        t = context.scene.my_tool.type
-        if t != "Mesh":
-            pass
-        else:
-            print("todo: mesh settins")
-            pass
+#     def draw(self, context):
+#         t = context.scene.my_tool.importer.type
+#         if t != "Mesh":
+#             pass
+#         else:
+#             print("todo: mesh settins")
+#             pass
 
 '''
 ====================Addon Operators=====================================
@@ -624,8 +726,24 @@ class particle_OT_clear(bpy.types.Operator):
             importer.clear()
         bpy.app.handlers.frame_change_post.clear()
         importer=None
-        context.scene.my_tool.init=False
+        context.scene.my_tool.importer.init=False
         return {"FINISHED"}
+
+
+
+class DUMMY_OT_test(bpy.types.Operator):
+    bl_label = "A button for testing"
+    bl_idname = "test.test"
+
+    def execute(self, context):
+        print('?')
+        i= context.scene.my_tool.imported
+        i.add()
+        context.scene.my_tool.imported_num+=1
+        return {"FINISHED"}
+
+
+
 
 
 class meshio_loader_OT_load(bpy.types.Operator):
@@ -636,36 +754,49 @@ class meshio_loader_OT_load(bpy.types.Operator):
         global count
         global importer
         scene = context.scene
-        mytool = scene.my_tool
-
-        fs=mytool.fileseq
+        importer_prop = scene.my_tool.importer
+        imported_prop= scene.my_tool.imported
+        imported_prop_num= scene.my_tool.imported_num
+        fs=importer_prop.fileseq
         if fs=="Manual":
-            fs=mytool.path+'\\'+mytool.pattern
+            fs=importer_prop.path+'\\'+importer_prop.pattern
         # save the status when reopen the .blend file
-        mytool.used_fs = fs
+        # importer_prop.used_fs = fs
         
         fs=fileseq.findSequenceOnDisk(fs)
 
-        if mytool.type == "particle":
+        if importer_prop.type == "particle":
             if importer:
-                bpy.ops.sequence.clear()
+                importer_list.append(importer)
+                importer=None
              
             importer = particle_importer(fs)
 
-            mytool.particle_emitter_obj_name=importer.emitterObject.name
-            mytool.particle_sphere_obj_name=importer.sphereObj.name
-            mytool.particle_material_name=importer.material.name
+            importer_prop.particle_emitter_obj_name=importer.emitterObject.name
+            importer_prop.particle_sphere_obj_name=importer.sphereObj.name
+            importer_prop.particle_material_name=importer.material.name
             
-            bpy.app.handlers.frame_change_post.append(importer)
-            bpy.app.handlers.frame_change_post.append(update_min_max)
+            imported_prop.add()
+            imported_prop[imported_prop_num].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
+            scene.my_tool.imported_num+=1
 
-        if mytool.type == "mesh":
+
+
+
+            bpy.app.handlers.frame_change_post.append(importer)
+            # bpy.app.handlers.frame_change_post.append(update_min_max)
+
+        if importer_prop.type == "mesh":
             if importer:
-                bpy.ops.sequence.clear()
+                importer_list.append(importer)
+                importer=None
             importer = mesh_importer(fs)
+            imported_prop.add()
+            imported_prop[imported_prop_num].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
+            scene.my_tool.imported_num+=1
             bpy.app.handlers.frame_change_post.append(importer)
         
-        mytool.init=True
+        importer_prop.init=True
         return {"FINISHED"}
 
 
@@ -681,22 +812,29 @@ classes = [
     importer_properties,
     MESHIO_IMPORT_PT_main_panel,
     meshio_loader_OT_load,
-    PARTICLE_PT_panel,
-    MESH_PT_panel,
+    # PARTICLE_PT_panel,
+    # MESH_PT_panel,
     particle_OT_clear,
+    sequence_list_panel,
+    SEQUENCE_UL_list,
+    color_attribtue,
+    imported_seq_properties,
+    tool_properties,
+    DUMMY_OT_test,
+
 ]
 
 @persistent
 def load_post(scene):
-    mytool = bpy.context.scene.my_tool
+    importer_prop = bpy.context.scene.my_tool.importer
     global importer
-    if mytool.init:
-        fs=fileseq.findSequenceOnDisk(mytool.used_fs)
+    if importer_prop.init:
+        fs=fileseq.findSequenceOnDisk(importer_prop.used_fs)
         if importer:
             bpy.ops.sequence.clear()
         file_type=check_type(fs[0])
         if file_type=='particle':
-            importer=particle_importer(fs,emitter_obj_name=mytool.particle_emitter_obj_name,sphere_obj_name=mytool.particle_sphere_obj_name,material_name=mytool.particle_material_name)
+            importer=particle_importer(fs,emitter_obj_name=importer_prop.particle_emitter_obj_name,sphere_obj_name=importer_prop.particle_sphere_obj_name,material_name=importer_prop.particle_material_name)
             bpy.app.handlers.frame_change_post.append(importer)
             bpy.app.handlers.frame_change_post.append(update_min_max)
         elif file_type=='mesh':
@@ -705,7 +843,7 @@ def load_post(scene):
 
         
 
-    mytool.init=True
+    importer_prop.init=True
     
 
 
@@ -714,7 +852,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=importer_properties)
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
     bpy.app.handlers.load_post.append(load_post)
 
 

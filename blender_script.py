@@ -10,9 +10,7 @@ import os
 import sys
 
 #  change the filepath here, 
-filepath = "C:\\Users\\hui\\Desktop\\hiwi_blender\\blendertool\\meshio_addon.py" 
-#  and here
-sys.path.append("C:\\Users\\hui\\Desktop\\hiwi_blender\\blendertool")
+filepath = "C:\\Users\\hui\\Desktop\\hiwi_blender\\blendertool\\meshio_importer.py" 
 
 
 global_namespace = {"__file__": filepath, "__name__": "__main__"}
