@@ -280,6 +280,7 @@ class particle_importer:
                 bpy.data.materials.remove(m)
 
     def __del__(self):
+        print("particles are removed")
         self.clear()
 
     def set_radius(self,r ):
@@ -552,6 +553,7 @@ class color_attribtue(bpy.types.PropertyGroup):
 
 class imported_seq_properties(bpy.types.PropertyGroup):
     pattern: bpy.props.StringProperty(name='pattern', description="pattern, using absolute path",default='test')
+    type: bpy.props.IntProperty(name='type',description='type of this sequence, particle or mesh, or other', default=0, min=0, max=1)
     used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)
     all_attributes: bpy.props.CollectionProperty(type=color_attribtue)
     start : bpy.props.IntProperty(name='start', description='start frame number')
@@ -562,7 +564,7 @@ class imported_seq_properties(bpy.types.PropertyGroup):
 class tool_properties(bpy.types.PropertyGroup):
     importer: bpy.props.PointerProperty(type=importer_properties)
     imported: bpy.props.CollectionProperty(type=imported_seq_properties)
-    imported_num: bpy.props.IntProperty(name='imported count',description='the number of all imported sequences',default=0)
+    imported_num: bpy.props.IntProperty(name='imported count',description='the number of imported sequence, when selecting from ui list',default=0)
 
 
 
@@ -631,11 +633,28 @@ class sequence_list_panel(bpy.types.Panel):
         layout = self.layout
 
         # imported = context.scene.my_tool.imported
-        imported_num = context.scene.my_tool.imported_num
+        mytool=context.scene.my_tool
         # template_list now takes two new args.
         # The first one is the identifier of the registered UIList to use (if you want only the default list,
         # with no custom draw code, use "UI_UL_list").
-        layout.template_list("SEQUENCE_UL_list", "", context.scene.my_tool, 'imported', context.scene.my_tool, "imported_num")
+        row = layout.row()
+        row.template_list("SEQUENCE_UL_list", "", context.scene.my_tool, 'imported', context.scene.my_tool, "imported_num")
+
+        col = row.column(align=True)
+        col.operator("sequence.remove", icon='REMOVE', text="")
+
+        if len(mytool.imported) >0:
+            item = mytool.imported[mytool.imported_num]
+            for i in  item.all_attributes:
+                print(i.name)
+            if item.type==0:
+                info_part = layout.column()
+                info_part.prop(item,'start')
+                info_part.prop(item,'end')
+                info_part.prop(item,'length')
+                # info_part.prop(item,)
+
+        # col.operator("splishsplash.fluid_block_action", icon='REMOVE', text="").action = 'REMOVE'
                                             # data ,  item, icon,          active_data,    active_propname              
         # The second one can usually be left as an empty string.
         # It's an additional ID used to distinguish lists in case you
@@ -669,7 +688,7 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         layout.prop(importer_prop, "type")
 
         layout.operator("sequence.load")
-        layout.operator("sequence.clear")
+        # layout.operator("sequence.clear")
         layout.operator("test.test")
 
 
@@ -718,15 +737,25 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
 
 class particle_OT_clear(bpy.types.Operator):
     bl_label = "Remove Sequence"
-    bl_idname = "sequence.clear"
+    bl_idname = "sequence.remove"
 
     def execute(self, context):
+
+        # bpy.app.handlers.frame_change_post.clear()
+        # importer=None
+        # context.scene.my_tool.importer.init=False
         global importer
-        if importer:
-            importer.clear()
-        bpy.app.handlers.frame_change_post.clear()
-        importer=None
-        context.scene.my_tool.importer.init=False
+        global importer_list
+        mytool=context.scene.my_tool
+        idx=mytool.imported_num
+        # seq = mytool.imported[idx]
+        mytool.imported.remove(idx)
+        bpy.app.handlers.frame_change_post.remove(importer_list[idx])
+        if importer==importer_list[idx]:
+            importer=None
+        importer_list[idx].clear()
+        del importer_list[idx]
+        mytool.imported_num= max(mytool.imported_num-1,0)
         return {"FINISHED"}
 
 
@@ -739,7 +768,6 @@ class DUMMY_OT_test(bpy.types.Operator):
         print('?')
         i= context.scene.my_tool.imported
         i.add()
-        context.scene.my_tool.imported_num+=1
         return {"FINISHED"}
 
 
@@ -753,10 +781,10 @@ class meshio_loader_OT_load(bpy.types.Operator):
     def execute(self, context):
         global count
         global importer
+        global importer_list
         scene = context.scene
         importer_prop = scene.my_tool.importer
         imported_prop= scene.my_tool.imported
-        imported_prop_num= scene.my_tool.imported_num
         fs=importer_prop.fileseq
         if fs=="Manual":
             fs=importer_prop.path+'\\'+importer_prop.pattern
@@ -767,19 +795,25 @@ class meshio_loader_OT_load(bpy.types.Operator):
 
         if importer_prop.type == "particle":
             if importer:
-                importer_list.append(importer)
                 importer=None
              
             importer = particle_importer(fs)
+            importer_list.append(importer)
 
-            importer_prop.particle_emitter_obj_name=importer.emitterObject.name
-            importer_prop.particle_sphere_obj_name=importer.sphereObj.name
-            importer_prop.particle_material_name=importer.material.name
+            # importer_prop.particle_emitter_obj_name=importer.emitterObject.name
+            # importer_prop.particle_sphere_obj_name=importer.sphereObj.name
+            # importer_prop.particle_material_name=importer.material.name
             
             imported_prop.add()
-            imported_prop[imported_prop_num].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
-            scene.my_tool.imported_num+=1
-
+            imported_prop[-1].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
+            imported_prop[-1].type=0
+            imported_prop[-1].start=fs.start()
+            imported_prop[-1].end=fs.end()
+            imported_prop[-1].type=0
+            imported_prop[-1].length=len(fs)
+            for co_at in importer.get_color_attribute():
+                imported_prop[-1].all_attributes.add()
+                imported_prop[-1].all_attributes[-1].name=co_at
 
 
 
@@ -788,12 +822,12 @@ class meshio_loader_OT_load(bpy.types.Operator):
 
         if importer_prop.type == "mesh":
             if importer:
-                importer_list.append(importer)
                 importer=None
             importer = mesh_importer(fs)
+            importer_list.append(importer)
             imported_prop.add()
-            imported_prop[imported_prop_num].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
-            scene.my_tool.imported_num+=1
+            imported_prop[-1].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
+            imported_prop[-1].type=1
             bpy.app.handlers.frame_change_post.append(importer)
         
         importer_prop.init=True
@@ -830,8 +864,8 @@ def load_post(scene):
     global importer
     if importer_prop.init:
         fs=fileseq.findSequenceOnDisk(importer_prop.used_fs)
-        if importer:
-            bpy.ops.sequence.clear()
+        # if importer:
+            # bpy.ops.sequence.clear()
         file_type=check_type(fs[0])
         if file_type=='particle':
             importer=particle_importer(fs,emitter_obj_name=importer_prop.particle_emitter_obj_name,sphere_obj_name=importer_prop.particle_sphere_obj_name,material_name=importer_prop.particle_material_name)
