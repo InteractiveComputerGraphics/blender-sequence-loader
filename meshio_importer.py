@@ -237,6 +237,9 @@ class particle_importer:
                 particles.foreach_set("velocity", vel_att.ravel())
 
                 scaling_node.default_value = 1.0 / self.max_v
+        else:
+            vel=[0] * 3*particle_num
+            particles.foreach_set("velocity", vel)
 
         # self.emitterObject.particle_systems[0].settings.frame_end = 0 # !! so velocity has no effect on the position any more, and velocity can be used for rendering
 
@@ -245,6 +248,7 @@ class particle_importer:
 
     def set_color_attribute(self, attribute_str):
         if not attribute_str:
+            self.used_render_attribute=None
             return
         if attribute_str in self.render_attributes:
             self.used_render_attribute = attribute_str
@@ -394,13 +398,28 @@ file_seq = []
 ====================Addon Update and Callback Functions=====================================
 '''
 
-def callback_render_attribute(self, context):
-    attr_items = [("None", "None", "")]
-    if importer and importer.get_color_attribute():
-        attrs = importer.get_color_attribute()
-        for a in attrs:
-            attr_items.append((a, a, ""))
+def callback_color_attribute(self, context):
+    attr_items=[('None','None','')]
+    mytool=context.scene.my_tool
+    item = mytool.imported[mytool.imported_num]
+    for i in  item.all_attributes:
+        attr_items.append((i.name,i.name,''))
+        pass
     return attr_items
+
+
+def update_color_attribute(self, context):
+    mytool = context.scene.my_tool
+    idx=mytool.imported_num
+
+    importer=importer_list[idx]
+    item=mytool.imported[idx]
+    if item.all_attributes_enum != "None":
+        importer.set_color_attribute(item.all_attributes_enum)
+        item.used_color_attribute.name=item.all_attributes_enum
+    else:
+        importer.set_color_attribute(None)
+        item.used_color_attribute.name='None'
 
 def callback_fileseq(self, context):
     return file_seq
@@ -423,13 +442,6 @@ def update_path(self, context):
         file_seq=[]
         file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
 
-def update_color_fields(self, context):
-    scene = context.scene
-    importer_prop = scene.my_tool.importer
-    if importer_prop.render != "None":
-        importer.set_color_attribute(importer_prop.render)
-    else:
-        importer.set_color_attribute(None)
 
 def update_fileseq(self, context):
     file_seq_items_name = context.scene.my_tool.importer.fileseq
@@ -475,10 +487,13 @@ def update_fileseq(self, context):
     return
 
 def update_particle_radius(self,context):
-    global importer
-    if not isinstance(importer, particle_importer):
-        show_message_box("The importer is not correct")
-    r = context.scene.my_tool.importer.particle_radius
+    # global importer
+    # if not isinstance(importer, particle_importer):
+    #     show_message_box("The importer is not correct")
+    # 
+    idx =context.scene.my_tool.imported_num
+    r = context.scene.my_tool.imported[idx].radius
+    importer = importer_list[idx]
     importer.set_radius(r) 
 
 
@@ -514,8 +529,8 @@ class importer_properties(bpy.types.PropertyGroup):
     render: bpy.props.EnumProperty(
         name="Color Field",
         description="choose attributes used for rendering",
-        items=callback_render_attribute,
-        update=update_color_fields,
+        items=callback_color_attribute,
+        update=update_color_attribute,
     )
 
     min_value: bpy.props.FloatProperty(
@@ -556,10 +571,18 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     type: bpy.props.IntProperty(name='type',description='type of this sequence, particle or mesh, or other', default=0, min=0, max=1)
     used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)
     all_attributes: bpy.props.CollectionProperty(type=color_attribtue)
+    all_attributes_enum : bpy.props.EnumProperty(
+        name="Color Field",
+        description="choose attributes used for coloring",
+        items=callback_color_attribute,
+        update=update_color_attribute,
+    )
     start : bpy.props.IntProperty(name='start', description='start frame number')
     end : bpy.props.IntProperty(name='end', description='end frame number')
     length: bpy.props.IntProperty(name='length', description='total frame number')
     attribute_count: bpy.props.IntProperty(name='attribute count',description='the number of all avaiable attributes')
+    radius :bpy.props.FloatProperty(name='radius',description='raidus of the particles',default=0.01,update=update_particle_radius,min=0,precision=6)
+
 
 class tool_properties(bpy.types.PropertyGroup):
     importer: bpy.props.PointerProperty(type=importer_properties)
@@ -646,12 +669,15 @@ class sequence_list_panel(bpy.types.Panel):
         if len(mytool.imported) >0:
             item = mytool.imported[mytool.imported_num]
             for i in  item.all_attributes:
-                print(i.name)
+                # print(i.name)
+                pass
             if item.type==0:
                 info_part = layout.column()
                 info_part.prop(item,'start')
                 info_part.prop(item,'end')
                 info_part.prop(item,'length')
+                info_part.prop(item,'radius')
+                info_part.prop(item,'all_attributes_enum')
                 # info_part.prop(item,)
 
         # col.operator("splishsplash.fluid_block_action", icon='REMOVE', text="").action = 'REMOVE'
