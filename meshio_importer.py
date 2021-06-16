@@ -298,7 +298,11 @@ class mesh_importer:
         self.rotation = rotation
         self.mesh= None
         self.obj = None
+        self.material = None
+        self.v_col=None
+        self.used_color_attribute= None
         self.init_mesh()
+        
 
 
     def create_face_data(self,meshio_cells):
@@ -317,18 +321,13 @@ class mesh_importer:
         vertices_count=len(meshio_mesh.points)
         mesh_faces=self.create_face_data(meshio_mesh.cells)
 
-        if self.mesh:
+        # if self.mesh:
             # remove all the vertices from the mesh
-            bm=bmesh.new()
-            bm.from_mesh(self.mesh)
-            bm.clear()    
-            bm.to_mesh(self.mesh)
-            bm.free()
-        else:
-            self.mesh=bpy.data.meshes.new(name=self.name)
-            new_object = bpy.data.objects.new(self.name, self.mesh)
-            bpy.data.collections[0].objects.link(new_object)
-            self.obj=new_object
+        bm=bmesh.new()
+        bm.from_mesh(self.mesh)
+        bm.clear()    
+        bm.to_mesh(self.mesh)
+        bm.free()
 
         self.mesh.vertices.add(vertices_count)
  
@@ -354,11 +353,61 @@ class mesh_importer:
         self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
         self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
         self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
+        
+        #  it will be extended to real data
+        v_col=self.mesh.vertex_colors.new() # because everytime clear the vertices using bmesh, vertex color will be lost, and it has to be created again
+        print(len(v_col.data))
+        mesh_colors=[]
+        r_min=np.min(meshio_mesh.points[:,0])
+        r_max=np.max(meshio_mesh.points[:,0])
+        r_slope=1/(r_max-r_min)
+        g_min=np.min(meshio_mesh.points[:,1])  
+        g_max=np.max(meshio_mesh.points[:,1])
+        g_slope=1/(g_max-g_min)
+        b_min=np.min(meshio_mesh.points[:,2])
+        b_max=np.max(meshio_mesh.points[:,2])
+        b_slope=1/(b_max-b_min)
+        for index in mesh_faces:  # for each face
+            for i in index:    # for each vertex in the face 
+                mesh_colors.append( r_slope*(meshio_mesh.points[i][0]-r_min) )  # red color
+                mesh_colors.append( g_slope *( meshio_mesh.points[i][1] -g_min))  # green color
+                mesh_colors.append( b_slope*(meshio_mesh.points[i][2] -b_min))   # blue color
+            
+                    
+        for i, col in enumerate(v_col.data):
+            col.color=mesh_colors[i*3],0,0,1
+
 
         self.mesh.update()
         self.mesh.validate()
 
     def init_mesh(self):
+
+        self.mesh=bpy.data.meshes.new(name=self.name)
+        # create vertex_color and material
+
+        self.material = bpy.data.materials.new(self.name+"_material")
+        self.material.use_nodes = True
+        nodes = self.material.node_tree.nodes
+        links = self.material.node_tree.links
+        nodes.clear()
+        links.clear()
+        output = nodes.new(type="ShaderNodeOutputMaterial")
+        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse") 
+        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
+        link = links.new(vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
+        #  create object
+        new_object = bpy.data.objects.new(self.name, self.mesh)
+        bpy.data.collections[0].objects.link(new_object)
+        self.obj=new_object
+        self.obj.active_material=self.material
+
+
+
+
+
+
         total_path=self.fileseq[0]
         self.load_mesh(total_path)
         
@@ -368,7 +417,11 @@ class mesh_importer:
         total_path=self.fileseq[frame_number]
         self.load_mesh(total_path)
     def get_color_attribute(self):
-        pass
+        return self.color_attribtues
+    def set_corlor_attribute(self,attr_name):
+        if attr_name and attr_name in self.color_attribtues:
+            self.used_color_attribute=attr_name
+
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
         if self.obj:
