@@ -44,7 +44,6 @@ def check_type(fs):
 '''
 ====================Importer Classes=====================================
 '''
-
 class particle_importer:
     def __init__(self, fileseq, rotation= np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]),emitter_obj_name=None,sphere_obj_name=None,material_name=None):
 
@@ -66,13 +65,38 @@ class particle_importer:
   
     def init_particles(self):
         # create emitter object
-        bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
-        self.emitterObject = bpy.context.active_object
+        # bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
+        # self.emitterObject = bpy.context.active_object
+
+        self.mesh=bpy.data.meshes.new(name="test")
+        try:
+            meshio_mesh=meshio.read(self.fileseq[0])
+        except:
+            print("file is missing : ",total_path)
+            return 
+        
+        mesh_vertices=meshio_mesh.points
+        vertices_count=len(meshio_mesh.points)
+        self.mesh.vertices.add(vertices_count)
+ 
+        pos=meshio_mesh.points @ self.rotation
+
+        self.mesh.vertices.foreach_set("co",pos.ravel())
+        new_object = bpy.data.objects.new("test", self.mesh)
+        bpy.data.collections[0].objects.link(new_object)
+        self.emitterObject=new_object
+        # self.emitterObject.select_set(True)
+        bpy.context.view_layer.objects.active = self.emitterObject
+        # bpy
+
+
+
         self.emitterObject.hide_viewport = False
         self.emitterObject.hide_render = False
         self.emitterObject.hide_select = False
         
-        bpy.ops.object.modifier_add(type="PARTICLE_SYSTEM")
+        # bpy.ops.object.modifier_add(type="PARTICLE_SYSTEM")
+        bpy.ops.object.particle_system_add()
         #  turn off the gravity
         bpy.data.particles["ParticleSettings"].effector_weights.gravity = 0
         # make the cube invincible
@@ -83,8 +107,11 @@ class particle_importer:
         self.emitterObject.particle_systems[0].settings.frame_end = 0
         self.emitterObject.particle_systems[0].settings.lifetime = 1000
         self.emitterObject.particle_systems[0].settings.particle_size = 0.01
-        
-        # create instance object
+        self.emitterObject.particle_systems[0].settings.emit_from = 'VERT'
+        self.emitterObject.particle_systems[0].settings.count = vertices_count
+        self.emitterObject.particle_systems[0].settings.use_emit_random = False
+        self.emitterObject.particle_systems[0].settings.normal_factor = 0
+
         bpy.ops.mesh.primitive_uv_sphere_add(
             radius=1, enter_editmode=False, location=(0, 0, 0)
         )
@@ -98,16 +125,16 @@ class particle_importer:
         self.material = bpy.data.materials.new("particle_material")
         self.material.use_nodes = True
 
+        self.read_first_frame()
         self.init_materials()
 
         self.emitterObject.active_material = self.material
         self.sphereObj.active_material = self.material
 
         self.emitterObject.particle_systems[0].settings.render_type = "OBJECT"
-        # self.emitterObject.particle_systems[0].settings.instance_object = bpy.data.objects[self.sphereObj.name]
         self.emitterObject.particle_systems[0].settings.instance_object = self.sphereObj
 
-        self.read_first_frame()
+        
 
     def init_materials(self):
         nodes = self.material.node_tree.nodes
@@ -117,29 +144,34 @@ class particle_importer:
 
         output = nodes.new(type="ShaderNodeOutputMaterial")
         diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
-        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
 
-        vecMath = nodes.new(type="ShaderNodeVectorMath")
-        vecMath.operation = "DOT_PRODUCT"
-
         math1 = nodes.new(type="ShaderNodeMath")
-        math1.operation = "SQRT"
+        math1.operation = "ADD"
+        math1.inputs[1].default_value = 0.5
+
+
         math2 = nodes.new(type="ShaderNodeMath")
-        math2.operation = "MULTIPLY"
-        math2.inputs[1].default_value = 0.1
-        # math2.use_clamp = True
+        math2.operation = "DIVIDE"
+        math2.inputs[1].default_value = self.particle_num # this should be the number of particles
+        
+        combine=nodes.new(type="ShaderNodeCombineXYZ")
+        combine.inputs[1].default_value = 0
+        combine.inputs[2].default_value = 0
+        tex=nodes.new(type="ShaderNodeTexImage")
+        
 
-        ramp = nodes.new(type="ShaderNodeValToRGB")
-        ramp.color_ramp.elements[0].color = (0, 0, 1, 1)
 
-        link = links.new(particleInfo.outputs["Velocity"], vecMath.inputs[0])
-        link = links.new(particleInfo.outputs["Velocity"], vecMath.inputs[1])
 
-        link = links.new(vecMath.outputs["Value"], math1.inputs[0])
+        link = links.new(particleInfo.outputs["Index"], math1.inputs[0])
         link = links.new(math1.outputs["Value"], math2.inputs[0])
-        link = links.new(math2.outputs["Value"], ramp.inputs["Fac"])
-        link = links.new(ramp.outputs["Color"], diffuse.inputs["Color"])
+        link = links.new(math2.outputs["Value"], combine.inputs[0])
+        link = links.new(combine.outputs["Vector"], tex.inputs["Vector"])
+        link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
+        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        self.tex_image=bpy.data.images.new('particle_tex_image',width=self.particle_num,height=1)
+        tex.image=self.tex_image
 
     def read_first_frame(self):
         try:
@@ -149,17 +181,6 @@ class particle_importer:
         except Exception as e:
             show_message_box("Can't read first frame file",icon="ERROR")
             print(str(e))
-
-        self.emitterObject.particle_systems[0].settings.count = len(mesh.points)
-
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
-        particles = particle_systems[0].particles
-
-        points_pos = mesh.points @ self.rotation
-
-        particles.foreach_set("location", points_pos.ravel())
-
         if mesh.point_data:
             for k in mesh.point_data.keys():
                 self.render_attributes.append(k)
@@ -167,11 +188,14 @@ class particle_importer:
             show_message_box(
                 "no attributes avaible, all particles will be rendered as the same color"
             )
-        # particles.foreach_set("velocity", [0]*3*len(mesh.points))
 
-    def __call__(self, scene, depsgraph=None):
+        self.particle_num = len(mesh.points)
+
+
+
+    def __call__(self, scene,depsgraph=None):
         frame_number = scene.frame_current
-        frame_number = frame_number % len(self.fileseq) - 1
+        frame_number = frame_number % len(self.fileseq) 
         try:
             mesh = meshio.read(
                 self.fileseq[frame_number]
@@ -181,30 +205,29 @@ class particle_importer:
             print(self.fileseq[frame_number])
             print(" does not exist, this file will be skipped")
             return
+
+
+        if len(mesh.points)!=self.particle_num: 
+            self.particle_num=len(mesh.points)
+            self.tex_image.generated_width=self.particle_num
+        bm=bmesh.new()
+        bm.from_mesh(self.mesh)
+        bm.clear()    
+        bm.to_mesh(self.mesh)
+        bm.free()
+        self.mesh.vertices.add(self.particle_num)
         
-
-        #  update location info
-        particle_num = len(mesh.points)
-        self.emitterObject.particle_systems[0].settings.count = particle_num
-
-        if depsgraph is None:
-            #  wish this line will never be executed
-            print("it shouldn't happen")
-            depsgraph = bpy.context.evaluated_depsgraph_get()
-
-        particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
-        particles = particle_systems[0].particles
-        points_pos = mesh.points @ self.rotation
-        particles.foreach_set("location", points_pos.ravel())
+ 
+        pos=mesh.points @ self.rotation
+        
+        self.mesh.vertices.foreach_set("co",pos.ravel())
 
 
-        # update rendering and color(velocity) info
-        scaling_node = self.material.node_tree.nodes.get("Math.001").inputs[1]
         if self.used_render_attribute:
             att_str = self.used_render_attribute
             att_data = mesh.point_data[att_str]
             if len(att_data.shape) >= 3:
-                #  normally, this one shouldn't happen
+        #         #  normally, this one shouldn't happen
                 show_message_box("attribute error: higher than 3 dimenion of attribute",icon="ERROR")
             elif len(att_data.shape) == 2:
                 a, b = att_data.shape
@@ -213,35 +236,27 @@ class particle_importer:
                         "attribute error: currently unsupport attributes more than 3 column",icon="ERROR"
                     )
                 else:
-                    #  The attribute as a vector with 1-3 elements
-                    #  extend the attribute to 3-element np array, and store it in velocity attribute
-                    vel_att = np.zeros((particle_num, 3))
-                    vel_att[:, :b] = att_data
 
-                    self.min_v = np.min(np.linalg.norm(vel_att, axis=1))
-                    self.max_v = np.max(np.linalg.norm(vel_att, axis=1))
+                    pixels = np.zeros((self.particle_num,4),dtype=np.float32)
+                    pixels[:,0] = np.linalg.norm(att_data, axis=1)
 
-                    particles.foreach_set("velocity", vel_att.ravel())
-                    scaling_node.default_value = 1.0 / self.max_v
+                    max_v=np.max(np.linalg.norm(att_data, axis=1))
+                    pixels/=max_v
+                    pixels[:,3]=1
+                    self.tex_image.pixels.foreach_set( pixels.ravel())
+
             elif len(att_data.shape) == 1:
-                # The attribute as a plain scalar value
-                #  extend the attribute to 3-element np array, and store it in velocity attribute
-                point_data_reshape = np.reshape(
-                    att_data, (particle_num, -1)
-                )
-                vel_att = np.zeros((particle_num, 3))
-                vel_att[:, :1] = point_data_reshape
+                pixels = np.zeros((self.particle_num, 4),dtype=np.float32)     
+                pixels[:, 0] = att_data
+                max_v = np.max(att_data)
+                pixels/=max_v
+                pixels[:,3]=1
+                self.tex_image.pixels.foreach_set( pixels.ravel())
 
-                self.min_v = np.min(np.linalg.norm(vel_att, axis=1))
-                self.max_v = np.max(np.linalg.norm(vel_att, axis=1))
-                particles.foreach_set("velocity", vel_att.ravel())
-
-                scaling_node.default_value = 1.0 / self.max_v
         else:
-            vel=[0] * 3*particle_num
-            particles.foreach_set("velocity", vel)
+            pixels=[0] * 4*self.particle_num
+            self.tex_image.pixels.foreach_set( pixels)
 
-        # self.emitterObject.particle_systems[0].settings.frame_end = 0 # !! so velocity has no effect on the position any more, and velocity can be used for rendering
 
     def get_color_attribute(self):
         return self.render_attributes
@@ -289,6 +304,50 @@ class particle_importer:
 
     def set_radius(self,r ):
         self.emitterObject.particle_systems[0].settings.particle_size = r
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class mesh_importer:
     def __init__(self,fileseq,rotation=np.array([[1,0,0],[0,0,1],[0,1,0]])):
@@ -436,8 +495,6 @@ class mesh_importer:
             if m.users == 0:
                 bpy.data.materials.remove(m)
         self.mesh = None
-        
-
 
 '''
 ====================Addon Static Memory=====================================
