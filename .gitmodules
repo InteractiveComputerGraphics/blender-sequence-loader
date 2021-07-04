@@ -1,0 +1,10 @@
+
+[submodule "extern/meshio"]
+	path = extern/meshio
+	url = https://github.com/nschloe/meshio
+[submodule "extern/python-future"]
+	path = extern/python-future
+	url = https://github.com/PythonCharmers/python-future
+[submodule "extern/fileseq"]
+	path = extern/fileseq
+	url = https://github.com/justinfx/fileseq
