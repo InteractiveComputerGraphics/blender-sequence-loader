@@ -36,11 +36,14 @@ def clear_screen():
     os.system("cls")
 
 def check_type(fs):
-    mesh=meshio.read(fs)
-    if mesh.cells[0].type == "vertex":
-        return "particle"
-    elif mesh.cells[0].type == "triangle":
-        return "mesh"
+    try:
+        mesh=meshio.read(fs)
+        if mesh.cells[0].type == "vertex":
+            return "particle"
+        elif mesh.cells[0].type == "triangle":
+            return "mesh"
+    except:
+        show_message_box("can't find mesh info from the file: "+fs)
 
 # you can write your own color function here
 # input: attributes you want to use for coloring, 
@@ -195,7 +198,6 @@ class particle_importer:
         if len(mesh.points)!=self.particle_num: 
             self.particle_num=len(mesh.points)
             self.tex_image.generated_width=self.particle_num
-
         bm=bmesh.new()
         bm.from_mesh(self.mesh)
         bm.clear()    
@@ -287,7 +289,9 @@ class mesh_importer:
         mesh_vertices=meshio_mesh.points
         vertices_count=len(meshio_mesh.points)
         mesh_faces=self.create_face_data(meshio_mesh.cells)
-
+        shade_scheme=False
+        if self.mesh.polygons:
+            shade_scheme=self.mesh.polygons[0].use_smooth
         bm=bmesh.new()
         bm.from_mesh(self.mesh)
         bm.clear()    
@@ -318,6 +322,7 @@ class mesh_importer:
         self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
         self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
         self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
+        self.mesh.polygons.foreach_set("use_smooth", [shade_scheme]*len(faces_loop_total))
         
         #  it will be extended to real data
         v_col=self.mesh.vertex_colors.new() # because everytime clear the vertices using bmesh, vertex color will be lost, and it has to be created again
@@ -402,7 +407,7 @@ class mesh_importer:
 
 importer = None
 importer_list= []
-file_seq = []
+# file_seq = []
 
 '''
 ====================Addon Update and Callback Functions=====================================
@@ -432,75 +437,41 @@ def update_color_attribute(self, context):
         item.used_color_attribute.name='None'
 
 def callback_fileseq(self, context):
-    return file_seq
-
-def update_path(self, context):
-    global file_seq
     p = context.scene.my_tool.importer.path
     f = fileseq.findSequencesOnDisk(p)
+    
     if not f:
         show_message_box("animation sequences not detected", icon="ERROR")
         return
+    file_seq = [("Manual", "Manual, use pattern above", "")]
     if len(f) >= 20:
         message = "There is something wrong in this folder, too many file sequences detected.\n\
         The problem could be the pattern is not recognized correctly, please sepcify the pattern manually."
-        show_message_box("message", icon="ERROR")
-        print(message)
-        file_seq = [("Manual", "Manual, use pattern above", "")]
-        return
-    for seq in f:
-        file_seq=[]
-        file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
+        # show_message_box(message, icon="ERROR")
+    else:
+        for seq in f:
+            file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
+    return file_seq    
 
 
+#  this function precheck and set the type of this sequence
 def update_fileseq(self, context):
     file_seq_items_name = context.scene.my_tool.importer.fileseq
-    ind = 0
-    p = context.scene.my_tool.importer.path
-    global file_seq
-
     f = None
     if file_seq_items_name == "Manual":
         try:
+            p = context.scene.my_tool.importer.path
             pattern = context.scene.my_tool.importer.pattern
             f = fileseq.findSequenceOnDisk(p + "\\" + pattern)
         except:
             show_message_box("can't find this sequence: " + pattern, icon="ERROR")
     else:
-        
         f=fileseq.findSequenceOnDisk(file_seq_items_name)
-
     if f:
-        # name = f.basename()
-        start = f.start()
-        end = f.end()
-        # extension = f.extension()
+        context.scene.my_tool.importer.type = check_type(f[0])
 
-        #  pre-check the content of file content
-        try:
-            mesh = meshio.read(f[0])
-            if len(mesh.cells) > 1:
-                print("unsupport multi-cell files")
-                return
-
-            # context.scene.my_tool.importer.name = f.basename()
-            # context.scene.my_tool.importer.start = f.start()
-            # context.scene.my_tool.importer.end = f.end()
-            # context.scene.my_tool.importer.extension = f.extension()
-            if mesh.cells[0].type == "vertex":
-                context.scene.my_tool.importer.type = "particle"
-            else:
-                # print("todo: it should be triangle mesh here")
-                context.scene.my_tool.importer.type = "mesh"
-        except:
-            show_message_box("can't find mesh info from the file: "+p[0])
-    return
 
 def update_particle_radius(self,context):
-    # global importer
-    # if not isinstance(importer, particle_importer):
-    #     show_message_box("The importer is not correct")
-    # 
     idx =context.scene.my_tool.imported_num
     r = context.scene.my_tool.imported[idx].radius
     importer = importer_list[idx]
@@ -513,12 +484,11 @@ def update_particle_radius(self,context):
 '''
 
 class importer_properties(bpy.types.PropertyGroup):
-
     path: bpy.props.StringProperty(
-        name="Path",
+        name="Directory",
         default="C:\\Users\\hui\\Desktop\\output\\DamBreakModel\\vtk\\",
         subtype="DIR_PATH",
-        update=update_path,
+        description = "You need to go to the folder with the sequence, then click \"Accept\". ",
     )
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
@@ -527,40 +497,11 @@ class importer_properties(bpy.types.PropertyGroup):
         update=update_fileseq,
     )
     pattern: bpy.props.StringProperty(name="Pattern")
-    # name: bpy.props.StringProperty(name="Name")
-    # extension: bpy.props.StringProperty(name="Extension")
-    # start: bpy.props.IntProperty(name="start", default=0)
-    # end: bpy.props.IntProperty(name="end", default=0)
     type: bpy.props.EnumProperty(
         name="Type",
         description="choose particles or mesh",
         items=[("mesh", "Add Mesh", ""), ("particle", "Add Particles", "")],
     )
-    render: bpy.props.EnumProperty(
-        name="Color Field",
-        description="choose attributes used for rendering",
-        items=callback_color_attribute,
-        update=update_color_attribute,
-    )
-
-    min_value: bpy.props.FloatProperty(
-        name="Min", description="min value of this property"
-    )
-    max_value: bpy.props.FloatProperty(
-        name="Max", description="max value of this property"
-    )
-    particle_radius: bpy.props.FloatProperty(
-        name="radius", description="radius of particles",default=0.01,update=update_particle_radius,min=0,precision=6
-    )
-
-    # the final used fileseq, needed when reloading the .blender file
-    init: bpy.props.BoolProperty(name="Initlized",default=False)
-    used_fs :bpy.props.StringProperty(name="Used File Sequence") 
-    
-    particle_emitter_obj_name: bpy.props.StringProperty(name="Particle Emitter Obj Name") 
-    particle_sphere_obj_name: bpy.props.StringProperty(name="Particle Sphere Obj Name") 
-    particle_material_name : bpy.props.StringProperty(name="Particle Material Obj Name")
-
 
 class color_attribtue(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name='color attr')
@@ -621,21 +562,10 @@ class SEQUENCE_UL_list(bpy.types.UIList):
         ma=item
         # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            # You should always start your row layout by a label (icon + text), or a non-embossed text field,
-            # this will also make the row easily selectable in the list! The later also enables ctrl-click rename.
-            # We use icon_value of label, as our given icon is an integer value, not an enum ID.
-            # Note "data" names should never be translated!
             if ma:
                 layout.prop(ma, "pattern",text='Pattern: ',emboss=False)
-                # , emboss=False, icon_value=icon)
-                # , )
             else:
                 layout.label(text="", translate=False, icon_value=icon)
-    #     # 'GRID' layout type should be as compact as possible (typically a single icon!).
-    #     #  deal with this later
-    #     # elif self.layout_type in {'GRID'}:
-    #     #     layout.alignment = 'CENTER'
-    #     #     layout.label(text="", icon_value=icon)
 
 
 
@@ -681,19 +611,6 @@ class sequence_list_panel(bpy.types.Panel):
                 info_part.prop(item,'all_attributes_enum')
                 # info_part.prop(item,)
 
-        # col.operator("splishsplash.fluid_block_action", icon='REMOVE', text="").action = 'REMOVE'
-                                            # data ,  item, icon,          active_data,    active_propname              
-        # The second one can usually be left as an empty string.
-        # It's an additional ID used to distinguish lists in case you
-        # use the same list several times in a given area.
-
-
-
-
-
-
-
-
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     bl_label = "Import Panel"
     bl_idname = "MESHIO_IMPORT_PT_panel"
@@ -709,15 +626,8 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         layout.prop(importer_prop, "path")
         layout.prop(importer_prop, "pattern")
         layout.prop(importer_prop, "fileseq")
-
-        # layout.prop(importer_prop, "start",emboss=False)
-        # layout.prop(importer_prop, "end",emboss=False)
         layout.prop(importer_prop, "type")
-
         layout.operator("sequence.load")
-        # layout.operator("sequence.clear")
-        layout.operator("test.test")
-
 '''
 ====================Addon Operators=====================================
 '''
@@ -725,17 +635,11 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
 class particle_OT_clear(bpy.types.Operator):
     bl_label = "Remove Sequence"
     bl_idname = "sequence.remove"
-
     def execute(self, context):
-
-        # bpy.app.handlers.frame_change_post.clear()
-        # importer=None
-        # context.scene.my_tool.importer.init=False
         global importer
         global importer_list
         mytool=context.scene.my_tool
         idx=mytool.imported_num
-        # seq = mytool.imported[idx]
         mytool.imported.remove(idx)
         bpy.app.handlers.frame_change_post.remove(importer_list[idx])
         if importer==importer_list[idx]:
@@ -746,27 +650,11 @@ class particle_OT_clear(bpy.types.Operator):
         return {"FINISHED"}
 
 
-
-class DUMMY_OT_test(bpy.types.Operator):
-    bl_label = "A button for testing"
-    bl_idname = "test.test"
-
-    def execute(self, context):
-        print('?')
-        i= context.scene.my_tool.imported
-        i.add()
-        return {"FINISHED"}
-
-
-
-
-
 class meshio_loader_OT_load(bpy.types.Operator):
     bl_label = "Load Sequences"
     bl_idname = "sequence.load"
 
     def execute(self, context):
-        global count
         global importer
         global importer_list
         scene = context.scene
@@ -775,21 +663,13 @@ class meshio_loader_OT_load(bpy.types.Operator):
         fs=importer_prop.fileseq
         if fs=="Manual":
             fs=importer_prop.path+'\\'+importer_prop.pattern
-        # save the status when reopen the .blend file
-        # importer_prop.used_fs = fs
-        
         fs=fileseq.findSequenceOnDisk(fs)
-
         if importer_prop.type == "particle":
             if importer:
                 importer=None
              
             importer = particle_importer(fs)
             importer_list.append(importer)
-
-            # importer_prop.particle_emitter_obj_name=importer.emitterObject.name
-            # importer_prop.particle_sphere_obj_name=importer.sphereObj.name
-            # importer_prop.particle_material_name=importer.material.name
             
             imported_prop.add()
             imported_prop[-1].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
@@ -802,8 +682,6 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name=co_at
 
-
-
             bpy.app.handlers.frame_change_post.append(importer)
 
         if importer_prop.type == "mesh":
@@ -815,8 +693,6 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern=fs.dirname()+fs.basename()+"@"+fs.extension()
             imported_prop[-1].type=1
             bpy.app.handlers.frame_change_post.append(importer)
-        
-        importer_prop.init=True
         return {"FINISHED"}
 
 
@@ -826,46 +702,21 @@ class meshio_loader_OT_load(bpy.types.Operator):
 ====================Main Fun=====================================
 '''
 
-
-
 classes = [
     importer_properties,
     MESHIO_IMPORT_PT_main_panel,
     meshio_loader_OT_load,
-    # PARTICLE_PT_panel,
-    # MESH_PT_panel,
     particle_OT_clear,
     sequence_list_panel,
     SEQUENCE_UL_list,
     color_attribtue,
     imported_seq_properties,
     tool_properties,
-    DUMMY_OT_test,
-
 ]
 
 @persistent
 def load_post(scene):
     pass
-    # importer_prop = bpy.context.scene.my_tool.importer
-    # global importer
-    # if importer_prop.init:
-    #     fs=fileseq.findSequenceOnDisk(importer_prop.used_fs)
-    #     # if importer:
-    #         # bpy.ops.sequence.clear()
-    #     file_type=check_type(fs[0])
-    #     if file_type=='particle':
-    #         importer=particle_importer(fs,emitter_obj_name=importer_prop.particle_emitter_obj_name,sphere_obj_name=importer_prop.particle_sphere_obj_name,material_name=importer_prop.particle_material_name)
-    #         bpy.app.handlers.frame_change_post.append(importer)
-    #         bpy.app.handlers.frame_change_post.append(update_min_max)
-    #     elif file_type=='mesh':
-    #         importer=mesh_importer(fs)
-    #         bpy.app.handlers.frame_change_post.append(importer)
-
-        
-
-    importer_prop.init=True
-    
 
 
 

@@ -1,1 +1,0 @@
-Loading animation sequences with meshio and fileseq
