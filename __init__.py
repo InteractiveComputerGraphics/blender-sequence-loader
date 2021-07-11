@@ -17,6 +17,8 @@ import meshio
 import fileseq
 import os
 import sys
+import logging
+logger = logging.getLogger(__name__)
 
 '''
 ====================Utility Functions=====================================
@@ -36,14 +38,11 @@ def clear_screen():
     os.system("cls")
 
 def check_type(fs):
-    try:
-        mesh=meshio.read(fs)
-        if mesh.cells[0].type == "vertex":
-            return "particle"
-        elif mesh.cells[0].type == "triangle":
-            return "mesh"
-    except:
-        show_message_box("can't find mesh info from the file: "+fs)
+    mesh=meshio.read(fs)
+    if mesh.cells[0].type == "vertex":
+        return "particle"
+    elif mesh.cells[0].type == "triangle":
+        return "mesh"
 
 # you can write your own color function here
 # input: attributes you want to use for coloring, 
@@ -92,8 +91,9 @@ class particle_importer:
     def init_particles(self):
         try:
             meshio_mesh=meshio.read(self.fileseq[0])
-        except:
-            show_message_box("file is missing : "+self.fileseq[0],icon="ERROR")
+        except Exception as e:
+            show_message_box("meshio error when reading: "+self.fileseq[0]+",\n please check console for more details.",icon="ERROR")
+            logger.exception(e)
             return 
 
         if meshio_mesh.point_data:
@@ -191,8 +191,9 @@ class particle_importer:
             mesh = meshio.read(
                 self.fileseq[frame_number]
             )
-        except:
-            show_message_box("file is missing : "+self.fileseq[frame_number],icon="ERROR")
+        except Exception as e:
+            show_message_box("meshio error when reading: "+self.fileseq[frame_number]+",\n please check console for more details",icon="ERROR")
+            logger.exception(e)
             return 
 
         if len(mesh.points)!=self.particle_num: 
@@ -282,8 +283,9 @@ class mesh_importer:
     def load_mesh(self,total_path):
         try:
             meshio_mesh=meshio.read(total_path)
-        except:
-            print("file is missing : ",total_path)
+        except Exception as e:
+            show_message_box("meshio error when reading: "+total_path+",\n please check console for more details",icon="ERROR")
+            logger.exception(e)
             return 
         
         mesh_vertices=meshio_mesh.points
@@ -464,11 +466,17 @@ def update_fileseq(self, context):
             pattern = context.scene.my_tool.importer.pattern
             f = fileseq.findSequenceOnDisk(p + "\\" + pattern)
         except:
-            show_message_box("can't find this sequence: " + pattern, icon="ERROR")
+            show_message_box("can't find this sequence with pattern \"" + pattern+"\"", icon="ERROR")
     else:
         f=fileseq.findSequenceOnDisk(file_seq_items_name)
     if f:
-        context.scene.my_tool.importer.type = check_type(f[0])
+        try:
+            context.scene.my_tool.importer.type = check_type(f[0])
+        except Exception as e:
+            show_message_box("meshio error when reading: "+f[0]+",\n please check console for more details. And please don't load sequence.",icon="ERROR")
+            logger.exception(e)
+            return 
+            
 
 
 def update_particle_radius(self,context):
