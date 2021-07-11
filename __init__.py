@@ -11,6 +11,10 @@ bl_info = {
 import logging
 import sys
 import os
+current_folder = os.path.dirname(os.path.abspath(__file__))
+if current_folder not in sys.path:
+    print("current directory of addon is:" +current_folder)
+    sys.path.append(current_folder)
 import fileseq
 import meshio
 import numpy as np
@@ -79,7 +83,7 @@ def calculate_color(att_data: np.array):
 
 
 class particle_importer:
-    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None):
+    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None,radius=0.01):
 
         # self.path=path
         self.fileseq = fileseq
@@ -89,14 +93,16 @@ class particle_importer:
         self.used_render_attribute = None  # the attribute used for rendering
         self.emitterObject = None
         self.sphereObj = None
-        if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image or not mesh_name:
-            self.init_particles()
+        if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image_name or not mesh_name:
+            self.init_particles()  
         else:
             self.mesh = bpy.data.meshes[mesh_name]
             self.emitterObject = bpy.data.objects[emitter_obj_name]
             self.sphereObj = bpy.data.objects[sphere_obj_name]
             self.material = bpy.data.materials[material_name]
             self.tex_image = bpy.data.images[tex_image_name]
+            self.particle_num=self.emitterObject.particle_systems[0].settings.count
+        self.set_radius(radius)
 
     def init_particles(self):
         try:
@@ -341,7 +347,6 @@ class mesh_importer:
         #  it will be extended to real data
         # because everytime clear the vertices using bmesh, vertex color will be lost, and it has to be created again
         v_col = self.mesh.vertex_colors.new()
-        print(len(v_col.data))
         mesh_colors = []
         r_min = np.min(meshio_mesh.points[:, 0])
         r_max = np.max(meshio_mesh.points[:, 0])
@@ -402,7 +407,7 @@ class mesh_importer:
     def get_color_attribute(self):
         return self.color_attribtues
 
-    def set_corlor_attribute(self, attr_name):
+    def set_color_attribute(self, attr_name):
         if attr_name and attr_name in self.color_attribtues:
             self.used_color_attribute = attr_name
 
@@ -428,7 +433,6 @@ class mesh_importer:
 
 importer = None
 importer_list = []
-# file_seq = []
 
 '''
 ====================Addon Update and Callback Functions=====================================
@@ -464,14 +468,12 @@ def callback_fileseq(self, context):
     f = fileseq.findSequencesOnDisk(p)
 
     if not f:
-        show_message_box("animation sequences not detected", icon="ERROR")
-        return
-    file_seq = [("Manual", "Manual, use pattern above", "")]
+        return [("None", "No sequence detected", "")]
+    file_seq = []
     if len(f) >= 20:
-        message = "There is something wrong in this folder, too many file sequences detected.\n\
-        The problem could be the pattern is not recognized correctly, please sepcify the pattern manually."
-        # show_message_box(message, icon="ERROR")
+        file_seq.append(("Manual", "Manual, too much sequence detected, use pattern above", ""))
     else:
+        file_seq.append(("Manual", "Manual, use pattern above", ""))
         for seq in f:
             file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
     return file_seq
@@ -511,8 +513,6 @@ def update_particle_radius(self, context):
 '''
 ====================Addon Properties=====================================
 '''
-#  These properites will be showed on gui
-
 
 class importer_properties(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(
@@ -536,7 +536,12 @@ class importer_properties(bpy.types.PropertyGroup):
     )
 
 
-#  All the rest properites will not be showed on gui, and used for internal process.
+# Structure:
+# tool_properties:
+#    1. importer (importer_properties object) 
+#    2. imported:
+#       2.1 imported_seq_properties
+#           2.1.1 color_attribute
 class color_attribtue(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name='color attr')
 
@@ -559,11 +564,16 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     end: bpy.props.IntProperty(name='end', description='end frame number')
     length: bpy.props.IntProperty(
         name='length', description='total frame number')
-    attribute_count: bpy.props.IntProperty(
-        name='attribute count', description='the number of all avaiable attributes')
+
+    # meshes
+    # particles
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
-
+    mesh_name: bpy.props.StringProperty()
+    emitter_obj_name: bpy.props.StringProperty()
+    sphere_obj_name: bpy.props.StringProperty()
+    material_name: bpy.props.StringProperty()
+    tex_image_name: bpy.props.StringProperty()
 
 class tool_properties(bpy.types.PropertyGroup):
     importer: bpy.props.PointerProperty(type=importer_properties)
@@ -695,6 +705,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
         importer_prop = scene.my_tool.importer
         imported_prop = scene.my_tool.imported
         fs = importer_prop.fileseq
+        if fs == "None":
+            return {'CANCELLED'}
         if fs == "Manual":
             fs = importer_prop.path+'\\'+importer_prop.pattern
         fs = fileseq.findSequenceOnDisk(fs)
@@ -716,7 +728,11 @@ class meshio_loader_OT_load(bpy.types.Operator):
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
-
+            imported_prop[-1].mesh_name = importer.mesh.name
+            imported_prop[-1].emitter_obj_name = importer.emitterObject.name
+            imported_prop[-1].sphere_obj_name = importer.sphereObj.name
+            imported_prop[-1].material_name = importer.material.name
+            imported_prop[-1].tex_image_name =  importer.tex_image.name
             bpy.app.handlers.frame_change_post.append(importer)
 
         if importer_prop.type == "mesh":
@@ -751,7 +767,20 @@ classes = [
 
 @persistent
 def load_post(scene):
-    pass
+    global importer_list
+    imported_list = bpy.context.scene.my_tool.imported
+    for l in imported_list:
+        if l.type==0:
+            fs=fileseq.findSequenceOnDisk(l.pattern)
+            Pi=particle_importer(fileseq =fs,mesh_name=l.mesh_name,emitter_obj_name=l.emitter_obj_name,sphere_obj_name=l.sphere_obj_name,material_name=l.material_name,tex_image_name=l.tex_image_name,radius=l.radius)
+            
+            for all_att in l.all_attributes:
+                Pi.render_attributes.append(all_att.name)
+            Pi.set_color_attribute(l.used_color_attribute.name)
+            importer_list.append(Pi)
+            bpy.app.handlers.frame_change_post.append(Pi)
+
+
 
 
 def register():
