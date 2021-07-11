@@ -10,8 +10,13 @@ import os
 import sys
 
 #  change the filepath here, 
-filepath = "C:\\Users\\hui\\Desktop\\blendertool\\__init__.py" 
+path = "C:\\Users\\hui\\Desktop\\blendertool\\" 
 
+#  add the direction to sys.path, so it can find dependencies
+if path not in sys.path:
+    sys.path.append(path)
+
+filepath = path + "__init__.py"
 
 global_namespace = {"__file__": filepath, "__name__": "__main__"}
 with open(filepath, 'rb') as file:

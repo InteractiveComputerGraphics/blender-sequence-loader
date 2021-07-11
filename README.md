@@ -14,7 +14,7 @@ Then you need to create the symlink again, by following command
 ```Batchfile
 mklink /d meshio extern\meshio\src\meshio 
 mklink /d fileseq extern\fileseq\src\fileseq 
-mklink /d future extern\python-future\src\
+mklink /d future extern\python-future\src\future
 ```
 Note: You may need to run this with administrator, or using delevoper mode. For more details, please find [here](https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/).
 
