@@ -139,6 +139,8 @@ class particle_importer:
         bpy.ops.object.particle_system_add()
 
         # basic settings for the particles
+        if self.particle_num > 50000:
+            self.emitterObject.particle_systems[0].settings.display_method = 'NONE'
         self.emitterObject.particle_systems[0].settings.frame_start = 0
         self.emitterObject.particle_systems[0].settings.effector_weights.gravity = 0
         self.emitterObject.particle_systems[0].settings.frame_end = 0
