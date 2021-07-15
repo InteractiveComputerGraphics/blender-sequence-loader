@@ -487,7 +487,7 @@ def update_fileseq(self, context):
         try:
             p = context.scene.my_tool.importer.path
             pattern = context.scene.my_tool.importer.pattern
-            f = fileseq.findSequenceOnDisk(p + "\\" + pattern)
+            f = fileseq.findSequenceOnDisk(p + "/" + pattern)
         except:
             show_message_box(
                 "can't find this sequence with pattern \"" + pattern+"\"", icon="ERROR")
@@ -708,7 +708,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
         if fs == "None":
             return {'CANCELLED'}
         if fs == "Manual":
-            fs = importer_prop.path+'\\'+importer_prop.pattern
+            fs = importer_prop.path+'/'+importer_prop.pattern
         fs = fileseq.findSequenceOnDisk(fs)
         if importer_prop.type == "particle":
             if importer:
