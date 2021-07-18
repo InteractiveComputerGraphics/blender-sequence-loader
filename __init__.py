@@ -342,11 +342,11 @@ class mesh_importer:
             # Assume the same polygonal connectivity for all faces
             npoly = mesh_faces.shape[1]
             loops_vert_idx = mesh_faces.ravel()
-            faces_loop_total = np.ones((len(mesh_faces))) * npoly
+            faces_loop_total = np.ones((len(mesh_faces)),dtype=np.int32) * npoly
             faces_loop_start = np.cumsum(faces_loop_total)
 
             # Add a zero as first entry
-            np.roll(faces_loop_start, 1)
+            faces_loop_start=np.roll(faces_loop_start, 1)
 
             if len(faces_loop_start) > 0:
                 faces_loop_start[0] = 0
@@ -394,18 +394,18 @@ class mesh_importer:
         self.mesh = bpy.data.meshes.new(name=self.name)
         # create vertex_color and material
 
-        self.material = bpy.data.materials.new(self.name+"_material")
-        self.material.use_nodes = True
-        nodes = self.material.node_tree.nodes
-        links = self.material.node_tree.links
-        nodes.clear()
-        links.clear()
-        output = nodes.new(type="ShaderNodeOutputMaterial")
-        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
-        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
-        link = links.new(
-            vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
+        # self.material = bpy.data.materials.new(self.name+"_material")
+        # self.material.use_nodes = True
+        # nodes = self.material.node_tree.nodes
+        # links = self.material.node_tree.links
+        # nodes.clear()
+        # links.clear()
+        # output = nodes.new(type="ShaderNodeOutputMaterial")
+        # diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
+        # link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        # vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
+        # link = links.new(
+        #     vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
         #  create object
         new_object = bpy.data.objects.new(self.name, self.mesh)
         bpy.data.collections[0].objects.link(new_object)
