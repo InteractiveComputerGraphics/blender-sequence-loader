@@ -326,50 +326,65 @@ class mesh_importer:
         self.mesh.vertices.foreach_set("co", pos.ravel())
 
         # code from ply impoter of blender, https://github.com/blender/blender-addons/blob/master/io_mesh_ply/import_ply.py#L363
-        loops_vert_idx = []
-        faces_loop_start = []
-        faces_loop_total = []
-        lidx = 0
-        for f in mesh_faces:
-            nbr_vidx = len(f)
-            loops_vert_idx.extend(f)
-            faces_loop_start.append(lidx)
-            faces_loop_total.append(nbr_vidx)
-            lidx += nbr_vidx
+        # loops_vert_idx = []
+        # faces_loop_start = []
+        # faces_loop_total = []
+        # lidx = 0
+        # for f in mesh_faces:
+        #     nbr_vidx = len(f)
+        #     loops_vert_idx.extend(f)
+        #     faces_loop_start.append(lidx)
+        #     faces_loop_total.append(nbr_vidx)
+        #     lidx += nbr_vidx
 
-        self.mesh.loops.add(len(loops_vert_idx))
-        self.mesh.polygons.add(len(mesh_faces))
+        # Check if there are any faces at all
+        if len(mesh_faces) > 0:
+            # Assume the same polygonal connectivity for all faces
+            npoly = mesh_faces.shape[1]
+            loops_vert_idx = mesh_faces.ravel()
+            faces_loop_total = np.ones((len(mesh_faces))) * npoly
+            faces_loop_start = np.cumsum(faces_loop_total)
 
-        self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-        self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
-        self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
-        self.mesh.polygons.foreach_set(
-            "use_smooth", [shade_scheme]*len(faces_loop_total))
+            # Add a zero as first entry
+            np.roll(faces_loop_start, 1)
 
+            if len(faces_loop_start) > 0:
+                faces_loop_start[0] = 0
+
+            self.mesh.loops.add(len(loops_vert_idx))
+            self.mesh.polygons.add(len(mesh_faces))
+
+            self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+            self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
+            self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
+            self.mesh.polygons.foreach_set(
+                "use_smooth", [shade_scheme]*len(faces_loop_total))
+
+        # Skip coloring the mesh for now
         #  it will be extended to real data
         # because everytime clear the vertices using bmesh, vertex color will be lost, and it has to be created again
-        v_col = self.mesh.vertex_colors.new()
-        mesh_colors = []
-        r_min = np.min(meshio_mesh.points[:, 0])
-        r_max = np.max(meshio_mesh.points[:, 0])
-        r_slope = 1/(r_max-r_min)
-        g_min = np.min(meshio_mesh.points[:, 1])
-        g_max = np.max(meshio_mesh.points[:, 1])
-        g_slope = 1/(g_max-g_min)
-        b_min = np.min(meshio_mesh.points[:, 2])
-        b_max = np.max(meshio_mesh.points[:, 2])
-        b_slope = 1/(b_max-b_min)
-        for index in mesh_faces:  # for each face
-            for i in index:    # for each vertex in the face
-                mesh_colors.append(
-                    r_slope*(meshio_mesh.points[i][0]-r_min))  # red color
-                mesh_colors.append(
-                    g_slope * (meshio_mesh.points[i][1] - g_min))  # green color
-                mesh_colors.append(
-                    b_slope*(meshio_mesh.points[i][2] - b_min))   # blue color
+        # v_col = self.mesh.vertex_colors.new()
+        # mesh_colors = []
+        # r_min = np.min(meshio_mesh.points[:, 0])
+        # r_max = np.max(meshio_mesh.points[:, 0])
+        # r_slope = 1/(r_max-r_min)
+        # g_min = np.min(meshio_mesh.points[:, 1])
+        # g_max = np.max(meshio_mesh.points[:, 1])
+        # g_slope = 1/(g_max-g_min)
+        # b_min = np.min(meshio_mesh.points[:, 2])
+        # b_max = np.max(meshio_mesh.points[:, 2])
+        # b_slope = 1/(b_max-b_min)
+        # for index in mesh_faces:  # for each face
+        #     for i in index:    # for each vertex in the face
+        #         mesh_colors.append(
+        #             r_slope*(meshio_mesh.points[i][0]-r_min))  # red color
+        #         mesh_colors.append(
+        #             g_slope * (meshio_mesh.points[i][1] - g_min))  # green color
+        #         mesh_colors.append(
+        #             b_slope*(meshio_mesh.points[i][2] - b_min))   # blue color
 
-        for i, col in enumerate(v_col.data):
-            col.color = mesh_colors[i*3], 0, 0, 1
+        # for i, col in enumerate(v_col.data):
+        #     col.color = mesh_colors[i*3], 0, 0, 1
 
         self.mesh.update()
         self.mesh.validate()
