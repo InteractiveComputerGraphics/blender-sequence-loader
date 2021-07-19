@@ -282,8 +282,7 @@ class particle_importer:
 
 
 class mesh_importer:
-    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]])):
-        # self.path = path
+    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]),mesh_name=None,obj_name=None,material_name=None):
         self.name = fileseq.basename()+"@"+fileseq.extension()
         self.fileseq = fileseq
         self.rotation = rotation
@@ -292,7 +291,12 @@ class mesh_importer:
         self.material = None
         self.v_col = None
         self.used_color_attribute = None
-        self.init_mesh()
+        if not mesh_name and not obj_name and not material_name:
+            self.init_mesh()
+        else:
+            self.mesh= bpy.data.meshes[mesh_name]
+            self.obj= bpy.data.objects[obj_name]
+            # self.material = bpy.data.materials[material_name]
 
     def create_face_data(self, meshio_cells):
         # todo: support other mesh structure, such as tetrahedron
@@ -587,7 +591,7 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
     mesh_name: bpy.props.StringProperty()
-    emitter_obj_name: bpy.props.StringProperty()
+    obj_name: bpy.props.StringProperty()
     sphere_obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
     tex_image_name: bpy.props.StringProperty()
@@ -746,7 +750,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
             imported_prop[-1].mesh_name = importer.mesh.name
-            imported_prop[-1].emitter_obj_name = importer.emitterObject.name
+            imported_prop[-1].obj_name = importer.emitterObject.name
             imported_prop[-1].sphere_obj_name = importer.sphereObj.name
             imported_prop[-1].material_name = importer.material.name
             imported_prop[-1].tex_image_name =  importer.tex_image.name
@@ -761,6 +765,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern = fs.dirname()+fs.basename() + \
                 "@"+fs.extension()
             imported_prop[-1].type = 1
+            imported_prop[-1].mesh_name = importer.mesh.name
+            imported_prop[-1].obj_name = importer.obj.name
             bpy.app.handlers.frame_change_post.append(importer)
         return {"FINISHED"}
 
@@ -789,13 +795,19 @@ def load_post(scene):
     for l in imported_list:
         if l.type==0:
             fs=fileseq.findSequenceOnDisk(l.pattern)
-            Pi=particle_importer(fileseq =fs,mesh_name=l.mesh_name,emitter_obj_name=l.emitter_obj_name,sphere_obj_name=l.sphere_obj_name,material_name=l.material_name,tex_image_name=l.tex_image_name,radius=l.radius)
+            Pi=particle_importer(fileseq =fs,mesh_name=l.mesh_name,emitter_obj_name=l.obj_name,sphere_obj_name=l.sphere_obj_name,material_name=l.material_name,tex_image_name=l.tex_image_name,radius=l.radius)
             
             for all_att in l.all_attributes:
                 Pi.render_attributes.append(all_att.name)
             Pi.set_color_attribute(l.used_color_attribute.name)
             importer_list.append(Pi)
             bpy.app.handlers.frame_change_post.append(Pi)
+        elif l.type == 1:
+            fs=fileseq.findSequenceOnDisk(l.pattern)
+            Mi=mesh_importer(fileseq =fs,mesh_name=l.mesh_name,obj_name=l.obj_name)
+            importer_list.append(Mi)
+            bpy.app.handlers.frame_change_post.append(Mi)
+
 
 
 
