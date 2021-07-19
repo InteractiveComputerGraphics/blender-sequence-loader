@@ -52,30 +52,6 @@ def check_type(fs):
     elif mesh.cells[0].type == "triangle":
         return "mesh"
 
-# you can write your own color function here
-# input: attributes you want to use for coloring,
-# the shape of input:  number of particles * dimension of attribute e.g. (6859,3) 6859 particles and each particle has a 3-d attribute
-# output: np array of color information, the same length as number of particles, the value should be normalized to [0,1]
-
-
-def calculate_color(att_data: np.array):
-    #  here is my implementation
-    if len(att_data.shape) >= 3:
-        #         #  normally, this one shouldn't happen
-        show_message_box(
-            "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-
-    elif len(att_data.shape) == 2:
-        a, b = att_data.shape
-        res = np.zeros(a, dtype=np.float32)
-        res = np.linalg.norm(att_data, axis=1)
-        res /= np.max(res)
-        return res
-    elif len(att_data.shape) == 1:
-        res = np.copy(att_data)
-        res /= np.max(res)
-        return res
-
 
 '''
 ====================Importer Classes=====================================
@@ -93,6 +69,7 @@ class particle_importer:
         self.used_render_attribute = None  # the attribute used for rendering
         self.emitterObject = None
         self.sphereObj = None
+        self.max_value=None
         if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image_name or not mesh_name:
             self.init_particles()  
         else:
@@ -177,30 +154,51 @@ class particle_importer:
         nodes.clear()
         links.clear()
 
-        output = nodes.new(type="ShaderNodeOutputMaterial")
-        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
         math1 = nodes.new(type="ShaderNodeMath")
-        math1.operation = "ADD"
-        math1.inputs[1].default_value = 0.5
         math2 = nodes.new(type="ShaderNodeMath")
+        combine = nodes.new(type="ShaderNodeCombineXYZ")
+        tex = nodes.new(type="ShaderNodeTexImage")
+        # s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
+
+
+
+        # math3 = nodes.new(type="ShaderNodeMath")
+        # math4 = nodes.new(type="ShaderNodeMath")
+        # math5 = nodes.new(type="ShaderNodeMath")
+        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
+        output = nodes.new(type="ShaderNodeOutputMaterial")
+
+        math1.operation = "ADD"
+        math1.inputs[1].default_value = 0.5    
         math2.operation = "DIVIDE"
         # this should be the number of particles
         math2.inputs[1].default_value = self.particle_num
-        combine = nodes.new(type="ShaderNodeCombineXYZ")
+        
         combine.inputs[1].default_value = 0
         combine.inputs[2].default_value = 0
-        tex = nodes.new(type="ShaderNodeTexImage")
+
+        # math3.operation = "MULTIPLY"
+        # math4.operation = "MULTIPLY"
+        # math5.operation = "MULTIPLY"
 
         link = links.new(particleInfo.outputs["Index"], math1.inputs[0])
         link = links.new(math1.outputs["Value"], math2.inputs[0])
         link = links.new(math2.outputs["Value"], combine.inputs[0])
         link = links.new(combine.outputs["Vector"], tex.inputs["Vector"])
+        # link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
         link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
+        # link = links.new(s_rgb.outputs["R"],math3.inputs[0])
+        # link = links.new(s_rgb.outputs["G"],math4.inputs[0])
+        # link = links.new(s_rgb.outputs["B"],math5.inputs[0])
+        # link = links.new(math3.outputs["Value"],)
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
         self.tex_image = bpy.data.images.new(
             'particle_tex_image', width=self.particle_num, height=1)
         tex.image = self.tex_image
+
+        for i in range(len(nodes)):
+            nodes[i].location.x=i*300
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
@@ -218,6 +216,7 @@ class particle_importer:
         if len(mesh.points) != self.particle_num:
             self.particle_num = len(mesh.points)
             self.tex_image.generated_width = self.particle_num
+            self.material.node_tree.nodes['Math.001'].inputs[1].default_value=self.particle_num # this should be math2 node
         bm = bmesh.new()
         bm.from_mesh(self.mesh)
         bm.clear()
@@ -230,9 +229,9 @@ class particle_importer:
         if self.used_render_attribute:
             att_str = self.used_render_attribute
             att_data = mesh.point_data[att_str]
-            color = calculate_color(att_data)
+            color = self.calculate_color(att_data)
             pixels = np.zeros((self.particle_num, 4), dtype=np.float32)
-            pixels[:, 0] = color
+            pixels[:, 0:3] = color
             pixels[:, 3] = 1
             self.tex_image.pixels.foreach_set(pixels.ravel())
         else:
@@ -241,6 +240,44 @@ class particle_importer:
 
     def get_color_attribute(self):
         return self.render_attributes
+
+    #  return a np.array with shape= particle_num, 3
+    def calculate_color(self, att_data):
+        if len(att_data.shape) >= 3:
+            #         #  normally, this one shouldn't happen
+            show_message_box(
+                "attribute error: this shouldn't happen", icon="ERROR")
+        elif len(att_data.shape) == 2:
+            a, b = att_data.shape
+            if b>3:
+                show_message_box(
+                "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+            # res = np.copy(att_data,dtype=np.float32)
+            res = np.zeros((a,3))
+            res[:,:b]=att_data
+            if self.max_value:
+                res=np.clip(res, 0, self.max_value)
+                res/=self.max_value
+            else:
+                m=np.max(res)
+                res/=m
+            return res
+        elif len(att_data.shape) == 1:
+            res = np.zeros((att_data.shape[0],3))
+            res[:,0]=att_data
+            if self.max_value:
+                res=np.clip(res, 0, self.max_value)
+                res/=self.max_value
+            else:
+                res/=np.max(res)
+            return res
+
+
+
+
+
+
+
 
     def set_color_attribute(self, attribute_str):
         if not attribute_str:
@@ -279,6 +316,8 @@ class particle_importer:
 
     def set_radius(self, r):
         self.emitterObject.particle_systems[0].settings.particle_size = r
+    def set_max_value(self, r):
+        self.max_value=r
 
 
 class mesh_importer:
@@ -366,7 +405,7 @@ class mesh_importer:
 
         # Skip coloring the mesh for now
         #  it will be extended to real data
-        # because everytime clear the vertices using bmesh, vertex color will be lost, and it has to be created again
+        # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
         # v_col = self.mesh.vertex_colors.new()
         # mesh_colors = []
         # r_min = np.min(meshio_mesh.points[:, 0])
@@ -531,6 +570,13 @@ def update_particle_radius(self, context):
     importer.set_radius(r)
 
 
+def update_particle_max_value(self, context):
+    idx = context.scene.my_tool.imported_num
+    r = context.scene.my_tool.imported[idx].max_value
+    importer = importer_list[idx]
+    importer.set_max_value(r)
+
+
 '''
 ====================Addon Properties=====================================
 '''
@@ -590,6 +636,7 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     # particles
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
+    max_value: bpy.props.FloatProperty(name='max value', description='max value to clamp the field',default=10,min=0, update=update_particle_max_value)
     mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
     sphere_obj_name: bpy.props.StringProperty()
@@ -668,6 +715,7 @@ class sequence_list_panel(bpy.types.Panel):
                 info_part.prop(item, 'end')
                 info_part.prop(item, 'length')
                 info_part.prop(item, 'radius')
+                info_part.prop(item, 'max_value')
                 info_part.prop(item, 'all_attributes_enum')
                 # info_part.prop(item,)
 
