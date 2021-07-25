@@ -71,6 +71,7 @@ class particle_importer:
         self.emitterObject = None
         self.sphereObj = None
         self.max_value=None
+        self.min_value=0
         if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image_name or not mesh_name:
             self.init_particles()  
         else:
@@ -81,7 +82,7 @@ class particle_importer:
             self.tex_image = bpy.data.images[tex_image_name]
             self.particle_num=self.emitterObject.particle_systems[0].settings.count
         self.set_radius(radius)
-
+        self.max_value = self.particle_num
     def init_particles(self):
         try:
             meshio_mesh = meshio.read(self.fileseq[0])
@@ -254,24 +255,19 @@ class particle_importer:
             if b>3:
                 show_message_box(
                 "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-            # res = np.copy(att_data,dtype=np.float32)
             res = np.zeros((a,3))
             res[:,:b]=att_data
-            if self.max_value:
-                res=np.clip(res, 0, self.max_value)
-                res/=self.max_value
-            else:
-                m=np.max(res)
-                res/=m
+            print(self.max_value,"    ",self.min_value)
+            res[:,:b]=np.clip(res[:,:b], self.min_value, self.max_value)
+            res[:,:b]-=self.min_value
+            res/=(self.max_value-self.min_value)
             return res
         elif len(att_data.shape) == 1:
             res = np.zeros((att_data.shape[0],3))
             res[:,0]=att_data
-            if self.max_value:
-                res=np.clip(res, 0, self.max_value)
-                res/=self.max_value
-            else:
-                res/=np.max(res)
+            res[:,0]=np.clip(res[:,0], self.min_value, self.max_value)
+            res[:,0] = res[:,0] - self.min_value
+            res/=(self.max_value-self.min_value)
             return res
 
 
@@ -320,6 +316,8 @@ class particle_importer:
         self.emitterObject.particle_systems[0].settings.particle_size = r
     def set_max_value(self, r):
         self.max_value=r
+    def set_min_value(self, r):
+        self.min_value=r
 
 
 class mesh_importer:
@@ -575,9 +573,24 @@ def update_particle_radius(self, context):
 
 def update_particle_max_value(self, context):
     idx = context.scene.my_tool.imported_num
-    r = context.scene.my_tool.imported[idx].max_value
+    max = context.scene.my_tool.imported[idx].max_value
+    min = context.scene.my_tool.imported[idx].min_value
     importer = importer_list[idx]
-    importer.set_max_value(r)
+    if max>=min:
+        importer.set_max_value(max)
+    else:
+        show_message_box("max value shoule be larger than min value",icon="ERROR")
+
+
+def update_particle_min_value(self, context):
+    idx = context.scene.my_tool.imported_num
+    max = context.scene.my_tool.imported[idx].max_value
+    min = context.scene.my_tool.imported[idx].min_value
+    importer = importer_list[idx]
+    if min<=max:
+        importer.set_min_value(min)
+    else:
+        show_message_box("min value shoule be smaller than max value",icon="ERROR")
 
 
 '''
@@ -639,7 +652,8 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     # particles
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
-    max_value: bpy.props.FloatProperty(name='max value', description='max value to clamp the field',default=10,min=0, update=update_particle_max_value)
+    max_value: bpy.props.FloatProperty(name='max value', description='max value to clamp the field',update=update_particle_max_value)
+    min_value: bpy.props.FloatProperty(name='min value', description='min value to clamp the field',default=0,update=update_particle_min_value)
     mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
     sphere_obj_name: bpy.props.StringProperty()
@@ -718,6 +732,7 @@ class sequence_list_panel(bpy.types.Panel):
                 info_part.prop(item, 'end')
                 info_part.prop(item, 'length')
                 info_part.prop(item, 'radius')
+                info_part.prop(item, 'min_value')
                 info_part.prop(item, 'max_value')
                 info_part.prop(item, 'all_attributes_enum')
                 # info_part.prop(item,)
@@ -797,6 +812,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].end = fs.end()
             imported_prop[-1].type = 0
             imported_prop[-1].length = len(fs)
+            imported_prop[-1].max_value = importer.particle_num
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
