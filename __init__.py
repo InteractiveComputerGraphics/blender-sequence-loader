@@ -21,6 +21,7 @@ import numpy as np
 import bmesh
 import bpy
 from bpy.app.handlers import persistent
+from mathutils import Matrix
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +60,12 @@ def check_type(fs):
 
 
 class particle_importer:
-    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None,radius=0.01):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None,radius=0.01):
 
         # self.path=path
         self.fileseq = fileseq
         self.name = fileseq.basename()+"@"+fileseq.extension()
-        self.rotation = rotation
+        self.transform_matrix = transform_matrix
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
         self.emitterObject = None
@@ -104,9 +105,9 @@ class particle_importer:
 
         self.mesh.vertices.add(self.particle_num)
 
-        pos = meshio_mesh.points @ self.rotation
+        # pos = meshio_mesh.points @ self.rotation
 
-        self.mesh.vertices.foreach_set("co", pos.ravel())
+        self.mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
         new_object = bpy.data.objects.new(self.name, self.mesh)
         bpy.data.collections[0].objects.link(new_object)
         self.emitterObject = new_object
@@ -114,6 +115,7 @@ class particle_importer:
         bpy.context.view_layer.objects.active = self.emitterObject
 
         bpy.ops.object.particle_system_add()
+        self.emitterObject.matrix_world = self.transform_matrix
 
         # basic settings for the particles
         if self.particle_num > 50000:
@@ -223,8 +225,8 @@ class particle_importer:
         bm.to_mesh(self.mesh)
         bm.free()
         self.mesh.vertices.add(self.particle_num)
-        pos = mesh.points @ self.rotation
-        self.mesh.vertices.foreach_set("co", pos.ravel())
+        # pos = mesh.points @ self.rotation
+        self.mesh.vertices.foreach_set("co", mesh.points.ravel())
 
         if self.used_render_attribute:
             att_str = self.used_render_attribute
@@ -321,10 +323,10 @@ class particle_importer:
 
 
 class mesh_importer:
-    def __init__(self, fileseq, rotation=np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]),mesh_name=None,obj_name=None,material_name=None):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0,0], [0, 0, -1,0], [0, 1, 0,0],[0,0,0,1]]),mesh_name=None,obj_name=None,material_name=None):
         self.name = fileseq.basename()+"@"+fileseq.extension()
         self.fileseq = fileseq
-        self.rotation = rotation
+        self.transform_matrix = transform_matrix
         self.mesh = None
         self.obj = None
         self.material = None
@@ -364,9 +366,9 @@ class mesh_importer:
 
         self.mesh.vertices.add(vertices_count)
 
-        pos = meshio_mesh.points @ self.rotation
+        # pos = meshio_mesh.points @ self.rotation
 
-        self.mesh.vertices.foreach_set("co", pos.ravel())
+        self.mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
 
         # code from ply impoter of blender, https://github.com/blender/blender-addons/blob/master/io_mesh_ply/import_ply.py#L363
         # loops_vert_idx = []
@@ -453,6 +455,7 @@ class mesh_importer:
         new_object = bpy.data.objects.new(self.name, self.mesh)
         bpy.data.collections[0].objects.link(new_object)
         self.obj = new_object
+        self.obj.matrix_world = self.transform_matrix
         self.obj.active_material = self.material
 
         total_path = self.fileseq[0]
