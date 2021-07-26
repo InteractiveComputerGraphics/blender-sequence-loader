@@ -247,7 +247,7 @@ class particle_importer:
     #  return a np.array with shape= particle_num, 3
     def calculate_color(self, att_data):
         if len(att_data.shape) >= 3:
-            #         #  normally, this one shouldn't happen
+            #  normally, this one shouldn't happen
             show_message_box(
                 "attribute error: this shouldn't happen", icon="ERROR")
         elif len(att_data.shape) == 2:
@@ -257,7 +257,11 @@ class particle_importer:
                 "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
             res = np.zeros((a,3))
             res[:,:b]=att_data
-            print(self.max_value,"    ",self.min_value)
+            #  for example, when the vield is velocity, it would rotate the velocity as well
+            if b==3: 
+                transform_matrix = np.array(self.emitterObject.matrix_world)
+                transform_matrix = transform_matrix[:3,:3]
+                res =   res @ transform_matrix
             res[:,:b]=np.clip(res[:,:b], self.min_value, self.max_value)
             res[:,:b]-=self.min_value
             res/=(self.max_value-self.min_value)
@@ -723,9 +727,9 @@ class sequence_list_panel(bpy.types.Panel):
 
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
-            for i in item.all_attributes:
-                # print(i.name)
-                pass
+            # for i in item.all_attributes:
+            #     # print(i.name)
+            #     pass
             if item.type == 0:
                 info_part = layout.column()
                 info_part.prop(item, 'start')
