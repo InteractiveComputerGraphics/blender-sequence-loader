@@ -11,4 +11,5 @@ __all__ = [
     "color_attribtue",
     "imported_seq_properties",
     "tool_properties",
+    "load_post"
 ]

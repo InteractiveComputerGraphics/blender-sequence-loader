@@ -30,23 +30,12 @@ classes = [
 ]
 
 
-
-# @persistent
-# def load_post(scene):
-#     global importer_list
-#     imported_list = bpy.context.scene.my_tool.imported
-#     for l in imported_list:
-#         if l.type==0:
-#             fs=fileseq.findSequenceOnDisk(l.pattern)
-#             Pi=particle_importer(fileseq =fs,mesh_name=l.mesh_name,emitter_obj_name=l.obj_name,sphere_obj_name=l.sphere_obj_name,material_name=l.material_name,tex_image_name=l.tex_image_name,radius=l.radius)
-
-
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
-    # bpy.app.handlers.load_post.append(load_post)
+    bpy.app.handlers.load_post.append(load_post)
 
 
 def unregister():
