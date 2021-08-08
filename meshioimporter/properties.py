@@ -1,5 +1,7 @@
 import bpy
 from .callback import *
+
+
 class importer_properties(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(
         name="Directory",
@@ -24,7 +26,7 @@ class importer_properties(bpy.types.PropertyGroup):
 
 # Structure:
 # tool_properties:
-#    1. importer (importer_properties object) 
+#    1. importer (importer_properties object)
 #    2. imported:
 #       2.1 imported_seq_properties
 #           2.1.1 color_attribute
@@ -55,13 +57,16 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     # particles
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
-    max_value: bpy.props.FloatProperty(name='max value', description='max value to clamp the field',update=update_particle_max_value)
-    min_value: bpy.props.FloatProperty(name='min value', description='min value to clamp the field',default=0,update=update_particle_min_value)
+    max_value: bpy.props.FloatProperty(
+        name='max value', description='max value to clamp the field', update=update_particle_max_value)
+    min_value: bpy.props.FloatProperty(
+        name='min value', description='min value to clamp the field', default=0, update=update_particle_min_value)
     mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
     sphere_obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
     tex_image_name: bpy.props.StringProperty()
+
 
 class tool_properties(bpy.types.PropertyGroup):
     importer: bpy.props.PointerProperty(type=importer_properties)

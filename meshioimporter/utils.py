@@ -2,6 +2,7 @@ import bpy
 import os
 import meshio
 
+
 def show_message_box(message="", title="Message Box", icon="INFO"):
     '''
     It shows a small window to display the error message and also print it the console

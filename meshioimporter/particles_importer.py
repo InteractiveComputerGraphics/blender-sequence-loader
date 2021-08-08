@@ -5,9 +5,12 @@ import bmesh
 import numpy as np
 import bmesh
 from mathutils import Matrix
+from .utils import *
+import traceback
+
 
 class particle_importer:
-    def __init__(self, fileseq, transform_matrix=Matrix([[1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None,radius=0.01):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None, radius=0.01):
 
         # self.path=path
         self.fileseq = fileseq
@@ -17,26 +20,27 @@ class particle_importer:
         self.used_render_attribute = None  # the attribute used for rendering
         self.emitterObject = None
         self.sphereObj = None
-        self.max_value=None
-        self.min_value=0
+        self.max_value = None
+        self.min_value = 0
         if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image_name or not mesh_name:
-            self.init_particles()  
+            self.init_particles()
         else:
             self.mesh = bpy.data.meshes[mesh_name]
             self.emitterObject = bpy.data.objects[emitter_obj_name]
             self.sphereObj = bpy.data.objects[sphere_obj_name]
             self.material = bpy.data.materials[material_name]
             self.tex_image = bpy.data.images[tex_image_name]
-            self.particle_num=self.emitterObject.particle_systems[0].settings.count
+            self.particle_num = self.emitterObject.particle_systems[0].settings.count
         self.set_radius(radius)
         self.max_value = self.particle_num
+
     def init_particles(self):
         try:
             meshio_mesh = meshio.read(self.fileseq[0])
         except Exception as e:
             show_message_box("meshio error when reading: " +
                              self.fileseq[0]+",\n please check console for more details.", icon="ERROR")
-            logger.exception(e)
+            traceback.print_exc()
             return
 
         if meshio_mesh.point_data:
@@ -111,8 +115,6 @@ class particle_importer:
         tex = nodes.new(type="ShaderNodeTexImage")
         # s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
 
-
-
         # math3 = nodes.new(type="ShaderNodeMath")
         # math4 = nodes.new(type="ShaderNodeMath")
         # math5 = nodes.new(type="ShaderNodeMath")
@@ -120,11 +122,11 @@ class particle_importer:
         output = nodes.new(type="ShaderNodeOutputMaterial")
 
         math1.operation = "ADD"
-        math1.inputs[1].default_value = 0.5    
+        math1.inputs[1].default_value = 0.5
         math2.operation = "DIVIDE"
         # this should be the number of particles
         math2.inputs[1].default_value = self.particle_num
-        
+
         combine.inputs[1].default_value = 0
         combine.inputs[2].default_value = 0
 
@@ -148,7 +150,7 @@ class particle_importer:
         tex.image = self.tex_image
 
         for i in range(len(nodes)):
-            nodes[i].location.x=i*300
+            nodes[i].location.x = i*300
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
@@ -160,13 +162,14 @@ class particle_importer:
         except Exception as e:
             show_message_box("meshio error when reading: " +
                              self.fileseq[frame_number]+",\n please check console for more details", icon="ERROR")
-            logger.exception(e)
+            traceback.print_exc()
             return
 
         if len(mesh.points) != self.particle_num:
             self.particle_num = len(mesh.points)
             self.tex_image.generated_width = self.particle_num
-            self.material.node_tree.nodes['Math.001'].inputs[1].default_value=self.particle_num # this should be math2 node
+            # this should be math2 node
+            self.material.node_tree.nodes['Math.001'].inputs[1].default_value = self.particle_num
         bm = bmesh.new()
         bm.from_mesh(self.mesh)
         bm.clear()
@@ -199,26 +202,26 @@ class particle_importer:
                 "attribute error: this shouldn't happen", icon="ERROR")
         elif len(att_data.shape) == 2:
             a, b = att_data.shape
-            if b>3:
+            if b > 3:
                 show_message_box(
-                "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-            res = np.zeros((a,3))
-            res[:,:b]=att_data
+                    "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+            res = np.zeros((a, 3))
+            res[:, :b] = att_data
             #  for example, when the vield is velocity, it would rotate the velocity as well
-            if b==3: 
+            if b == 3:
                 transform_matrix = np.array(self.emitterObject.matrix_world)
-                transform_matrix = transform_matrix[:3,:3]
-                res =   res @ transform_matrix
-            res[:,:b]=np.clip(res[:,:b], self.min_value, self.max_value)
-            res[:,:b]-=self.min_value
-            res/=(self.max_value-self.min_value)
+                transform_matrix = transform_matrix[:3, :3]
+                res = res @ transform_matrix
+            res[:, :b] = np.clip(res[:, :b], self.min_value, self.max_value)
+            res[:, :b] -= self.min_value
+            res /= (self.max_value-self.min_value)
             return res
         elif len(att_data.shape) == 1:
-            res = np.zeros((att_data.shape[0],3))
-            res[:,0]=att_data
-            res[:,0]=np.clip(res[:,0], self.min_value, self.max_value)
-            res[:,0] = res[:,0] - self.min_value
-            res/=(self.max_value-self.min_value)
+            res = np.zeros((att_data.shape[0], 3))
+            res[:, 0] = att_data
+            res[:, 0] = np.clip(res[:, 0], self.min_value, self.max_value)
+            res[:, 0] = res[:, 0] - self.min_value
+            res /= (self.max_value-self.min_value)
             return res
 
     def set_color_attribute(self, attribute_str):
@@ -258,8 +261,9 @@ class particle_importer:
 
     def set_radius(self, r):
         self.emitterObject.particle_systems[0].settings.particle_size = r
-    def set_max_value(self, r):
-        self.max_value=r
-    def set_min_value(self, r):
-        self.min_value=r
 
+    def set_max_value(self, r):
+        self.max_value = r
+
+    def set_min_value(self, r):
+        self.min_value = r

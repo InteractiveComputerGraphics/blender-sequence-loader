@@ -2,7 +2,7 @@ from .operators import *
 from .properties import *
 from .panels import *
 __all__ = [
-        "importer_properties",
+    "importer_properties",
     "MESHIO_IMPORT_PT_main_panel",
     "meshio_loader_OT_load",
     "particle_OT_clear",

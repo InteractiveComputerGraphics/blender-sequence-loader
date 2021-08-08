@@ -8,15 +8,17 @@ bl_info = {
     "support": "COMMUNITY",
     "category": "Import-Export",
 }
-import sys
+
+import bpy
 import os
+import sys
+
 current_folder = os.path.dirname(os.path.abspath(__file__))
 if current_folder not in sys.path:
-    print("current directory of addon is:" +current_folder)
+    print("current directory of addon is:" + current_folder)
     sys.path.append(current_folder)
-import bpy
-
 from meshioimporter import *
+
 classes = [
     importer_properties,
     MESHIO_IMPORT_PT_main_panel,
@@ -45,13 +47,9 @@ def unregister():
 
 
 if __name__ == "__main__":
-    
+
     # unregister()
     register()
-
-
-
-
 
 
 # import logging
@@ -119,7 +117,7 @@ if __name__ == "__main__":
 #         self.max_value=None
 #         self.min_value=0
 #         if not emitter_obj_name or not sphere_obj_name or not material_name or not tex_image_name or not mesh_name:
-#             self.init_particles()  
+#             self.init_particles()
 #         else:
 #             self.mesh = bpy.data.meshes[mesh_name]
 #             self.emitterObject = bpy.data.objects[emitter_obj_name]
@@ -211,7 +209,6 @@ if __name__ == "__main__":
 #         # s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
 
 
-
 #         # math3 = nodes.new(type="ShaderNodeMath")
 #         # math4 = nodes.new(type="ShaderNodeMath")
 #         # math5 = nodes.new(type="ShaderNodeMath")
@@ -219,11 +216,11 @@ if __name__ == "__main__":
 #         output = nodes.new(type="ShaderNodeOutputMaterial")
 
 #         math1.operation = "ADD"
-#         math1.inputs[1].default_value = 0.5    
+#         math1.inputs[1].default_value = 0.5
 #         math2.operation = "DIVIDE"
 #         # this should be the number of particles
 #         math2.inputs[1].default_value = self.particle_num
-        
+
 #         combine.inputs[1].default_value = 0
 #         combine.inputs[2].default_value = 0
 
@@ -304,7 +301,7 @@ if __name__ == "__main__":
 #             res = np.zeros((a,3))
 #             res[:,:b]=att_data
 #             #  for example, when the vield is velocity, it would rotate the velocity as well
-#             if b==3: 
+#             if b==3:
 #                 transform_matrix = np.array(self.emitterObject.matrix_world)
 #                 transform_matrix = transform_matrix[:3,:3]
 #                 res =   res @ transform_matrix
@@ -319,12 +316,6 @@ if __name__ == "__main__":
 #             res[:,0] = res[:,0] - self.min_value
 #             res/=(self.max_value-self.min_value)
 #             return res
-
-
-
-
-
-
 
 
 #     def set_color_attribute(self, attribute_str):
@@ -671,7 +662,7 @@ if __name__ == "__main__":
 
 # # Structure:
 # # tool_properties:
-# #    1. importer (importer_properties object) 
+# #    1. importer (importer_properties object)
 # #    2. imported:
 # #       2.1 imported_seq_properties
 # #           2.1.1 color_attribute
@@ -913,7 +904,7 @@ if __name__ == "__main__":
 #         if l.type==0:
 #             fs=fileseq.findSequenceOnDisk(l.pattern)
 #             Pi=particle_importer(fileseq =fs,mesh_name=l.mesh_name,emitter_obj_name=l.obj_name,sphere_obj_name=l.sphere_obj_name,material_name=l.material_name,tex_image_name=l.tex_image_name,radius=l.radius)
-            
+
 #             for all_att in l.all_attributes:
 #                 Pi.render_attributes.append(all_att.name)
 #             Pi.set_color_attribute(l.used_color_attribute.name)
@@ -924,9 +915,6 @@ if __name__ == "__main__":
 #             Mi=mesh_importer(fileseq =fs,mesh_name=l.mesh_name,obj_name=l.obj_name)
 #             importer_list.append(Mi)
 #             bpy.app.handlers.frame_change_post.append(Mi)
-
-
-
 
 
 # def register():

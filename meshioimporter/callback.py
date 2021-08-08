@@ -2,6 +2,7 @@ import bpy
 import fileseq
 from .utils import *
 from .importer_manager import *
+import traceback
 
 def callback_color_attribute(self, context):
     attr_items = [('None', 'None', '')]
@@ -35,7 +36,8 @@ def callback_fileseq(self, context):
         return [("None", "No sequence detected", "")]
     file_seq = []
     if len(f) >= 20:
-        file_seq.append(("Manual", "Manual, too much sequence detected, use pattern above", ""))
+        file_seq.append(
+            ("Manual", "Manual, too much sequence detected, use pattern above", ""))
     else:
         file_seq.append(("Manual", "Manual, use pattern above", ""))
         for seq in f:
@@ -63,7 +65,7 @@ def update_fileseq(self, context):
         except Exception as e:
             show_message_box("meshio error when reading: " +
                              f[0]+",\n please check console for more details. And please don't load sequence.", icon="ERROR")
-            logger.exception(e)
+            traceback.print_exc()
             return
 
 
@@ -79,10 +81,11 @@ def update_particle_max_value(self, context):
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
     importer = importer_list[idx]
-    if max>=min:
+    if max >= min:
         importer.set_max_value(max)
     else:
-        show_message_box("max value shoule be larger than min value",icon="ERROR")
+        show_message_box(
+            "max value shoule be larger than min value", icon="ERROR")
 
 
 def update_particle_min_value(self, context):
@@ -90,7 +93,8 @@ def update_particle_min_value(self, context):
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
     importer = importer_list[idx]
-    if min<=max:
+    if min <= max:
         importer.set_min_value(min)
     else:
-        show_message_box("min value shoule be smaller than max value",icon="ERROR")
+        show_message_box(
+            "min value shoule be smaller than max value", icon="ERROR")

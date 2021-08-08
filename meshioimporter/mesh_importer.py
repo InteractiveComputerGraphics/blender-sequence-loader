@@ -5,10 +5,12 @@ import bmesh
 import numpy as np
 import bmesh
 from mathutils import Matrix
+import traceback
+from .utils import *
 
 
 class mesh_importer:
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0,0], [0, 0, -1,0], [0, 1, 0,0],[0,0,0,1]]),mesh_name=None,obj_name=None,material_name=None):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None, obj_name=None, material_name=None):
         self.name = fileseq.basename()+"@"+fileseq.extension()
         self.fileseq = fileseq
         self.transform_matrix = transform_matrix
@@ -20,8 +22,8 @@ class mesh_importer:
         if not mesh_name and not obj_name and not material_name:
             self.init_mesh()
         else:
-            self.mesh= bpy.data.meshes[mesh_name]
-            self.obj= bpy.data.objects[obj_name]
+            self.mesh = bpy.data.meshes[mesh_name]
+            self.obj = bpy.data.objects[obj_name]
             # self.material = bpy.data.materials[material_name]
 
     def create_face_data(self, meshio_cells):
@@ -34,7 +36,7 @@ class mesh_importer:
         except Exception as e:
             show_message_box("meshio error when reading: "+total_path +
                              ",\n please check console for more details", icon="ERROR")
-            logger.exception(e)
+            traceback.print_exc()
             return
 
         mesh_vertices = meshio_mesh.points
@@ -72,11 +74,12 @@ class mesh_importer:
             # Assume the same polygonal connectivity for all faces
             npoly = mesh_faces.shape[1]
             loops_vert_idx = mesh_faces.ravel()
-            faces_loop_total = np.ones((len(mesh_faces)),dtype=np.int32) * npoly
+            faces_loop_total = np.ones(
+                (len(mesh_faces)), dtype=np.int32) * npoly
             faces_loop_start = np.cumsum(faces_loop_total)
 
             # Add a zero as first entry
-            faces_loop_start=np.roll(faces_loop_start, 1)
+            faces_loop_start = np.roll(faces_loop_start, 1)
 
             if len(faces_loop_start) > 0:
                 faces_loop_start[0] = 0
@@ -173,4 +176,3 @@ class mesh_importer:
             if m.users == 0:
                 bpy.data.materials.remove(m)
         self.mesh = None
-
