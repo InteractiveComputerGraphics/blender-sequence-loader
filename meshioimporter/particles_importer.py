@@ -32,7 +32,6 @@ class particle_importer:
             self.tex_image = bpy.data.images[tex_image_name]
             self.particle_num = self.emitterObject.particle_systems[0].settings.count
         self.set_radius(radius)
-        self.max_value = self.particle_num
 
     def init_particles(self):
         try:
@@ -54,6 +53,7 @@ class particle_importer:
         self.mesh = bpy.data.meshes.new(name=self.name+"_mesh")
         mesh_vertices = meshio_mesh.points
         self.particle_num = len(meshio_mesh.points)
+        self.max_value = self.particle_num
 
         self.mesh.vertices.add(self.particle_num)
 
@@ -108,18 +108,51 @@ class particle_importer:
         nodes.clear()
         links.clear()
 
+        #  init node
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
         math1 = nodes.new(type="ShaderNodeMath")
         math2 = nodes.new(type="ShaderNodeMath")
         combine = nodes.new(type="ShaderNodeCombineXYZ")
         tex = nodes.new(type="ShaderNodeTexImage")
-        # s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
+        s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
 
-        # math3 = nodes.new(type="ShaderNodeMath")
-        # math4 = nodes.new(type="ShaderNodeMath")
-        # math5 = nodes.new(type="ShaderNodeMath")
+        math3 = nodes.new(type="ShaderNodeMath")
+        math4 = nodes.new(type="ShaderNodeMath")
+        math5 = nodes.new(type="ShaderNodeMath")
+
+        math6 = nodes.new(type="ShaderNodeMath")
+        math7 = nodes.new(type="ShaderNodeMath")
+        math8 = nodes.new(type="ShaderNodeMath")
+
         diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
         output = nodes.new(type="ShaderNodeOutputMaterial")
+
+
+        #  set node location
+        math1.location.x=300
+        math2.location.x=300 *2
+        combine.location.x=300 *3
+        tex.location.x = 300*4
+        s_rgb.location.x = 300*5
+        s_rgb.location.y = 300
+        math6.location.x=300*6
+        math6.location.y = 900
+        math7.location.x=300*6
+        math7.location.y = 600
+        math8.location.x=300*6
+        math8.location.y = 300
+
+        math3.location.x=300*7
+        math3.location.y = 900
+        math4.location.x=300*7
+        math4.location.y = 600
+        math5.location.x=300*7
+        math5.location.y = 300
+
+        diffuse.location.x = 300*5
+        output.location.x = 300*7
+
+        #  set node init value
 
         math1.operation = "ADD"
         math1.inputs[1].default_value = 0.5
@@ -130,27 +163,47 @@ class particle_importer:
         combine.inputs[1].default_value = 0
         combine.inputs[2].default_value = 0
 
-        # math3.operation = "MULTIPLY"
-        # math4.operation = "MULTIPLY"
-        # math5.operation = "MULTIPLY"
+        math3.operation = "ADD"
+        math4.operation = "ADD"
+        math5.operation = "ADD"
+
+        math3.inputs[1].default_value = self.min_value
+        math4.inputs[1].default_value = self.min_value
+        math5.inputs[1].default_value = self.min_value
+
+
+        math6.operation = "MULTIPLY"
+        math7.operation = "MULTIPLY"
+        math8.operation = "MULTIPLY"
+
+
+        math6.inputs[1].default_value = self.max_value - self.min_value
+        math7.inputs[1].default_value = self.max_value - self.min_value
+        math8.inputs[1].default_value = self.max_value - self.min_value
+
+
+        self.tex_image = bpy.data.images.new(
+            'particle_tex_image', width=self.particle_num, height=1)
+        tex.image = self.tex_image
+
+        #  set node links
 
         link = links.new(particleInfo.outputs["Index"], math1.inputs[0])
         link = links.new(math1.outputs["Value"], math2.inputs[0])
         link = links.new(math2.outputs["Value"], combine.inputs[0])
         link = links.new(combine.outputs["Vector"], tex.inputs["Vector"])
-        # link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
+        link = links.new(tex.outputs["Color"], s_rgb.inputs["Image"])
         link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
-        # link = links.new(s_rgb.outputs["R"],math3.inputs[0])
-        # link = links.new(s_rgb.outputs["G"],math4.inputs[0])
-        # link = links.new(s_rgb.outputs["B"],math5.inputs[0])
-        # link = links.new(math3.outputs["Value"],)
-        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        self.tex_image = bpy.data.images.new(
-            'particle_tex_image', width=self.particle_num, height=1)
-        tex.image = self.tex_image
+        link = links.new(s_rgb.outputs["R"],math6.inputs[0])
+        link = links.new(s_rgb.outputs["G"],math7.inputs[0])
+        link = links.new(s_rgb.outputs["B"],math8.inputs[0])
 
-        for i in range(len(nodes)):
-            nodes[i].location.x = i*300
+        link = links.new(math6.outputs["Value"],math3.inputs[0])
+        link = links.new(math7.outputs["Value"],math4.inputs[0])
+        link = links.new(math8.outputs["Value"],math5.inputs[0])
+        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        
+
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
@@ -176,7 +229,6 @@ class particle_importer:
         bm.to_mesh(self.mesh)
         bm.free()
         self.mesh.vertices.add(self.particle_num)
-        # pos = mesh.points @ self.rotation
         self.mesh.vertices.foreach_set("co", mesh.points.ravel())
 
         if self.used_render_attribute:
@@ -264,6 +316,22 @@ class particle_importer:
 
     def set_max_value(self, r):
         self.max_value = r
+        self.material.node_tree.nodes[9].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[10].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[11].inputs[1].default_value = self.max_value - self.min_value
+
+
 
     def set_min_value(self, r):
         self.min_value = r
+
+        self.material.node_tree.nodes[6].inputs[1].default_value =  self.min_value
+        self.material.node_tree.nodes[7].inputs[1].default_value =  self.min_value
+        self.material.node_tree.nodes[8].inputs[1].default_value =  self.min_value
+
+
+        self.material.node_tree.nodes[9].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[10].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[11].inputs[1].default_value = self.max_value - self.min_value
+
+
