@@ -5,7 +5,7 @@ from .callback import *
 class importer_properties(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(
         name="Directory",
-        default="C:\\Users\\hui\\Desktop\\output\\DamBreakModel\\vtk\\",
+        default="C:\\Users\\hui\\Desktop\\out\\",
         subtype="DIR_PATH",
         description="You need to go to the folder with the sequence, then click \"Accept\". ",
     )

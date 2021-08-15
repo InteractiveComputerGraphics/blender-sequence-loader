@@ -77,5 +77,12 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].type = 1
             imported_prop[-1].mesh_name = importer.mesh.name
             imported_prop[-1].obj_name = importer.obj.name
+            imported_prop[-1].start = fs.start()
+            imported_prop[-1].end = fs.end()
+            imported_prop[-1].max_value = 100
+            for co_at in importer.get_color_attribute():
+                imported_prop[-1].all_attributes.add()
+                imported_prop[-1].all_attributes[-1].name = co_at
+
             bpy.app.handlers.frame_change_post.append(importer)
         return {"FINISHED"}

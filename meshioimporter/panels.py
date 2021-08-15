@@ -56,16 +56,18 @@ class sequence_list_panel(bpy.types.Panel):
             # for i in item.all_attributes:
             #     # print(i.name)
             #     pass
+            
+            info_part = layout.column()
+            info_part.prop(item, 'start')
+            info_part.prop(item, 'end')
+            info_part.prop(item, 'length')
+
+            info_part.prop(item, 'min_value')
+            info_part.prop(item, 'max_value')
+            info_part.prop(item, 'all_attributes_enum')
             if item.type == 0:
-                info_part = layout.column()
-                info_part.prop(item, 'start')
-                info_part.prop(item, 'end')
-                info_part.prop(item, 'length')
                 info_part.prop(item, 'radius')
-                info_part.prop(item, 'min_value')
-                info_part.prop(item, 'max_value')
-                info_part.prop(item, 'all_attributes_enum')
-                # info_part.prop(item,)
+
 
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):

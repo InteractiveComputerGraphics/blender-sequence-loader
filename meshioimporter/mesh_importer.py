@@ -18,7 +18,10 @@ class mesh_importer:
         self.obj = None
         self.material = None
         self.v_col = None
-        self.used_color_attribute = None
+        self.render_attributes = []  # all the possible attributes, and type
+        self.used_render_attribute = None  # the attribute used for rendering
+        self.min_value = 0
+        self.max_value = 100
         if not mesh_name and not obj_name and not material_name:
             self.init_mesh()
         else:
@@ -93,31 +96,36 @@ class mesh_importer:
             self.mesh.polygons.foreach_set(
                 "use_smooth", [shade_scheme]*len(faces_loop_total))
 
-        # Skip coloring the mesh for now
-        #  it will be extended to real data
-        # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
-        # v_col = self.mesh.vertex_colors.new()
-        # mesh_colors = []
-        # r_min = np.min(meshio_mesh.points[:, 0])
-        # r_max = np.max(meshio_mesh.points[:, 0])
-        # r_slope = 1/(r_max-r_min)
-        # g_min = np.min(meshio_mesh.points[:, 1])
-        # g_max = np.max(meshio_mesh.points[:, 1])
-        # g_slope = 1/(g_max-g_min)
-        # b_min = np.min(meshio_mesh.points[:, 2])
-        # b_max = np.max(meshio_mesh.points[:, 2])
-        # b_slope = 1/(b_max-b_min)
-        # for index in mesh_faces:  # for each face
-        #     for i in index:    # for each vertex in the face
-        #         mesh_colors.append(
-        #             r_slope*(meshio_mesh.points[i][0]-r_min))  # red color
-        #         mesh_colors.append(
-        #             g_slope * (meshio_mesh.points[i][1] - g_min))  # green color
-        #         mesh_colors.append(
-        #             b_slope*(meshio_mesh.points[i][2] - b_min))   # blue color
 
-        # for i, col in enumerate(v_col.data):
-        #     col.color = mesh_colors[i*3], 0, 0, 1
+        if not self.render_attributes:
+            for n in meshio_mesh.point_data.keys():
+                self.render_attributes.append(n)
+        # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
+        if self.used_render_attribute:
+            v_col = self.mesh.vertex_colors.new()
+            att_data = meshio_mesh.point_data[self.used_render_attribute]
+            mesh_colors = None
+            if len(att_data.shape)>=3:
+                show_message_box("attribute error: this shouldn't happen", icon="ERROR")
+            elif len(att_data.shape)==2:
+                a, b = att_data.shape
+                if b>3:
+                    show_message_box(
+                    "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                mesh_colors = np.zeros((len(mesh_faces)*3,4))
+                
+                count= 0 
+                for index in mesh_faces:  # for each face
+                    for i in index:
+                        mesh_colors[count,:b] = att_data[i]
+                        count+=1
+                mesh_colors[:, :b] = np.clip(mesh_colors[:, :b], self.min_value, self.max_value)
+                mesh_colors[:, :b] -= self.min_value
+                mesh_colors /= (self.max_value-self.min_value)
+
+
+                mesh_colors[:,3] =1 # set alpha channel to 1
+                v_col.data.foreach_set('color',mesh_colors.ravel())
 
         self.mesh.update()
         self.mesh.validate()
@@ -127,18 +135,18 @@ class mesh_importer:
         self.mesh = bpy.data.meshes.new(name=self.name)
         # create vertex_color and material
 
-        # self.material = bpy.data.materials.new(self.name+"_material")
-        # self.material.use_nodes = True
-        # nodes = self.material.node_tree.nodes
-        # links = self.material.node_tree.links
-        # nodes.clear()
-        # links.clear()
-        # output = nodes.new(type="ShaderNodeOutputMaterial")
-        # diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
-        # link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        # vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
-        # link = links.new(
-        #     vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
+        self.material = bpy.data.materials.new(self.name+"_material")
+        self.material.use_nodes = True
+        nodes = self.material.node_tree.nodes
+        links = self.material.node_tree.links
+        nodes.clear()
+        links.clear()
+        output = nodes.new(type="ShaderNodeOutputMaterial")
+        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
+        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+        vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
+        link = links.new(
+            vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
         #  create object
         new_object = bpy.data.objects.new(self.name, self.mesh)
         bpy.data.collections[0].objects.link(new_object)
@@ -156,11 +164,11 @@ class mesh_importer:
         self.load_mesh(total_path)
 
     def get_color_attribute(self):
-        return self.color_attribtues
+        return self.render_attributes
 
     def set_color_attribute(self, attr_name):
-        if attr_name and attr_name in self.color_attribtues:
-            self.used_color_attribute = attr_name
+        if attr_name and attr_name in self.render_attributes:
+            self.used_render_attribute = attr_name
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
@@ -176,3 +184,12 @@ class mesh_importer:
             if m.users == 0:
                 bpy.data.materials.remove(m)
         self.mesh = None
+
+
+
+    def set_max_value(self, r):
+        self.max_value = r
+
+    def set_min_value(self, r):
+        self.min_value = r
+
