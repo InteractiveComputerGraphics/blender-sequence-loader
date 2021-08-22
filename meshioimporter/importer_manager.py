@@ -1,5 +1,5 @@
 from .mesh_importer import *
-from .particles_importer import *
+from .particle_importer import *
 import fileseq
 import bpy
 from bpy.app.handlers import persistent
@@ -19,6 +19,8 @@ def load_post(scene):
             for all_att in l.all_attributes:
                 Pi.render_attributes.append(all_att.name)
             Pi.set_color_attribute(l.used_color_attribute.name)
+            Pi.set_max_value(l.max_value)
+            Pi.set_min_value(l.min_value)
             importer_list.append(Pi)
             bpy.app.handlers.frame_change_post.append(Pi)
         elif l.type == 1:
@@ -26,4 +28,6 @@ def load_post(scene):
             Mi = mesh_importer(
                 fileseq=fs, mesh_name=l.mesh_name, obj_name=l.obj_name)
             importer_list.append(Mi)
+            Mi.set_max_value(l.max_value)
+            Mi.set_min_value(l.min_value)
             bpy.app.handlers.frame_change_post.append(Mi)

@@ -1,7 +1,7 @@
 import bpy
 import fileseq
 from .importer_manager import *
-from .particles_importer import *
+from .particle_importer import *
 from .mesh_importer import *
 
 
