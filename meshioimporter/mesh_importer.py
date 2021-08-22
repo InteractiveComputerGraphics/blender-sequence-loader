@@ -107,23 +107,20 @@ class mesh_importer:
             mesh_colors = None
             if len(att_data.shape)>=3:
                 show_message_box("attribute error: this shouldn't happen", icon="ERROR")
-            elif len(att_data.shape)==2:
+            # elif len(att_data.shape)==2:
+            else:
+                if len(att_data.shape)==1:
+                    att_data=np.expand_dims(att_data,axis=1)
                 a, b = att_data.shape
                 if b>3:
                     show_message_box(
                     "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 mesh_colors = np.zeros((len(mesh_faces)*3,4))
+                mesh_colors[:,:b]=att_data[mesh_faces.ravel()]
                 
-                count= 0 
-                for index in mesh_faces:  # for each face
-                    for i in index:
-                        mesh_colors[count,:b] = att_data[i]
-                        count+=1
                 mesh_colors[:, :b] = np.clip(mesh_colors[:, :b], self.min_value, self.max_value)
                 mesh_colors[:, :b] -= self.min_value
                 mesh_colors /= (self.max_value-self.min_value)
-
-
                 mesh_colors[:,3] =1 # set alpha channel to 1
                 v_col.data.foreach_set('color',mesh_colors.ravel())
 
@@ -169,6 +166,9 @@ class mesh_importer:
     def set_color_attribute(self, attr_name):
         if attr_name and attr_name in self.render_attributes:
             self.used_render_attribute = attr_name
+        else:
+            self.used_render_attribute = None
+
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
