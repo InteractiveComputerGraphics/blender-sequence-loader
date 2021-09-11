@@ -29,19 +29,18 @@ It should work without any problems.
 
 ## 2. Build & Install
 
-1. If you prefer to make this as a blender addon
+1. Build manually
 
 
-Then you can create a zip file of this entire folder, it should work fine. Then you can install it by add this zip file to blender add-on system.
+    Clone the project as mentioned above, then create a zip file of this entire folder.
 
-2. Or you can run directly
+2. Download directly the addon from [release](https://graphics.rwth-aachen.de:9000/hhui/blendertool/-/releases) page. 
 
-Copy the code from `blender_script.py` and modify the line `path = "C:\\Users\\hui\\Desktop\\blendertool\\"` to the path to this directory. Then run it in blender script.
-
-3. Or you can directly download the addon from [release](https://graphics.rwth-aachen.de:9000/hhui/blendertool/-/releases) page. 
+After have the .zip file, install it using blender addon system.
 
 
-Note: For 1. and 3. option, don't forget to remove old addon, before add new version addon to blender. (Actually, I not very sure about this, but I think this would be better)
+
+Note: don't forget to remove old addon, before add new version addon to blender. (Actually, I not very sure if it's necessary, but I think this would be better)
 
 ## 3. How to use
 

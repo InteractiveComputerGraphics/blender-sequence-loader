@@ -29,6 +29,7 @@ class particle_importer:
             self.emitterObject=bpy.data.objects[emitter_obj_name]
             self.sphereObj=bpy.data.objects[sphere_obj_name]
             self.material=bpy.data.materials[material_name]
+            self.particle_num = self.emitterObject.particle_systems[0].settings.count
   
     def init_particles(self):
         # create emitter object
@@ -73,15 +74,14 @@ class particle_importer:
         self.sphereObj.active_material = self.material
 
         self.emitterObject.particle_systems[0].settings.render_type = "OBJECT"
-        # self.emitterObject.particle_systems[0].settings.instance_object = bpy.data.objects[self.sphereObj.name]
         self.emitterObject.particle_systems[0].settings.instance_object = self.sphereObj
 
         self.read_first_frame()
 
-        #  useless init
+        #  useless init, only used to be compatible with new_particle_importer.py
         self.mesh = self.emitterObject.data
         self.tex_image = bpy.data.images.new(
-            'particle_tex_image', width=self.particle_num, height=1)
+            'not_used', width=self.particle_num, height=1)
 
     def init_materials(self):
         nodes = self.material.node_tree.nodes
@@ -166,13 +166,14 @@ class particle_importer:
             show_message_box("Can't read first frame file",icon="ERROR")
             traceback.print_exc()
 
-        self.emitterObject.particle_systems[0].settings.count = len(mesh.points)
+        self.particle_num = len(mesh.points)
+        self.emitterObject.particle_systems[0].settings.count = self.particle_num
 
         depsgraph = bpy.context.evaluated_depsgraph_get()
         particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
         particles = particle_systems[0].particles
 
-        points_pos = np.zeros((len(mesh.points),4))
+        points_pos = np.zeros((self.particle_num,4))
         points_pos[:,-1] =1
         points_pos[:,:3] = mesh.points
         transform_matrix = np.array(self.emitterObject.matrix_world)
@@ -189,7 +190,7 @@ class particle_importer:
                 "no attributes avaible, all particles will be rendered as the same color"
             )
         # particles.foreach_set("velocity", [0]*3*len(mesh.points))
-        self.particle_num = len(mesh.points)
+        
         self.max_value = self.particle_num
 
     def __call__(self, scene, depsgraph=None):
@@ -206,10 +207,11 @@ class particle_importer:
             return
         
 
-        #  update location info
-        particle_num = len(mesh.points)
-        self.emitterObject.particle_systems[0].settings.count = particle_num
+        if len(mesh.points) !=  self.particle_num:
+            self.particle_num = len(mesh.points)
+            self.emitterObject.particle_systems[0].settings.count = self.particle_num
 
+        #  update location info
         if depsgraph is None:
             #  wish this line will never be executed
             show_message_box("it shouldn't happen")
@@ -241,14 +243,14 @@ class particle_importer:
                 if b>3:
                     show_message_box(
                     "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-                vel_att = np.zeros((particle_num, 3))
+                vel_att = np.zeros((self.particle_num, 3))
                 vel_att[:, :b] = att_data
                 vel_att[:, :b] = np.clip(vel_att[:, :b],self.min_value,self.max_value)
                 vel_att[:, :b] -=self.min_value
                 vel_att/=(self.max_value-self.min_value)
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
-            vel=[0] * 3*particle_num
+            vel=[0] * 3*self.particle_num
             particles.foreach_set("velocity", vel)
 
         # self.emitterObject.particle_systems[0].settings.frame_end = 0 # !! so velocity has no effect on the position any more, and velocity can be used for rendering

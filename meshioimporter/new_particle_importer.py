@@ -1,5 +1,6 @@
 #  this should be a better one, but there is a critical blender bug, so this code only works for a small number of particles, about 10k
 #  for more details, please check https://developer.blender.org/T81103
+#  and this code is not being used currently
 import bpy
 import meshio
 import fileseq

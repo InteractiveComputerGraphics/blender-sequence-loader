@@ -1,5 +1,6 @@
 import bpy
 import fileseq
+import os
 from .importer_manager import *
 from .particle_importer import *
 from .mesh_importer import *
@@ -29,16 +30,23 @@ class meshio_loader_OT_load(bpy.types.Operator):
     bl_idname = "sequence.load"
 
     def execute(self, context):
+        if not bpy.data.is_saved:
+            show_message_box("Please save file before using it",icon="ERROR")
+            return {"CANCELLED"}
+
         global importer
         global importer_list
         scene = context.scene
         importer_prop = scene.my_tool.importer
         imported_prop = scene.my_tool.imported
         fs = importer_prop.fileseq
-        if fs == "None":
+        if not fs or fs == "None":
             return {'CANCELLED'}
         if fs == "Manual":
             fs = importer_prop.path+'/'+importer_prop.pattern
+
+        
+        relative_path = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
         fs = fileseq.findSequenceOnDisk(fs)
         if importer_prop.type == "particle":
             if importer:
@@ -48,8 +56,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             importer_list.append(importer)
 
             imported_prop.add()
-            imported_prop[-1].pattern = fs.dirname()+fs.basename() + \
-                "@"+fs.extension()
+            imported_prop[-1].pattern = relative_path
             imported_prop[-1].type = 0
             imported_prop[-1].start = fs.start()
             imported_prop[-1].end = fs.end()
@@ -72,8 +79,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             importer = mesh_importer(fs)
             importer_list.append(importer)
             imported_prop.add()
-            imported_prop[-1].pattern = fs.dirname()+fs.basename() + \
-                "@"+fs.extension()
+            imported_prop[-1].pattern = relative_path
             imported_prop[-1].type = 1
             imported_prop[-1].mesh_name = importer.mesh.name
             imported_prop[-1].obj_name = importer.obj.name
