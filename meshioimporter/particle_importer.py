@@ -3,15 +3,17 @@ import meshio
 import fileseq
 import numpy as np
 from .utils import *
+from mathutils import Matrix
 import traceback
 
 
 class particle_importer:
-    def __init__(self, fileseq, rotation= np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]]),emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None, radius=0.01):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None, radius=0.01):
 
         # self.path=path
         self.fileseq=fileseq
-        self.rotation=rotation
+        self.name = fileseq.basename()+"@"+fileseq.extension()
+        self.transform_matrix = transform_matrix  
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0 # the min value of this attribute
@@ -32,6 +34,8 @@ class particle_importer:
         # create emitter object
         bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
         self.emitterObject = bpy.context.active_object
+        self.emitterObject.name = self.name
+        self.emitterObject.matrix_world = self.transform_matrix
         self.emitterObject.hide_viewport = False
         self.emitterObject.hide_render = False
         self.emitterObject.hide_select = False
@@ -54,6 +58,7 @@ class particle_importer:
         )
         bpy.ops.object.shade_smooth()
         self.sphereObj = bpy.context.active_object
+        self.sphereObj.name = self.name + "_sphere"
         self.sphereObj.hide_set(True)
         self.sphereObj.hide_viewport = False
         self.sphereObj.hide_render = True
@@ -167,7 +172,12 @@ class particle_importer:
         particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
         particles = particle_systems[0].particles
 
-        points_pos = mesh.points @ self.rotation
+        points_pos = np.zeros((len(mesh.points),4))
+        points_pos[:,-1] =1
+        points_pos[:,:3] = mesh.points
+        transform_matrix = np.array(self.emitterObject.matrix_world)
+        points_pos =   points_pos @np.transpose(transform_matrix)
+        points_pos= points_pos[:,:3]
 
         particles.foreach_set("location", points_pos.ravel())
 
@@ -207,7 +217,13 @@ class particle_importer:
 
         particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
         particles = particle_systems[0].particles
-        points_pos = mesh.points @ self.rotation
+
+        points_pos = np.zeros((self.particle_num,4))
+        points_pos[:,-1] =1
+        points_pos[:,:3] = mesh.points
+        transform_matrix = np.array(self.emitterObject.matrix_world)
+        points_pos =  points_pos @np.transpose(transform_matrix)
+        points_pos= points_pos[:,:3]
         particles.foreach_set("location", points_pos.ravel())
 
 
