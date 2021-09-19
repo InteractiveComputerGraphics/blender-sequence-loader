@@ -138,6 +138,7 @@ You can also remove the sequence you want, by selecting the sequence, then click
 ### 3.5  Rendering
 
 Same as the way to render other objects, you can find it on the top right corner of blender.
+
 ![render](images/11.png).
 
 When rendering animation, **please toggle on `Lock Interface`**
