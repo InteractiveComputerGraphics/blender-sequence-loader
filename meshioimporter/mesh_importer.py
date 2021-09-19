@@ -17,7 +17,6 @@ class mesh_importer:
         self.mesh = None
         self.obj = None
         self.material = None
-        self.v_col = None
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0
@@ -34,6 +33,9 @@ class mesh_importer:
         return meshio_cells[0][1]
 
     def load_mesh(self, total_path):
+        '''
+        load the mesh in each frame
+        '''
         try:
             meshio_mesh = meshio.read(total_path)
         except Exception as e:
@@ -48,16 +50,17 @@ class mesh_importer:
         shade_scheme = False
         if self.mesh.polygons:
             shade_scheme = self.mesh.polygons[0].use_smooth
+
+        #  delete the old mesh, if it has
         bm = bmesh.new()
         bm.from_mesh(self.mesh)
         bm.clear()
         bm.to_mesh(self.mesh)
         bm.free()
+        # then create a new mesh
 
+        # load the vertices 
         self.mesh.vertices.add(vertices_count)
-
-        # pos = meshio_mesh.points @ self.rotation
-
         self.mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
 
         # code from ply impoter of blender, https://github.com/blender/blender-addons/blob/master/io_mesh_ply/import_ply.py#L363
@@ -72,9 +75,10 @@ class mesh_importer:
         #     faces_loop_total.append(nbr_vidx)
         #     lidx += nbr_vidx
 
+        #  optimized from code above
         # Check if there are any faces at all
         if len(mesh_faces) > 0:
-            # Assume the same polygonal connectivity for all faces
+            # Assume the same polygonal connectivity (e.g. all are triangles, then nploy =3 ) for all faces
             npoly = mesh_faces.shape[1]
             loops_vert_idx = mesh_faces.ravel()
             faces_loop_total = np.ones(
@@ -93,6 +97,7 @@ class mesh_importer:
             self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
             self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
             self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
+            # settings about if use shade_smooth or shade_flat
             self.mesh.polygons.foreach_set(
                 "use_smooth", [shade_scheme]*len(faces_loop_total))
 
@@ -107,22 +112,28 @@ class mesh_importer:
             if len(att_data.shape) >= 3:
                 show_message_box(
                     "attribute error: this shouldn't happen", icon="ERROR")
-            # elif len(att_data.shape)==2:
             else:
+                # if it's 1-d vector, extend it to a nx1 matrix
                 if len(att_data.shape) == 1:
                     att_data = np.expand_dims(att_data, axis=1)
+
+                # a should be number of vertices, b should be dim of color attribute, e.g. velocity will have b=3
                 a, b = att_data.shape
                 if b > 3:
                     show_message_box(
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                
+                #  4-dim, rgba
                 mesh_colors = np.zeros((len(mesh_faces)*3, 4))
+                # copy the data from 0-b dims
                 mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
-
                 mesh_colors[:, :b] = np.clip(
                     mesh_colors[:, :b], self.min_value, self.max_value)
                 mesh_colors[:, :b] -= self.min_value
                 mesh_colors /= (self.max_value-self.min_value)
-                mesh_colors[:, 3] = 1  # set alpha channel to 1
+
+                # set alpha channel to 1
+                mesh_colors[:, 3] = 1 
                 v_col.data.foreach_set('color', mesh_colors.ravel())
 
         self.mesh.update()
@@ -131,8 +142,8 @@ class mesh_importer:
     def init_mesh(self):
 
         self.mesh = bpy.data.meshes.new(name=self.name)
-        # create vertex_color and material
-
+        
+        # init material
         self.material = bpy.data.materials.new(self.name+"_material")
         self.material.use_nodes = True
         nodes = self.material.node_tree.nodes
@@ -145,6 +156,7 @@ class mesh_importer:
         vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
         link = links.new(
             vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
+        
         #  create object
         new_object = bpy.data.objects.new(self.name, self.mesh)
         bpy.data.collections[0].objects.link(new_object)

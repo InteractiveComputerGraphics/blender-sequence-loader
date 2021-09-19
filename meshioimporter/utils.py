@@ -14,12 +14,12 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
     print(message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
-
-def clear_screen():
-    os.system("cls")
-
-
 def check_type(fs):
+    '''
+    It checkes the type of the file, it could be either a triangle mesh or particles.
+    
+    Can be extended to other cases.
+    '''
     mesh = meshio.read(fs)
     if mesh.cells[0].type == "vertex":
         return "particle"

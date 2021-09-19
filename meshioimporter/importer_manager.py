@@ -9,9 +9,13 @@ importer_list = []
 
 @persistent
 def load_post(scene):
+    '''
+    When everytime saved .blender file starts, this function here will read the information from .blender file, and initialize all the importers.
+    '''
     global importer_list
     imported_list = bpy.context.scene.my_tool.imported
     for l in imported_list:
+        # particle importer
         if l.type == 0:
             fs = fileseq.findSequenceOnDisk(
                 os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
@@ -24,6 +28,7 @@ def load_post(scene):
             Pi.set_min_value(l.min_value)
             importer_list.append(Pi)
             bpy.app.handlers.frame_change_post.append(Pi)
+        # mesh importer
         elif l.type == 1:
             fs = fileseq.findSequenceOnDisk(
                 os.path.dirname(bpy.data.filepath)+"/"+l.pattern)

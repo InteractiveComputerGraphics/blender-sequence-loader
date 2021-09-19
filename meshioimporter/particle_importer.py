@@ -14,7 +14,7 @@ class particle_importer:
         self.fileseq = fileseq
         self.name = fileseq.basename()+"@"+fileseq.extension()
         self.transform_matrix = transform_matrix
-        self.render_attributes = []  # all the possible attributes, and type
+        self.render_attributes = []  # all the (name of ) color attributes
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0  # the min value of this attribute
         self.max_value = 0  # the max value of this attribute
@@ -68,7 +68,7 @@ class particle_importer:
         #  create new material
         self.material = bpy.data.materials.new("particle_material")
         self.material.use_nodes = True
-
+        #  init nodes and links of material
         self.init_materials()
 
         self.emitterObject.active_material = self.material
@@ -163,9 +163,8 @@ class particle_importer:
 
         self.particle_num = len(mesh.points)
         self.emitterObject.particle_systems[0].settings.count = self.particle_num
-        if self.particle_num > 50000:
-            self.emitterObject.particle_systems[0].settings.display_method = 'DOT'
 
+        #  some tricky way to directly access location and velocitys of particles
         depsgraph = bpy.context.evaluated_depsgraph_get()
         particle_systems = self.emitterObject.evaluated_get(
             depsgraph).particle_systems
@@ -227,6 +226,7 @@ class particle_importer:
         particles.foreach_set("location", points_pos.ravel())
 
         # update rendering and color(velocity) info
+        #  The idea here is to use velocity of particles to store the information of color attributes, because particles position are manually set, so the velocity has no visual effect. And later, use velocity in particle_shading_node, to draw the color. 
         if self.used_render_attribute:
             att_str = self.used_render_attribute
             att_data = mesh.point_data[att_str]
@@ -252,7 +252,6 @@ class particle_importer:
             vel = [0] * 3*self.particle_num
             particles.foreach_set("velocity", vel)
 
-        # self.emitterObject.particle_systems[0].settings.frame_end = 0 # !! so velocity has no effect on the position any more, and velocity can be used for rendering
 
     def get_color_attribute(self):
         return self.render_attributes

@@ -4,18 +4,26 @@ from .utils import *
 from .importer_manager import *
 import traceback
 
+#  Codes here are mostly about the callback functions and update functions used in properties.py 
+
+
 
 def callback_color_attribute(self, context):
+    '''
+    When an imported sequence selected, this function returns all the color attributes it has, such as 'id', 'velocity', etc.
+    '''
     attr_items = [('None', 'None', '')]
     mytool = context.scene.my_tool
     item = mytool.imported[mytool.imported_num]
     for i in item.all_attributes:
         attr_items.append((i.name, i.name, ''))
-        pass
     return attr_items
 
 
 def update_color_attribute(self, context):
+    '''
+    When an imported sequence selected, and a new color attribute selected, it will update the importer so the color can be correctly rendered. 
+    '''
     mytool = context.scene.my_tool
     idx = mytool.imported_num
 
@@ -23,6 +31,7 @@ def update_color_attribute(self, context):
     item = mytool.imported[idx]
     if item.all_attributes_enum != "None":
         importer.set_color_attribute(item.all_attributes_enum)
+        # this is used to store the used color attribute
         item.used_color_attribute.name = item.all_attributes_enum
     else:
         importer.set_color_attribute(None)
@@ -30,6 +39,10 @@ def update_color_attribute(self, context):
 
 
 def callback_fileseq(self, context):
+    '''
+    Detects all the file sequences in the directory
+    '''
+
     p = context.scene.my_tool.importer.path
     f = fileseq.findSequencesOnDisk(p)
 
@@ -48,6 +61,9 @@ def callback_fileseq(self, context):
 
 #  this function precheck and set the type of this sequence
 def update_fileseq(self, context):
+    '''
+    When a file sequence selected, this function here do some pre-check, e.g. check if it's particle or mesh.
+    '''
     file_seq_items_name = context.scene.my_tool.importer.fileseq
     f = None
     if file_seq_items_name == "Manual":
@@ -71,13 +87,19 @@ def update_fileseq(self, context):
 
 
 def update_particle_radius(self, context):
+    '''
+    This function here updates the radius of selected particle sequence.
+    '''
     idx = context.scene.my_tool.imported_num
     r = context.scene.my_tool.imported[idx].radius
     importer = importer_list[idx]
     importer.set_radius(r)
 
 
-def update_particle_max_value(self, context):
+def update_max_value(self, context):
+    '''
+    When max (or min) value adjusted by user, this function will update it in the importer 
+    '''
     idx = context.scene.my_tool.imported_num
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
@@ -89,7 +111,10 @@ def update_particle_max_value(self, context):
             "max value shoule be larger than min value", icon="ERROR")
 
 
-def update_particle_min_value(self, context):
+def update_min_value(self, context):
+    '''
+    When max (or min) value adjusted by user, this function will update it in the importer 
+    '''
     idx = context.scene.my_tool.imported_num
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
@@ -102,6 +127,9 @@ def update_particle_min_value(self, context):
 
 
 def update_display(self, context):
+    '''
+    When particles display method adjusted by user, this function will update it in the importer 
+    '''
     idx = context.scene.my_tool.imported_num
     method = context.scene.my_tool.imported[idx].display
     importer = importer_list[idx]

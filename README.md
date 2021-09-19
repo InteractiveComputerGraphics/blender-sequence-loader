@@ -113,19 +113,21 @@ You can play or render the animation as usually used in blender.
 
 Here it showes all the sequences loaded. And you can click on each of them, it showes the relative information.
 
-start: means the number of first frame file. e.g. here it means `ParticleData_Fluid_1.vtk`. Though it's editable, but nothing will happen if you edit it.
++ start: means the number of first frame file. e.g. here it means `ParticleData_Fluid_1.vtk`. Though it's editable, but nothing will happen if you edit it.
 
-end: similiar to `start`, but the last frame file.
++ end: similiar to `start`, but the last frame file.
 
-length: means how many files in this sequence.
++ length: means how many files in this sequence.
 
-min value: value used when coloring the object, the object attribute value smaller than min value will be clamped as min value here. Editable, and has effect.
++ min value: value used when coloring the object, the object attribute value smaller than min value will be clamped as min value here. Editable, and has effect.
 
-max value: Similiar to min value, but means the max value when clamping.
++ max value: Similiar to min value, but means the max value when clamping.
 
-Color Field: attribute used to color the object. Default `None`
++ Color Field: attribute used to color the object. Default `None`
 
-radius: **particles only**, set the radius of particles.
++ radius: **particles only**, set the radius of particles.
+
++ display method: **particles only**, how the particles are shown in viewport, either `Point`, which is a simple point, or `Rendered`, which is almost the same as rendered result. 
 
 #### 3.4
 
@@ -133,8 +135,36 @@ You can also remove the sequence you want, by selecting the sequence, then click
 
 ![remove](images/10.png)
 
+### 3.5  Rendering
+
+Same as the way to render other objects, you can find it on the top right corner of blender.
+![render](images/11.png).
+
+When rendering animation, **please toggle on `Lock Interface`**
+
+You can adjust the start frame and end frame at the bottom of blender.
+
+![adjust](images/12.png)
+
+**Important**
+
+If rendering particles, it only works with `Cycles` render engine. For mesh sequences, it works with both `Cycles` and `Eevee`.
+
+You can change to `Cycles` engine, at the `Render Properties` tab of blender.
+
+![change](images/13.png)
+
+After choosing `Cycles`, which usually renders much slower than `Eevee`, you can speed up by turn down the `Render` and `Viewport`, of course, it will sacrifice image quality.
+
+![faster](images/14.png)
+
+
+
 ## 4. Some features
 
 1. after saving `.blender` file, the sequences still work after restarting the `.blender` file.
 
 2. Relative path (aniamtion data and `.blender` file ) are used inside, so it is safe to move the data and `.blender` file togethore to another location or machine.
+
+## 5. Limitations
+1. Sometimes, it could have very strange look in viewport, but it can be rendered correctly.

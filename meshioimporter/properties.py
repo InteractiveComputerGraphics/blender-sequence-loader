@@ -2,7 +2,18 @@ import bpy
 from .callback import *
 
 
+# Structure:
+# tool_properties:
+#    1. importer (importer_properties object)
+#    2. imported:
+#       2.1 imported_seq_properties
+#           2.1.1 color_attribute
+
+
 class importer_properties(bpy.types.PropertyGroup):
+    '''
+    This is all the properties showed on main panel
+    '''
     path: bpy.props.StringProperty(
         name="Directory",
         default="C:\\Users\\hui\\Desktop\\out\\",
@@ -24,12 +35,7 @@ class importer_properties(bpy.types.PropertyGroup):
     )
 
 
-# Structure:
-# tool_properties:
-#    1. importer (importer_properties object)
-#    2. imported:
-#       2.1 imported_seq_properties
-#           2.1.1 color_attribute
+#  Because I can't create a CollectionProperty of StringProperty, so I have to create a CollectionProperty of PropertyGroup (color attribute), and the PropertyGroup has the only information, which is the name of color attribute.
 class color_attribtue(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name='color attr')
 
@@ -55,9 +61,9 @@ class imported_seq_properties(bpy.types.PropertyGroup):
 
     # general
     max_value: bpy.props.FloatProperty(
-        name='max value', description='max value to clamp the field', update=update_particle_max_value)
+        name='max value', description='max value to clamp the field', update=update_max_value)
     min_value: bpy.props.FloatProperty(
-        name='min value', description='min value to clamp the field', default=0, update=update_particle_min_value)
+        name='min value', description='min value to clamp the field', default=0, update=update_min_value)
     mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()

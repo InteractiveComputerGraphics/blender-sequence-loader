@@ -5,8 +5,12 @@ from .importer_manager import *
 from .particle_importer import *
 from .mesh_importer import *
 
+#  Here are load and delete operations 
 
 class particle_OT_clear(bpy.types.Operator):
+    '''
+    This operator delete a sequnce
+    '''
     bl_label = "Remove Sequence"
     bl_idname = "sequence.remove"
 
@@ -26,6 +30,9 @@ class particle_OT_clear(bpy.types.Operator):
 
 
 class meshio_loader_OT_load(bpy.types.Operator):
+    '''
+    This operator loads a sequnce
+    '''
     bl_label = "Load Sequences"
     bl_idname = "sequence.load"
 
@@ -56,7 +63,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
 
             importer = particle_importer(fs)
             importer_list.append(importer)
-
+            #  save information, will be used when restart .blender file
             imported_prop.add()
             imported_prop[-1].pattern = relative_path
             imported_prop[-1].type = 0
@@ -73,6 +80,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].sphere_obj_name = importer.sphereObj.name
             imported_prop[-1].material_name = importer.material.name
             imported_prop[-1].tex_image_name = importer.tex_image.name
+            #  add importer to blender animation system
             bpy.app.handlers.frame_change_post.append(importer)
 
         if importer_prop.type == "mesh":
@@ -80,6 +88,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 importer = None
             importer = mesh_importer(fs)
             importer_list.append(importer)
+            #  save information, will be used when restart .blender file
             imported_prop.add()
             imported_prop[-1].pattern = relative_path
             imported_prop[-1].type = 1
@@ -92,6 +101,6 @@ class meshio_loader_OT_load(bpy.types.Operator):
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
-
+            #  add importer to blender animation system
             bpy.app.handlers.frame_change_post.append(importer)
         return {"FINISHED"}
