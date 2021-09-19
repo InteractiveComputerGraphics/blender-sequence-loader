@@ -27,7 +27,7 @@ class mesh_importer:
         else:
             self.mesh = bpy.data.meshes[mesh_name]
             self.obj = bpy.data.objects[obj_name]
-            # self.material = bpy.data.materials[material_name]
+            self.material = bpy.data.materials[material_name]
 
     def create_face_data(self, meshio_cells):
         # todo: support other mesh structure, such as tetrahedron

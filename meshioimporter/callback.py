@@ -98,3 +98,11 @@ def update_particle_min_value(self, context):
     else:
         show_message_box(
             "min value shoule be smaller than max value", icon="ERROR")
+
+
+def update_display(self, context):
+    idx = context.scene.my_tool.imported_num
+    method =  context.scene.my_tool.imported[idx].display
+    importer = importer_list[idx]
+    importer.update_display(method)
+    

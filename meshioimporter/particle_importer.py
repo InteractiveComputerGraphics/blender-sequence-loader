@@ -168,6 +168,8 @@ class particle_importer:
 
         self.particle_num = len(mesh.points)
         self.emitterObject.particle_systems[0].settings.count = self.particle_num
+        if self.particle_num > 50000:
+            self.emitterObject.particle_systems[0].settings.display_method = 'DOT'
 
         depsgraph = bpy.context.evaluated_depsgraph_get()
         particle_systems = self.emitterObject.evaluated_get(depsgraph).particle_systems
@@ -195,7 +197,7 @@ class particle_importer:
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
-        frame_number = frame_number % len(self.fileseq) - 1
+        frame_number = frame_number % len(self.fileseq) 
         try:
             mesh = meshio.read(
                 self.fileseq[frame_number]
@@ -297,6 +299,7 @@ class particle_importer:
 
     def set_radius(self,r ):
         self.emitterObject.particle_systems[0].settings.particle_size = r
+        self.emitterObject.particle_systems[0].settings.display_size = r
 
     def set_max_value(self, r):
         self.max_value = r
@@ -318,3 +321,6 @@ class particle_importer:
         self.material.node_tree.nodes[4].inputs[1].default_value = self.max_value - self.min_value
         self.material.node_tree.nodes[5].inputs[1].default_value = self.max_value - self.min_value
         self.material.node_tree.nodes[6].inputs[1].default_value = self.max_value - self.min_value
+
+    def update_display(self,method):
+        self.emitterObject.particle_systems[0].settings.display_method = method

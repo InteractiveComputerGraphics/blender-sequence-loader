@@ -38,12 +38,7 @@ class sequence_list_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        # imported = context.scene.my_tool.imported
         mytool = context.scene.my_tool
-        # template_list now takes two new args.
-        # The first one is the identifier of the registered UIList to use (if you want only the default list,
-        # with no custom draw code, use "UI_UL_list").
         row = layout.row()
         row.template_list("SEQUENCE_UL_list", "", context.scene.my_tool,
                           'imported', context.scene.my_tool, "imported_num")
@@ -53,20 +48,18 @@ class sequence_list_panel(bpy.types.Panel):
 
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
-            # for i in item.all_attributes:
-            #     # print(i.name)
-            #     pass
-            
+
             info_part = layout.column()
             info_part.prop(item, 'start')
             info_part.prop(item, 'end')
             info_part.prop(item, 'length')
-
             info_part.prop(item, 'min_value')
             info_part.prop(item, 'max_value')
             info_part.prop(item, 'all_attributes_enum')
+
             if item.type == 0:
                 info_part.prop(item, 'radius')
+                info_part.prop(item, 'display')
 
 
 

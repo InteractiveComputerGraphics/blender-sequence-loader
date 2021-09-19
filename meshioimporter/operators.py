@@ -43,6 +43,9 @@ class meshio_loader_OT_load(bpy.types.Operator):
         if not fs or fs == "None":
             return {'CANCELLED'}
         if fs == "Manual":
+            if not importer_prop.pattern:
+                show_message_box("Pattern is empty",icon= "ERROR")
+                return {"CANCELLED"}
             fs = importer_prop.path+'/'+importer_prop.pattern
 
         
@@ -83,6 +86,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].type = 1
             imported_prop[-1].mesh_name = importer.mesh.name
             imported_prop[-1].obj_name = importer.obj.name
+            imported_prop[-1].material_name = importer.material.name
             imported_prop[-1].start = fs.start()
             imported_prop[-1].end = fs.end()
             imported_prop[-1].max_value = 100

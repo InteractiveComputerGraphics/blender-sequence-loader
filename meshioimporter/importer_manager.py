@@ -25,7 +25,7 @@ def load_post(scene):
         elif l.type == 1:
             fs = fileseq.findSequenceOnDisk(os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
             Mi = mesh_importer(
-                fileseq=fs, mesh_name=l.mesh_name, obj_name=l.obj_name)
+                fileseq=fs, mesh_name=l.mesh_name, obj_name=l.obj_name,material_name = l.material_name)
             importer_list.append(Mi)
             for all_att in l.all_attributes:
                 Mi.render_attributes.append(all_att.name)

@@ -53,18 +53,29 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     length: bpy.props.IntProperty(
         name='length', description='total frame number')
 
-    # meshes
-    # particles
-    radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
-                                    default=0.01, update=update_particle_radius, min=0, precision=6)
+    # general
     max_value: bpy.props.FloatProperty(
         name='max value', description='max value to clamp the field', update=update_particle_max_value)
     min_value: bpy.props.FloatProperty(
         name='min value', description='min value to clamp the field', default=0, update=update_particle_min_value)
     mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
-    sphere_obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
+
+
+    # mesh only 
+    #  currently, none
+
+    # particles only
+    radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
+                                    default=0.01, update=update_particle_radius, min=0, precision=6)
+    display: bpy.props.EnumProperty(
+        name = "display method",
+        description = "the way to display particles in viewport, rendered or point",
+        items = [("RENDER","Rendered",""),('DOT', 'Point', '')],
+        update=update_display,
+    )
+    sphere_obj_name: bpy.props.StringProperty()
     tex_image_name: bpy.props.StringProperty()
 
 
