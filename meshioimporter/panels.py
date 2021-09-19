@@ -62,7 +62,6 @@ class sequence_list_panel(bpy.types.Panel):
                 info_part.prop(item, 'display')
 
 
-
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     bl_label = "Import Panel"
     bl_idname = "MESHIO_IMPORT_PT_panel"

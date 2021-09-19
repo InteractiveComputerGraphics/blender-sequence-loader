@@ -96,7 +96,6 @@ class mesh_importer:
             self.mesh.polygons.foreach_set(
                 "use_smooth", [shade_scheme]*len(faces_loop_total))
 
-
         if not self.render_attributes:
             for n in meshio_mesh.point_data.keys():
                 self.render_attributes.append(n)
@@ -105,24 +104,26 @@ class mesh_importer:
             v_col = self.mesh.vertex_colors.new()
             att_data = meshio_mesh.point_data[self.used_render_attribute]
             mesh_colors = None
-            if len(att_data.shape)>=3:
-                show_message_box("attribute error: this shouldn't happen", icon="ERROR")
+            if len(att_data.shape) >= 3:
+                show_message_box(
+                    "attribute error: this shouldn't happen", icon="ERROR")
             # elif len(att_data.shape)==2:
             else:
-                if len(att_data.shape)==1:
-                    att_data=np.expand_dims(att_data,axis=1)
+                if len(att_data.shape) == 1:
+                    att_data = np.expand_dims(att_data, axis=1)
                 a, b = att_data.shape
-                if b>3:
+                if b > 3:
                     show_message_box(
-                    "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-                mesh_colors = np.zeros((len(mesh_faces)*3,4))
-                mesh_colors[:,:b]=att_data[mesh_faces.ravel()]
-                
-                mesh_colors[:, :b] = np.clip(mesh_colors[:, :b], self.min_value, self.max_value)
+                        "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                mesh_colors = np.zeros((len(mesh_faces)*3, 4))
+                mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
+
+                mesh_colors[:, :b] = np.clip(
+                    mesh_colors[:, :b], self.min_value, self.max_value)
                 mesh_colors[:, :b] -= self.min_value
                 mesh_colors /= (self.max_value-self.min_value)
-                mesh_colors[:,3] =1 # set alpha channel to 1
-                v_col.data.foreach_set('color',mesh_colors.ravel())
+                mesh_colors[:, 3] = 1  # set alpha channel to 1
+                v_col.data.foreach_set('color', mesh_colors.ravel())
 
         self.mesh.update()
         self.mesh.validate()
@@ -169,7 +170,6 @@ class mesh_importer:
         else:
             self.used_render_attribute = None
 
-
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
         if self.obj:
@@ -185,11 +185,8 @@ class mesh_importer:
                 bpy.data.materials.remove(m)
         self.mesh = None
 
-
-
     def set_max_value(self, r):
         self.max_value = r
 
     def set_min_value(self, r):
         self.min_value = r
-

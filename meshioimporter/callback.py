@@ -4,6 +4,7 @@ from .utils import *
 from .importer_manager import *
 import traceback
 
+
 def callback_color_attribute(self, context):
     attr_items = [('None', 'None', '')]
     mytool = context.scene.my_tool
@@ -102,7 +103,6 @@ def update_particle_min_value(self, context):
 
 def update_display(self, context):
     idx = context.scene.my_tool.imported_num
-    method =  context.scene.my_tool.imported[idx].display
+    method = context.scene.my_tool.imported[idx].display
     importer = importer_list[idx]
     importer.update_display(method)
-    

@@ -62,17 +62,16 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
 
-
-    # mesh only 
+    # mesh only
     #  currently, none
 
     # particles only
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
     display: bpy.props.EnumProperty(
-        name = "display method",
-        description = "the way to display particles in viewport, rendered or point",
-        items = [("RENDER","Rendered",""),('DOT', 'Point', '')],
+        name="display method",
+        description="the way to display particles in viewport, rendered or point",
+        items=[("RENDER", "Rendered", ""), ('DOT', 'Point', '')],
         update=update_display,
     )
     sphere_obj_name: bpy.props.StringProperty()

@@ -117,7 +117,7 @@ class particle_importer:
         math2 = nodes.new(type="ShaderNodeMath")
         combine = nodes.new(type="ShaderNodeCombineXYZ")
         tex = nodes.new(type="ShaderNodeTexImage")
-        s_rgb=nodes.new(type="ShaderNodeSeparateRGB")
+        s_rgb = nodes.new(type="ShaderNodeSeparateRGB")
 
         math3 = nodes.new(type="ShaderNodeMath")
         math4 = nodes.new(type="ShaderNodeMath")
@@ -130,26 +130,25 @@ class particle_importer:
         diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
         output = nodes.new(type="ShaderNodeOutputMaterial")
 
-
         #  set node location
-        math1.location.x=300
-        math2.location.x=300 *2
-        combine.location.x=300 *3
+        math1.location.x = 300
+        math2.location.x = 300 * 2
+        combine.location.x = 300 * 3
         tex.location.x = 300*4
         s_rgb.location.x = 300*5
         s_rgb.location.y = 300
-        math6.location.x=300*6
+        math6.location.x = 300*6
         math6.location.y = 900
-        math7.location.x=300*6
+        math7.location.x = 300*6
         math7.location.y = 600
-        math8.location.x=300*6
+        math8.location.x = 300*6
         math8.location.y = 300
 
-        math3.location.x=300*7
+        math3.location.x = 300*7
         math3.location.y = 900
-        math4.location.x=300*7
+        math4.location.x = 300*7
         math4.location.y = 600
-        math5.location.x=300*7
+        math5.location.x = 300*7
         math5.location.y = 300
 
         diffuse.location.x = 300*5
@@ -174,16 +173,13 @@ class particle_importer:
         math4.inputs[1].default_value = self.min_value
         math5.inputs[1].default_value = self.min_value
 
-
         math6.operation = "MULTIPLY"
         math7.operation = "MULTIPLY"
         math8.operation = "MULTIPLY"
 
-
         math6.inputs[1].default_value = self.max_value - self.min_value
         math7.inputs[1].default_value = self.max_value - self.min_value
         math8.inputs[1].default_value = self.max_value - self.min_value
-
 
         self.tex_image = bpy.data.images.new(
             'particle_tex_image', width=self.particle_num, height=1)
@@ -197,16 +193,14 @@ class particle_importer:
         link = links.new(combine.outputs["Vector"], tex.inputs["Vector"])
         link = links.new(tex.outputs["Color"], s_rgb.inputs["Image"])
         link = links.new(tex.outputs["Color"], diffuse.inputs["Color"])
-        link = links.new(s_rgb.outputs["R"],math6.inputs[0])
-        link = links.new(s_rgb.outputs["G"],math7.inputs[0])
-        link = links.new(s_rgb.outputs["B"],math8.inputs[0])
+        link = links.new(s_rgb.outputs["R"], math6.inputs[0])
+        link = links.new(s_rgb.outputs["G"], math7.inputs[0])
+        link = links.new(s_rgb.outputs["B"], math8.inputs[0])
 
-        link = links.new(math6.outputs["Value"],math3.inputs[0])
-        link = links.new(math7.outputs["Value"],math4.inputs[0])
-        link = links.new(math8.outputs["Value"],math5.inputs[0])
+        link = links.new(math6.outputs["Value"], math3.inputs[0])
+        link = links.new(math7.outputs["Value"], math4.inputs[0])
+        link = links.new(math8.outputs["Value"], math5.inputs[0])
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        
-
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
@@ -323,18 +317,13 @@ class particle_importer:
         self.material.node_tree.nodes[10].inputs[1].default_value = self.max_value - self.min_value
         self.material.node_tree.nodes[11].inputs[1].default_value = self.max_value - self.min_value
 
-
-
     def set_min_value(self, r):
         self.min_value = r
 
-        self.material.node_tree.nodes[6].inputs[1].default_value =  self.min_value
-        self.material.node_tree.nodes[7].inputs[1].default_value =  self.min_value
-        self.material.node_tree.nodes[8].inputs[1].default_value =  self.min_value
-
+        self.material.node_tree.nodes[6].inputs[1].default_value = self.min_value
+        self.material.node_tree.nodes[7].inputs[1].default_value = self.min_value
+        self.material.node_tree.nodes[8].inputs[1].default_value = self.min_value
 
         self.material.node_tree.nodes[9].inputs[1].default_value = self.max_value - self.min_value
         self.material.node_tree.nodes[10].inputs[1].default_value = self.max_value - self.min_value
         self.material.node_tree.nodes[11].inputs[1].default_value = self.max_value - self.min_value
-
-

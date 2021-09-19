@@ -31,7 +31,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
 
     def execute(self, context):
         if not bpy.data.is_saved:
-            show_message_box("Please save file before using it",icon="ERROR")
+            show_message_box("Please save file before using it", icon="ERROR")
             return {"CANCELLED"}
 
         global importer
@@ -44,11 +44,10 @@ class meshio_loader_OT_load(bpy.types.Operator):
             return {'CANCELLED'}
         if fs == "Manual":
             if not importer_prop.pattern:
-                show_message_box("Pattern is empty",icon= "ERROR")
+                show_message_box("Pattern is empty", icon="ERROR")
                 return {"CANCELLED"}
             fs = importer_prop.path+'/'+importer_prop.pattern
 
-        
         relative_path = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
         fs = fileseq.findSequenceOnDisk(fs)
         if importer_prop.type == "particle":
