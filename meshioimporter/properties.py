@@ -20,6 +20,8 @@ class importer_properties(bpy.types.PropertyGroup):
         subtype="DIR_PATH",
         description="You need to go to the folder with the sequence, then click \"Accept\". ",
     )
+    relative: bpy.props.BoolProperty(
+        name='Use relative path', description="whether or not to use reletive path")
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
         description="Please choose the file sequences you want",
@@ -43,6 +45,8 @@ class color_attribtue(bpy.types.PropertyGroup):
 class imported_seq_properties(bpy.types.PropertyGroup):
     pattern: bpy.props.StringProperty(
         name='pattern', description="pattern, using absolute path", default='test')
+    relative: bpy.props.BoolProperty(
+        name='Use relative path', description="whether or not to use reletive path")
     type: bpy.props.IntProperty(
         name='type', description='type of this sequence, particle or mesh, or other', default=0, min=0, max=1)
     used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)

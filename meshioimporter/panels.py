@@ -70,6 +70,7 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         importer_prop = scene.my_tool.importer
 
         layout.prop(importer_prop, "path")
+        layout.prop(importer_prop, "relative")
         layout.prop(importer_prop, "pattern")
         layout.prop(importer_prop, "fileseq")
         layout.prop(importer_prop, "type")

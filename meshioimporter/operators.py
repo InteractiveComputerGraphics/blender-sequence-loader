@@ -37,15 +37,18 @@ class meshio_loader_OT_load(bpy.types.Operator):
     bl_idname = "sequence.load"
 
     def execute(self, context):
-        if not bpy.data.is_saved:
-            show_message_box("Please save file before using it", icon="ERROR")
-            return {"CANCELLED"}
+        
 
         global importer
         global importer_list
         scene = context.scene
         importer_prop = scene.my_tool.importer
         imported_prop = scene.my_tool.imported
+
+        if importer_prop.relative and  not bpy.data.is_saved:
+            show_message_box("When using relative path, please save file before using it", icon="ERROR")
+            return {"CANCELLED"}
+
         fs = importer_prop.fileseq
         if not fs or fs == "None":
             return {'CANCELLED'}
@@ -54,9 +57,16 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 show_message_box("Pattern is empty", icon="ERROR")
                 return {"CANCELLED"}
             fs = importer_prop.path+'/'+importer_prop.pattern
+        
+        pattern = fs
+        if importer_prop.relative:
+            pattern = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
 
-        relative_path = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
+
+
         fs = fileseq.findSequenceOnDisk(fs)
+
+
         if importer_prop.type == "particle":
             if importer:
                 importer = None
@@ -65,7 +75,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             importer_list.append(importer)
             #  save information, will be used when restart .blender file
             imported_prop.add()
-            imported_prop[-1].pattern = relative_path
+            imported_prop[-1].pattern = pattern
+            imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
             imported_prop[-1].start = fs.start()
             imported_prop[-1].end = fs.end()
@@ -90,7 +101,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             importer_list.append(importer)
             #  save information, will be used when restart .blender file
             imported_prop.add()
-            imported_prop[-1].pattern = relative_path
+            imported_prop[-1].pattern = pattern
+            imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 1
             imported_prop[-1].mesh_name = importer.mesh.name
             imported_prop[-1].obj_name = importer.obj.name

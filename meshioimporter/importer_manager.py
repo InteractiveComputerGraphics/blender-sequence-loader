@@ -17,8 +17,12 @@ def load_post(scene):
     for l in imported_list:
         # particle importer
         if l.type == 0:
-            fs = fileseq.findSequenceOnDisk(
+            fs=None
+            if l.relative:
+                fs = fileseq.findSequenceOnDisk(
                 os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
+            else:
+                fs = fileseq.findSequenceOnDisk(l.pattern)
             Pi = particle_importer(fileseq=fs, mesh_name=l.mesh_name, emitter_obj_name=l.obj_name, sphere_obj_name=l.sphere_obj_name,
                                    material_name=l.material_name, tex_image_name=l.tex_image_name, radius=l.radius)
             for all_att in l.all_attributes:
@@ -30,8 +34,12 @@ def load_post(scene):
             bpy.app.handlers.frame_change_post.append(Pi)
         # mesh importer
         elif l.type == 1:
-            fs = fileseq.findSequenceOnDisk(
+            fs=None
+            if l.relative:
+                fs = fileseq.findSequenceOnDisk(
                 os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
+            else:
+                fs = fileseq.findSequenceOnDisk(l.pattern)
             Mi = mesh_importer(
                 fileseq=fs, mesh_name=l.mesh_name, obj_name=l.obj_name, material_name=l.material_name)
             importer_list.append(Mi)
