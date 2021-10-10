@@ -17,7 +17,7 @@ class particle_importer:
         self.render_attributes = []  # all the (name of ) color attributes
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0  # the min value of this attribute
-        self.max_value = 0  # the max value of this attribute
+        self.max_value = 0  # the max value of this attribute, will be initlized as number of particles
         self.emitterObject = None
         self.sphereObj = None
         self.mesh = None
@@ -69,6 +69,8 @@ class particle_importer:
         self.material = bpy.data.materials.new("particle_material")
         self.material.use_nodes = True
         #  init nodes and links of material
+
+        self.read_first_frame()
         self.init_materials()
 
         self.emitterObject.active_material = self.material
@@ -77,7 +79,7 @@ class particle_importer:
         self.emitterObject.particle_systems[0].settings.render_type = "OBJECT"
         self.emitterObject.particle_systems[0].settings.instance_object = self.sphereObj
 
-        self.read_first_frame()
+        
 
         #  useless init, only used to be compatible with new_particle_importer.py
         self.mesh = self.emitterObject.data
@@ -91,66 +93,35 @@ class particle_importer:
         links.clear()
 
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
-
-        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
-        diffuse.location.x = 300
+        vecMath = nodes.new( type = 'ShaderNodeVectorMath' )
+        vecMath.operation = 'DOT_PRODUCT'
+        math1 = nodes.new( type = 'ShaderNodeMath' )
+        math1.operation = 'SQRT'
+        math2 = nodes.new( type = 'ShaderNodeMath' )
+        math2.operation = 'SUBTRACT'
+        math2.inputs[1].default_value = self.min_value
+        math3 = nodes.new( type = 'ShaderNodeMath' )
+        math3.operation = 'MULTIPLY'
+        math3.inputs[1].default_value = 1.0/(self.max_value-self.min_value)
+        math3.use_clamp = True
+        ramp = nodes.new( type = 'ShaderNodeValToRGB' )
+        ramp.color_ramp.elements[0].color = (0, 0, 1, 1)
+        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")   
         output = nodes.new(type="ShaderNodeOutputMaterial")
-        output.location.x = 600
+
+        for i,n in enumerate(nodes):
+            n.location.x = i*300
+
+        
+        link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[0])
+        link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[1])
+        link = links.new(vecMath.outputs["Value"],math1.inputs["Value"])
+        link = links.new(math1.outputs["Value"],math2.inputs[0])
+        link = links.new(math2.outputs["Value"],math3.inputs[0])
+        link = links.new( math3.outputs['Value'], ramp.inputs['Fac'] )
+        link = links.new(ramp.outputs["Color"], diffuse.inputs["Color"])
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        link = links.new(
-            particleInfo.outputs["Velocity"], diffuse.inputs["Color"])
-
-        # recover the real attribute value
-
-        s_xyz = nodes.new(type="ShaderNodeSeparateXYZ")
-        math3 = nodes.new(type="ShaderNodeMath")
-        math4 = nodes.new(type="ShaderNodeMath")
-        math5 = nodes.new(type="ShaderNodeMath")
-
-        math3.location.y = 900
-        math4.location.x = 300*2
-        math4.location.y = 600
-        math5.location.x = 300*2
-        math5.location.y = 300
-
-        math3.operation = "MULTIPLY"
-        math4.operation = "MULTIPLY"
-        math5.operation = "MULTIPLY"
-
-        math3.inputs[1].default_value = self.max_value - self.min_value
-        math4.inputs[1].default_value = self.max_value - self.min_value
-        math5.inputs[1].default_value = self.max_value - self.min_value
-
-        math6 = nodes.new(type="ShaderNodeMath")
-        math7 = nodes.new(type="ShaderNodeMath")
-        math8 = nodes.new(type="ShaderNodeMath")
-
-        math6.operation = "ADD"
-        math7.operation = "ADD"
-        math8.operation = "ADD"
-
-        math6.inputs[1].default_value = self.min_value
-        math7.inputs[1].default_value = self.min_value
-        math8.inputs[1].default_value = self.min_value
-
-        math6.location.x = 300*3
-        math6.location.y = 900
-        math7.location.x = 300*3
-        math7.location.y = 600
-        math8.location.x = 300*3
-        math8.location.y = 300
-
-        math3.location.x = 300*2
-
-        link = links.new(
-            particleInfo.outputs["Velocity"], s_xyz.inputs["Vector"])
-        link = links.new(s_xyz.outputs["X"], math3.inputs[0])
-        link = links.new(s_xyz.outputs["Y"], math4.inputs[0])
-        link = links.new(s_xyz.outputs["Z"], math5.inputs[0])
-
-        link = links.new(math3.outputs["Value"], math6.inputs[0])
-        link = links.new(math4.outputs["Value"], math7.inputs[0])
-        link = links.new(math5.outputs["Value"], math8.inputs[0])
+    
 
     def read_first_frame(self):
         try:
@@ -186,7 +157,6 @@ class particle_importer:
             show_message_box(
                 "no attributes avaible, all particles will be rendered as the same color"
             )
-        # particles.foreach_set("velocity", [0]*3*len(mesh.points))
 
         self.max_value = self.particle_num
 
@@ -243,10 +213,10 @@ class particle_importer:
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 vel_att = np.zeros((self.particle_num, 3))
                 vel_att[:, :b] = att_data
-                vel_att[:, :b] = np.clip(
-                    vel_att[:, :b], self.min_value, self.max_value)
-                vel_att[:, :b] -= self.min_value
-                vel_att /= (self.max_value-self.min_value)
+                # vel_att[:, :b] = np.clip(
+                #     vel_att[:, :b], self.min_value, self.max_value)
+                # vel_att[:, :b] -= self.min_value
+                # vel_att /= (self.max_value-self.min_value)
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
             vel = [0] * 3*self.particle_num
@@ -299,20 +269,12 @@ class particle_importer:
 
     def set_max_value(self, r):
         self.max_value = r
-        self.material.node_tree.nodes[4].inputs[1].default_value = self.max_value - self.min_value
-        self.material.node_tree.nodes[5].inputs[1].default_value = self.max_value - self.min_value
-        self.material.node_tree.nodes[6].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def set_min_value(self, r):
         self.min_value = r
-
-        self.material.node_tree.nodes[7].inputs[1].default_value = self.min_value
-        self.material.node_tree.nodes[8].inputs[1].default_value = self.min_value
-        self.material.node_tree.nodes[9].inputs[1].default_value = self.min_value
-
-        self.material.node_tree.nodes[4].inputs[1].default_value = self.max_value - self.min_value
-        self.material.node_tree.nodes[5].inputs[1].default_value = self.max_value - self.min_value
-        self.material.node_tree.nodes[6].inputs[1].default_value = self.max_value - self.min_value
+        self.material.node_tree.nodes[3].inputs[1].default_value = self.min_value
+        self.material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def update_display(self, method):
         self.emitterObject.particle_systems[0].settings.display_method = method

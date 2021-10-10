@@ -7,7 +7,16 @@ Loading animation sequences with meshio and fileseq
 
 ### 1.1 Windows Users
 
-Before go ahead, please delete the `meshio`, `future` and `fileseq` file, they should be a symlink to the extern folder, but it doesn't work on windows. 
+1. Simple Way
+
+Simply delete the `meshio`, `future` and `fileseq` file.
+And copy `extern/meshio/src/meshio`, and `extern/fileseq/src/fileseq`, and `extern/python-future/src/future` these three folders to the root folder.
+
+Note: This will ruin the git structure, so if you make changes to source code and want to track it using git, be careful.
+
+2. Complicated Way
+
+Delete the `meshio`, `future` and `fileseq` file, they should be a symlink to the extern folder, but it doesn't work on windows. 
 
 Then you need to create the symlink again, by following command
 
@@ -45,6 +54,10 @@ Note: don't forget to remove old addon, before add new version addon to blender.
 ## 3. How to use
 
 After installing addon, you can find it here.
+
+![start](images/0.png)
+
+Then you can find it here.
 
 ![homepage](images/1.jpg)
 
