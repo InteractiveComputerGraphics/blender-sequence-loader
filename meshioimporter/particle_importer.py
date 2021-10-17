@@ -22,6 +22,8 @@ class particle_importer:
         self.sphereObj = None
         self.mesh = None
         self.tex_image = None
+        self.start = 0
+        self.end = 500
         self.particle_num = 0
         if not emitter_obj_name or not sphere_obj_name or not material_name:
             self.init_particles()
@@ -162,6 +164,9 @@ class particle_importer:
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
+        frame_number = max(frame_number,self.start)
+        frame_number = min(frame_number,self.end)
+        frame_number -= self.start
         frame_number = frame_number % len(self.fileseq)
         try:
             mesh = meshio.read(

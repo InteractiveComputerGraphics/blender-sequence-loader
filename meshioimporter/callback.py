@@ -134,3 +134,28 @@ def update_display(self, context):
     method = context.scene.my_tool.imported[idx].display
     importer = importer_list[idx]
     importer.update_display(method)
+
+
+def update_start(self,context):
+    idx = context.scene.my_tool.imported_num
+    start = context.scene.my_tool.imported[idx].start
+    end = context.scene.my_tool.imported[idx].end
+    if start< end:
+        importer = importer_list[idx]
+        importer.start = start
+    else:
+        show_message_box(
+            "start frame shoule be smaller than end frame", icon="ERROR")
+
+
+
+def update_end(self,context):
+    idx = context.scene.my_tool.imported_num
+    start = context.scene.my_tool.imported[idx].start
+    end = context.scene.my_tool.imported[idx].end
+    if start< end:
+        importer = importer_list[idx]
+        importer.end = end
+    else:
+        show_message_box(
+            "start frame shoule be smaller than end frame", icon="ERROR")

@@ -78,8 +78,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern = pattern
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
-            imported_prop[-1].start = fs.start()
-            imported_prop[-1].end = fs.end()
+            imported_prop[-1].start = 0
+            imported_prop[-1].end = 500
             imported_prop[-1].type = 0
             imported_prop[-1].length = len(fs)
             imported_prop[-1].max_value = importer.particle_num
@@ -107,8 +107,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].mesh_name = importer.mesh.name
             imported_prop[-1].obj_name = importer.obj.name
             imported_prop[-1].material_name = importer.material.name
-            imported_prop[-1].start = fs.start()
-            imported_prop[-1].end = fs.end()
+            imported_prop[-1].start = 0
+            imported_prop[-1].end = 500
             imported_prop[-1].max_value = 100
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()

@@ -19,6 +19,8 @@ class mesh_importer:
         self.material = None
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
+        self.start = 0
+        self.end = 500
         self.min_value = 0
         self.max_value = 100
         if not mesh_name and not obj_name and not material_name:
@@ -169,6 +171,9 @@ class mesh_importer:
 
     def __call__(self, scene, depsgraph=None):
         frame_number = scene.frame_current
+        frame_number = max(frame_number,self.start)
+        frame_number = min(frame_number,self.end)
+        frame_number -= self.start
         frame_number = frame_number % len(self.fileseq)
         total_path = self.fileseq[frame_number]
         self.load_mesh(total_path)
