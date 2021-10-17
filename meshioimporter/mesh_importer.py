@@ -207,3 +207,5 @@ class mesh_importer:
 
     def set_min_value(self, r):
         self.min_value = r
+    def get_obj(self):
+        return self.obj

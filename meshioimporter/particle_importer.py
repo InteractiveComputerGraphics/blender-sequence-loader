@@ -283,3 +283,5 @@ class particle_importer:
 
     def update_display(self, method):
         self.emitterObject.particle_systems[0].settings.display_method = method
+    def get_obj(self):
+        return self.emitterObject

@@ -16,7 +16,6 @@ class importer_properties(bpy.types.PropertyGroup):
     '''
     path: bpy.props.StringProperty(
         name="Directory",
-        default="C:\\Users\\hui\\Desktop\\out\\",
         subtype="DIR_PATH",
         description="You need to go to the folder with the sequence, then click \"Accept\". ",
     )
@@ -44,7 +43,7 @@ class color_attribtue(bpy.types.PropertyGroup):
 
 class imported_seq_properties(bpy.types.PropertyGroup):
     pattern: bpy.props.StringProperty(
-        name='pattern', description="pattern, using absolute path", default='test')
+        name='pattern', description="pattern, using absolute path")
     relative: bpy.props.BoolProperty(
         name='Use relative path', description="whether or not to use reletive path")
     type: bpy.props.IntProperty(
@@ -58,8 +57,8 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         update=update_color_attribute,
     )
     start: bpy.props.IntProperty(
-        name='start', description='start frame number',update = update_start,min=0)
-    end: bpy.props.IntProperty(name='end', description='end frame number',update = update_end,min=1)
+        name='start', description='start frame number',update = update_start,min=0,default = 0)
+    end: bpy.props.IntProperty(name='end', description='end frame number',update = update_end,min=1,default = 500)
     length: bpy.props.IntProperty(
         name='length', description='length of animation sequence')
 
@@ -92,4 +91,4 @@ class tool_properties(bpy.types.PropertyGroup):
     importer: bpy.props.PointerProperty(type=importer_properties)
     imported: bpy.props.CollectionProperty(type=imported_seq_properties)
     imported_num: bpy.props.IntProperty(
-        name='imported count', description='the number of imported sequence, when selecting from ui list', default=0)
+        name='imported count', description='the number of imported sequence, when selecting from ui list', default=0,update=update_imported_num)

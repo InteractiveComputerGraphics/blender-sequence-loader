@@ -145,9 +145,7 @@ def update_start(self,context):
         importer.start = start
     else:
         show_message_box(
-            "start frame shoule be smaller than end frame", icon="ERROR")
-
-
+            "start frame should be smaller than end frame", icon="ERROR")
 
 def update_end(self,context):
     idx = context.scene.my_tool.imported_num
@@ -158,4 +156,13 @@ def update_end(self,context):
         importer.end = end
     else:
         show_message_box(
-            "start frame shoule be smaller than end frame", icon="ERROR")
+            "start frame should be smaller than end frame", icon="ERROR")
+
+
+def update_imported_num(self,context):
+    if importer_list:
+        idx = context.scene.my_tool.imported_num
+        bpy.ops.object.select_all(action='DESELECT')
+        importer = importer_list[idx]
+        importer.get_obj().select_set(True)
+        bpy.context.view_layer.objects.active = importer.get_obj()
