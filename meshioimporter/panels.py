@@ -44,7 +44,6 @@ class sequence_list_panel(bpy.types.Panel):
             info_part = layout.column()
             info_part.prop(item, 'start')
             info_part.prop(item, 'end')
-            info_part.prop(item, 'length')
             info_part.prop(item, 'min_value')
             info_part.prop(item, 'max_value')
             info_part.prop(item, 'all_attributes_enum')

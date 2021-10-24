@@ -44,6 +44,7 @@ def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.my_tool
+    bpy.app.handlers.load_post.remove(load_post)
 
 
 if __name__ == "__main__":

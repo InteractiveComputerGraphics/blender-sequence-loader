@@ -59,7 +59,7 @@ After installing addon, you can find it here.
 
 Then you can find it here.
 
-![homepage](images/1.jpg)
+![homepage](images/1.png)
 
 ### 3. Load the animation sequence you want.
 
@@ -83,6 +83,15 @@ Then you will see this in the addon panel.
 ![after_selecting](images/5.png)
     
 Similarly, you can just type this directory in the input box. **Only to the directory, not the specific file(s)**
+
+##### 3.1.1
+There is a small checkbox about where using `relative path` or not.
+
+when toggling on, then you must save the blender file first, before load the sequence. Then this sequence will be loaded using relative path, from the .blend file. Also if you move the .blend file and data altogether to another directory, it still works.
+
+If not toggling on, it will use abosulte path to load the sequence. And you don't need to save the .blend file.
+
+![relative_path](images/2.5.png)
 
 
 #### 3.2
@@ -118,7 +127,6 @@ Note: if you manually type the sequence, please click the `Manual` as file seque
 
 #### 3.3
 
-Before you want to load the sequence, please save the blender project as a `.blender` file first. Then after selecting the animation sequence, you can simply click `Load Sequence`.
 
 You can play or render the animation as usually used in blender.
 
@@ -126,11 +134,11 @@ You can play or render the animation as usually used in blender.
 
 Here it showes all the sequences loaded. And you can click on each of them, it showes the relative information.
 
-+ start: means the number of first frame file. e.g. here it means `ParticleData_Fluid_1.vtk`. Though it's editable, but nothing will happen if you edit it.
++ start: The frame this sequence will start to animate. (Default 0 )
 
-+ end: similiar to `start`, but the last frame file.
++ end: The frame this sequence will stop to animate.(Default 500).
 
-+ length: means how many files in this sequence.
+    For example, if start set to 50, and stop set to 100, then sequence will animate between frame 50 and 100. Before frame 50, it will always show the frame 50, and after frame 100, it will always show the frame 100. And if the sequence length is shorter than 50 frames, then the sequence will loop again and again between frame 50 and 100.
 
 + min value: value used when coloring the object, the object attribute value smaller than min value will be clamped as min value here. Editable, and has effect.
 
@@ -156,13 +164,15 @@ Same as the way to render other objects, you can find it on the top right corner
 
 When rendering animation, **please toggle on `Lock Interface`**
 
-You can adjust the start frame and end frame at the bottom of blender.
+You can adjust the start frame and end frame at the bottom of blender. 
+
+**Note: By default, blender set the start from frame 1, but this addon will start to render object from frame 0.**
 
 ![adjust](images/12.png)
 
 **Important**
 
-If rendering particles, it only works with `Cycles` render engine. For mesh sequences, it works with both `Cycles` and `Eevee`.
+If rendering particles, **it only works with `Cycles` render engine**. For mesh sequences, it works with both `Cycles` and `Eevee`.
 
 You can change to `Cycles` engine, at the `Render Properties` tab of blender.
 
@@ -174,11 +184,7 @@ After choosing `Cycles`, which usually renders much slower than `Eevee`, you can
 
 
 
-## 4. Some features
-
-1. after saving `.blender` file, the sequences still work after restarting the `.blender` file.
-
-2. Relative path (aniamtion data and `.blender` file ) are used inside, so it is safe to move the data and `.blender` file togethore to another location or machine.
-
 ## 5. Limitations
-1. Sometimes, it could have very strange look in viewport, but it can be rendered correctly.
+1. **Never** use undo, or blender default delete operation(you can use the minus button to delete a sequence), with sequence objects. It will change some blender object structure, and this addon can't function any more.
+
+2. Sometimes, it could have very strange look in viewport, but it can be rendered correctly.

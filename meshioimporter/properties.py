@@ -59,8 +59,6 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     start: bpy.props.IntProperty(
         name='start', description='start frame number',update = update_start,min=0,default = 0)
     end: bpy.props.IntProperty(name='end', description='end frame number',update = update_end,min=1,default = 500)
-    length: bpy.props.IntProperty(
-        name='length', description='length of animation sequence')
 
     # general
     max_value: bpy.props.FloatProperty(

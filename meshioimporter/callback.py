@@ -44,7 +44,10 @@ def callback_fileseq(self, context):
     '''
 
     p = context.scene.my_tool.importer.path
-    f = fileseq.findSequencesOnDisk(p)
+    try:
+        f = fileseq.findSequencesOnDisk(p)
+    except:
+        return [("None", "No sequence detected", "")]
 
     if not f:
         return [("None", "No sequence detected", "")]
@@ -52,10 +55,11 @@ def callback_fileseq(self, context):
     if len(f) >= 20:
         file_seq.append(
             ("Manual", "Manual, too much sequence detected, use pattern above", ""))
-    else:
-        file_seq.append(("Manual", "Manual, use pattern above", ""))
+    else:      
+        file_seq.append(("None", "Please select the pattern", "")) 
         for seq in f:
             file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
+        file_seq.append(("Manual", "Manually set the pattern, use the pattern entered above", ""))
     return file_seq
 
 
@@ -65,6 +69,8 @@ def update_fileseq(self, context):
     When a file sequence selected, this function here do some pre-check, e.g. check if it's particle or mesh.
     '''
     file_seq_items_name = context.scene.my_tool.importer.fileseq
+    if file_seq_items_name == "None":
+        return
     f = None
     if file_seq_items_name == "Manual":
         try:
@@ -166,3 +172,10 @@ def update_imported_num(self,context):
         importer = importer_list[idx]
         importer.get_obj().select_set(True)
         bpy.context.view_layer.objects.active = importer.get_obj()
+
+
+def selected_callback():
+    if importer_list:
+        for ind,im in enumerate(importer_list):
+            if im.get_obj() == bpy.context.view_layer.objects.active:
+                bpy.context.scene.my_tool.imported_num = ind

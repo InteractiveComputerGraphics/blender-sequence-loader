@@ -6,6 +6,22 @@ from bpy.app.handlers import persistent
 importer = None
 importer_list = []
 
+from .callback import selected_callback
+
+
+
+def subscribe_to_selected():
+    import meshioimporter       
+    bpy.msgbus.subscribe_rna(
+        key=(bpy.types.LayerObjects, 'active'),
+        #  don't know why it needs this owner, so I set owner to this module `meshioimporter`
+        owner=meshioimporter,
+        #  no args
+        args = (()),
+        notify=selected_callback,
+        )
+
+
 
 @persistent
 def load_post(scene):
@@ -49,3 +65,4 @@ def load_post(scene):
             Mi.set_max_value(l.max_value)
             Mi.set_min_value(l.min_value)
             bpy.app.handlers.frame_change_post.append(Mi)
+    subscribe_to_selected()

@@ -55,6 +55,7 @@ class particle_importer:
         self.emitterObject.particle_systems[0].settings.frame_end = 0
         self.emitterObject.particle_systems[0].settings.lifetime = 1000
         self.emitterObject.particle_systems[0].settings.particle_size = 0.01
+        self.emitterObject.particle_systems[0].settings.display_size = 0.01
 
         # create instance object
         bpy.ops.mesh.primitive_uv_sphere_add(
