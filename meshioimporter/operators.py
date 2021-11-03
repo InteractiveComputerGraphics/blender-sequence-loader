@@ -13,7 +13,8 @@ class particle_OT_clear(bpy.types.Operator):
     '''
     bl_label = "Remove Sequence"
     bl_idname = "sequence.remove"
-
+    bl_options = {"UNDO"}
+    
     def execute(self, context):
         global importer
         global importer_list
@@ -21,12 +22,12 @@ class particle_OT_clear(bpy.types.Operator):
             return {"CANCELLED"}
         mytool = context.scene.my_tool
         idx = mytool.imported_num
+        importer_list_index = mytool.imported[idx].importer_list_index
+
+
         mytool.imported.remove(idx)
-        bpy.app.handlers.frame_change_post.remove(importer_list[idx])
-        if importer == importer_list[idx]:
-            importer = None
-        importer_list[idx].clear()
-        del importer_list[idx]
+        #  don't need to delete, only remove the object, so it can be undone
+        importer_list[importer_list_index].clear()
         mytool.imported_num = max(mytool.imported_num-1, 0)
         return {"FINISHED"}
 
@@ -37,6 +38,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
     '''
     bl_label = "Load Sequences"
     bl_idname = "sequence.load"
+    bl_options = {"UNDO"}
 
     def execute(self, context):
         
@@ -84,11 +86,12 @@ class meshio_loader_OT_load(bpy.types.Operator):
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
-            imported_prop[-1].mesh_name = importer.mesh.name
-            imported_prop[-1].obj_name = importer.emitterObject.name
-            imported_prop[-1].sphere_obj_name = importer.sphereObj.name
-            imported_prop[-1].material_name = importer.material.name
-            imported_prop[-1].tex_image_name = importer.tex_image.name
+            # imported_prop[-1].mesh_name = importer.mesh.name
+            imported_prop[-1].obj_name = importer.emitter_obj_name
+            imported_prop[-1].sphere_obj_name = importer.sphere_obj_name
+            imported_prop[-1].material_name = importer.material_name
+            imported_prop[-1].importer_list_index = len(importer_list) -1
+            # imported_prop[-1].tex_image_name = importer.tex_image.name
             #  add importer to blender animation system
             bpy.app.handlers.frame_change_post.append(importer)
 
@@ -102,10 +105,11 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern = pattern
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 1
-            imported_prop[-1].mesh_name = importer.mesh.name
-            imported_prop[-1].obj_name = importer.obj.name
-            imported_prop[-1].material_name = importer.material.name
+            imported_prop[-1].mesh_name = importer.mesh_name
+            imported_prop[-1].obj_name = importer.obj_name
+            imported_prop[-1].material_name = importer.material_name
             imported_prop[-1].max_value = 100
+            imported_prop[-1].importer_list_index = len(importer_list) -1
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at

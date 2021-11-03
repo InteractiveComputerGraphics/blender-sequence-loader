@@ -8,6 +8,14 @@ import traceback
 
 
 
+def get_index(context):
+    mytool = context.scene.my_tool
+    idx = mytool.imported_num
+    imported_obj_list = context.scene.my_tool.imported
+    importer_list_index = imported_obj_list[idx].importer_list_index
+    return idx, importer_list_index
+
+
 def callback_color_attribute(self, context):
     '''
     When an imported sequence selected, this function returns all the color attributes it has, such as 'id', 'velocity', etc.
@@ -24,10 +32,14 @@ def update_color_attribute(self, context):
     '''
     When an imported sequence selected, and a new color attribute selected, it will update the importer so the color can be correctly rendered. 
     '''
-    mytool = context.scene.my_tool
-    idx = mytool.imported_num
 
-    importer = importer_list[idx]
+    idx, importer_list_index = get_index(context)
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
+    mytool = context.scene.my_tool
     item = mytool.imported[idx]
     if item.all_attributes_enum != "None":
         importer.set_color_attribute(item.all_attributes_enum)
@@ -96,9 +108,13 @@ def update_particle_radius(self, context):
     '''
     This function here updates the radius of selected particle sequence.
     '''
-    idx = context.scene.my_tool.imported_num
+    idx, importer_list_index = get_index(context)
     r = context.scene.my_tool.imported[idx].radius
-    importer = importer_list[idx]
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
     importer.set_radius(r)
 
 
@@ -106,10 +122,14 @@ def update_max_value(self, context):
     '''
     When max (or min) value adjusted by user, this function will update it in the importer 
     '''
-    idx = context.scene.my_tool.imported_num
+    idx, importer_list_index = get_index(context)
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
-    importer = importer_list[idx]
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
     if max >= min:
         importer.set_max_value(max)
     else:
@@ -121,10 +141,14 @@ def update_min_value(self, context):
     '''
     When max (or min) value adjusted by user, this function will update it in the importer 
     '''
-    idx = context.scene.my_tool.imported_num
+    idx, importer_list_index = get_index(context)
     max = context.scene.my_tool.imported[idx].max_value
     min = context.scene.my_tool.imported[idx].min_value
-    importer = importer_list[idx]
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
     if min <= max:
         importer.set_min_value(min)
     else:
@@ -136,29 +160,42 @@ def update_display(self, context):
     '''
     When particles display method adjusted by user, this function will update it in the importer 
     '''
-    idx = context.scene.my_tool.imported_num
+    idx, importer_list_index = get_index(context)
     method = context.scene.my_tool.imported[idx].display
-    importer = importer_list[idx]
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
     importer.update_display(method)
 
 
 def update_start(self,context):
+    idx, importer_list_index = get_index(context)
     idx = context.scene.my_tool.imported_num
     start = context.scene.my_tool.imported[idx].start
     end = context.scene.my_tool.imported[idx].end
     if start< end:
-        importer = importer_list[idx]
+        importer = importer_list[importer_list_index]
+        if not importer.check_valid():
+            show_message_box("Sequence has been changed or removed")
+            bpy.ops.sequence.remove()
+            return
         importer.start = start
     else:
         show_message_box(
             "start frame should be smaller than end frame", icon="ERROR")
 
 def update_end(self,context):
-    idx = context.scene.my_tool.imported_num
+    idx, importer_list_index = get_index(context)
     start = context.scene.my_tool.imported[idx].start
     end = context.scene.my_tool.imported[idx].end
     if start< end:
-        importer = importer_list[idx]
+        importer = importer_list[importer_list_index]
+        if not importer.check_valid():
+            show_message_box("Sequence has been changed or removed")
+            bpy.ops.sequence.remove()
+            return
         importer.end = end
     else:
         show_message_box(
@@ -166,16 +203,22 @@ def update_end(self,context):
 
 
 def update_imported_num(self,context):
-    if importer_list:
+    imported_obj_list = context.scene.my_tool.imported
+    if imported_obj_list:
         idx = context.scene.my_tool.imported_num
         bpy.ops.object.select_all(action='DESELECT')
-        importer = importer_list[idx]
-        importer.get_obj().select_set(True)
-        bpy.context.view_layer.objects.active = importer.get_obj()
+        importer = importer_list[imported_obj_list[idx].importer_list_index]
+        if importer.check_valid():
+            importer.get_obj().select_set(True)
+            bpy.context.view_layer.objects.active = importer.get_obj()
+        else:
+            show_message_box("Sequence has been changed or removed")
+            bpy.ops.sequence.remove()
 
 
 def selected_callback():
-    if importer_list:
-        for ind,im in enumerate(importer_list):
-            if im.get_obj() == bpy.context.view_layer.objects.active:
+    imported_obj_list = bpy.context.scene.my_tool.imported
+    if imported_obj_list:
+        for ind,im in enumerate(imported_obj_list):
+            if im.obj_name == bpy.context.view_layer.objects.active.name:
                 bpy.context.scene.my_tool.imported_num = ind

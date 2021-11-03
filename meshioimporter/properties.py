@@ -65,12 +65,17 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         name='max value', description='max value to clamp the field', update=update_max_value)
     min_value: bpy.props.FloatProperty(
         name='min value', description='min value to clamp the field', default=0, update=update_min_value)
-    mesh_name: bpy.props.StringProperty()
     obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
 
+    #  because now, importer list has different size with property imported.
+    #  when using imported_num, this can directly lead to the index of property imported, but not index of importer list
+    #  so I created this additional property importer_list_index
+    importer_list_index: bpy.props.IntProperty(
+        name='importer_list_index', default=0, min=0)
+
     # mesh only
-    #  currently, none
+    mesh_name: bpy.props.StringProperty()
 
     # particles only
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
@@ -82,7 +87,6 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         update=update_display,
     )
     sphere_obj_name: bpy.props.StringProperty()
-    tex_image_name: bpy.props.StringProperty()
 
 
 class tool_properties(bpy.types.PropertyGroup):

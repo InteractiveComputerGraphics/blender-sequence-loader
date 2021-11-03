@@ -5,6 +5,7 @@ import bpy
 from bpy.app.handlers import persistent
 importer = None
 importer_list = []
+imported_count = 0
 
 from .callback import selected_callback
 
@@ -40,13 +41,19 @@ def load_post(scene):
             else:
                 fs = fileseq.findSequenceOnDisk(l.pattern)
             Pi = particle_importer(fileseq=fs, mesh_name=l.mesh_name, emitter_obj_name=l.obj_name, sphere_obj_name=l.sphere_obj_name,
-                                   material_name=l.material_name, tex_image_name=l.tex_image_name, radius=l.radius)
+                                   material_name=l.material_name, radius=l.radius)
+            importer_list.append(Pi)
+
+            l.obj_name = Pi.emitter_obj_name
+            l.sphere_obj_name = Pi.sphere_obj_name
+            l.material_name = Pi.material_name
+            l.importer_list_index = len(importer_list)-1
             for all_att in l.all_attributes:
                 Pi.render_attributes.append(all_att.name)
             Pi.set_color_attribute(l.used_color_attribute.name)
             Pi.set_max_value(l.max_value)
             Pi.set_min_value(l.min_value)
-            importer_list.append(Pi)
+
             bpy.app.handlers.frame_change_post.append(Pi)
         # mesh importer
         elif l.type == 1:
@@ -59,6 +66,11 @@ def load_post(scene):
             Mi = mesh_importer(
                 fileseq=fs, mesh_name=l.mesh_name, obj_name=l.obj_name, material_name=l.material_name)
             importer_list.append(Mi)
+            l.obj_name = Mi.obj_name
+            l.mesh_name = Mi.mesh_name
+            l.material_name = Mi.material_name
+            l.importer_list_index = len(importer_list)-1
+
             for all_att in l.all_attributes:
                 Mi.render_attributes.append(all_att.name)
             Mi.set_color_attribute(l.used_color_attribute.name)

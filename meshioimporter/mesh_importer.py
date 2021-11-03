@@ -10,25 +10,38 @@ from .utils import *
 
 
 class mesh_importer:
+    count =0
     def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None, obj_name=None, material_name=None):
-        self.name = fileseq.basename()+"@"+fileseq.extension()
+        self.name = fileseq.basename()+"@"+fileseq.extension() 
+        mesh_importer.count+=1
         self.fileseq = fileseq
         self.transform_matrix = transform_matrix
-        self.mesh = None
-        self.obj = None
-        self.material = None
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
         self.start = 0
         self.end = 500
         self.min_value = 0
         self.max_value = 100
+        self.mesh_name = None
+        self.obj_name = None
+        self.material_name = None
         if not mesh_name and not obj_name and not material_name:
+            self.name = self.name + str(mesh_importer.count)
             self.init_mesh()
         else:
-            self.mesh = bpy.data.meshes[mesh_name]
-            self.obj = bpy.data.objects[obj_name]
-            self.material = bpy.data.materials[material_name]
+            self.name = self.name + str(mesh_importer.count)
+
+            mesh = bpy.data.meshes[mesh_name]
+            mesh.name = "Mesh_"+ self.name
+            self.mesh_name = mesh.name
+            
+            obj = bpy.data.objects[obj_name]
+            obj.name = "Obj_" + self.name
+            self.obj_name =  obj.name
+
+            material = bpy.data.materials[material_name]
+            material.name = "Material_"+ self.name
+            self.material_name = material.name
 
     def create_face_data(self, meshio_cells):
         # todo: support other mesh structure, such as tetrahedron
@@ -50,20 +63,21 @@ class mesh_importer:
         vertices_count = len(meshio_mesh.points)
         mesh_faces = self.create_face_data(meshio_mesh.cells)
         shade_scheme = False
-        if self.mesh.polygons:
-            shade_scheme = self.mesh.polygons[0].use_smooth
+        mesh = bpy.data.meshes[self.mesh_name]
+        if mesh.polygons:
+            shade_scheme = mesh.polygons[0].use_smooth
 
         #  delete the old mesh, if it has
         bm = bmesh.new()
-        bm.from_mesh(self.mesh)
+        bm.from_mesh(mesh)
         bm.clear()
-        bm.to_mesh(self.mesh)
+        bm.to_mesh(mesh)
         bm.free()
         # then create a new mesh
 
         # load the vertices 
-        self.mesh.vertices.add(vertices_count)
-        self.mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
+        mesh.vertices.add(vertices_count)
+        mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
 
         # code from ply impoter of blender, https://github.com/blender/blender-addons/blob/master/io_mesh_ply/import_ply.py#L363
         # loops_vert_idx = []
@@ -93,14 +107,14 @@ class mesh_importer:
             if len(faces_loop_start) > 0:
                 faces_loop_start[0] = 0
 
-            self.mesh.loops.add(len(loops_vert_idx))
-            self.mesh.polygons.add(len(mesh_faces))
+            mesh.loops.add(len(loops_vert_idx))
+            mesh.polygons.add(len(mesh_faces))
 
-            self.mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-            self.mesh.polygons.foreach_set("loop_start", faces_loop_start)
-            self.mesh.polygons.foreach_set("loop_total", faces_loop_total)
+            mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+            mesh.polygons.foreach_set("loop_start", faces_loop_start)
+            mesh.polygons.foreach_set("loop_total", faces_loop_total)
             # settings about if use shade_smooth or shade_flat
-            self.mesh.polygons.foreach_set(
+            mesh.polygons.foreach_set(
                 "use_smooth", [shade_scheme]*len(faces_loop_total))
 
         if not self.render_attributes:
@@ -108,7 +122,7 @@ class mesh_importer:
                 self.render_attributes.append(n)
         # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
         if self.used_render_attribute:
-            v_col = self.mesh.vertex_colors.new()
+            v_col = mesh.vertex_colors.new()
             att_data = meshio_mesh.point_data[self.used_render_attribute]
             mesh_colors = None
             if len(att_data.shape) >= 3:
@@ -138,18 +152,20 @@ class mesh_importer:
                 mesh_colors[:, 3] = 1 
                 v_col.data.foreach_set('color', mesh_colors.ravel())
 
-        self.mesh.update()
-        self.mesh.validate()
+        mesh.update()
+        mesh.validate()
 
     def init_mesh(self):
 
-        self.mesh = bpy.data.meshes.new(name=self.name)
+        mesh = bpy.data.meshes.new(name="Mesh_"+ self.name)
+        self.mesh_name = mesh.name
         
         # init material
-        self.material = bpy.data.materials.new(self.name+"_material")
-        self.material.use_nodes = True
-        nodes = self.material.node_tree.nodes
-        links = self.material.node_tree.links
+        material = bpy.data.materials.new("Material_" + self.name)
+        self.material_name = material.name
+        material.use_nodes = True
+        nodes = material.node_tree.nodes
+        links = material.node_tree.links
         nodes.clear()
         links.clear()
         output = nodes.new(type="ShaderNodeOutputMaterial")
@@ -160,16 +176,18 @@ class mesh_importer:
             vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
         
         #  create object
-        new_object = bpy.data.objects.new(self.name, self.mesh)
+        new_object = bpy.data.objects.new("Obj_"+self.name, mesh)
         bpy.data.collections[0].objects.link(new_object)
-        self.obj = new_object
-        self.obj.matrix_world = self.transform_matrix
-        self.obj.active_material = self.material
+        self.obj_name = new_object.name
+        new_object.matrix_world = self.transform_matrix
+        new_object.active_material = material
 
         total_path = self.fileseq[0]
         self.load_mesh(total_path)
 
     def __call__(self, scene, depsgraph=None):
+        if not self.check_valid():
+            return
         frame_number = scene.frame_current
         frame_number = max(frame_number,self.start)
         frame_number = min(frame_number,self.end)
@@ -189,18 +207,9 @@ class mesh_importer:
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
-        if self.obj:
-            self.obj.select_set(True)
+        if self.obj_name in bpy.data.objects:
+            bpy.data.objects[self.obj_name].select_set(True)
             bpy.ops.object.delete()
-            self.obj = None
-
-        for m in bpy.data.meshes:
-            if m.users == 0:
-                bpy.data.meshes.remove(m)
-        for m in bpy.data.materials:
-            if m.users == 0:
-                bpy.data.materials.remove(m)
-        self.mesh = None
 
     def set_max_value(self, r):
         self.max_value = r
@@ -208,4 +217,9 @@ class mesh_importer:
     def set_min_value(self, r):
         self.min_value = r
     def get_obj(self):
-        return self.obj
+        return bpy.data.objects[self.obj_name]
+    
+    def check_valid(self):
+        if self.mesh_name not in bpy.data.meshes or self.obj_name not in bpy.data.objects or self.material_name not in bpy.data.materials:
+            return False
+        return True
