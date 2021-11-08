@@ -82,6 +82,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern = pattern
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
+            imported_prop[-1].importer_list_index = len(importer_list) -1
             imported_prop[-1].max_value = importer.particle_num
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
@@ -90,7 +91,6 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].obj_name = importer.emitter_obj_name
             imported_prop[-1].sphere_obj_name = importer.sphere_obj_name
             imported_prop[-1].material_name = importer.material_name
-            imported_prop[-1].importer_list_index = len(importer_list) -1
             # imported_prop[-1].tex_image_name = importer.tex_image.name
             #  add importer to blender animation system
             bpy.app.handlers.frame_change_post.append(importer)
@@ -108,8 +108,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].mesh_name = importer.mesh_name
             imported_prop[-1].obj_name = importer.obj_name
             imported_prop[-1].material_name = importer.material_name
-            imported_prop[-1].max_value = 100
             imported_prop[-1].importer_list_index = len(importer_list) -1
+            imported_prop[-1].max_value = 100
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
