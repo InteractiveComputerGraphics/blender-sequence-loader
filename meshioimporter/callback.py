@@ -222,7 +222,16 @@ def update_name(self,context):
         show_message_box("Sequence has been changed or removed")
         bpy.ops.sequence.remove()
         return
-    importer.get_obj().name = context.scene.my_tool.imported[idx].name
+    name = context.scene.my_tool.imported[idx].name
+    # if name doesn't change
+    if importer.get_obj().name==name:
+        return
+    for obj in bpy.data.objects:
+        if name ==obj.name:
+            show_message_box("Name already exists")
+            bpy.ops.ed.undo()
+            return
+    importer.get_obj().name = name
 
 def selected_callback():
     imported_obj_list = bpy.context.scene.my_tool.imported
