@@ -215,10 +215,18 @@ def update_imported_num(self,context):
             show_message_box("Sequence has been changed or removed")
             bpy.ops.sequence.remove()
 
+def update_name(self,context):
+    idx, importer_list_index = get_index(context)
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
+    importer.get_obj().name = context.scene.my_tool.imported[idx].name
 
 def selected_callback():
     imported_obj_list = bpy.context.scene.my_tool.imported
     if imported_obj_list:
         for ind,im in enumerate(imported_obj_list):
-            if im.obj_name == bpy.context.view_layer.objects.active.name:
+            if im.name == bpy.context.view_layer.objects.active.name:
                 bpy.context.scene.my_tool.imported_num = ind

@@ -12,7 +12,7 @@ class SEQUENCE_UL_list(bpy.types.UIList):
         ma = item
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             if ma:
-                layout.prop(ma, "pattern", text='Pattern: ', emboss=False)
+                layout.prop(ma, "name", text='Name: ', emboss=False)
             else:
                 layout.label(text="", translate=False, icon_value=icon)
 
@@ -21,7 +21,7 @@ class sequence_list_panel(bpy.types.Panel):
     '''
     This is the panel of imported sequences, bottom part of images/9.png
     '''
-    bl_label = "Sequences Imported"
+    bl_label = "Sequences Imported, please don't give multiple sequencs the same name"
     bl_idname = "SEQUENCES_PT_list"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"

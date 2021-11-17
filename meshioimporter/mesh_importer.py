@@ -10,10 +10,8 @@ from .utils import *
 
 
 class mesh_importer:
-    count =0
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None, obj_name=None, material_name=None):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None,  material_name=None):
         self.name = fileseq.basename()+"@"+fileseq.extension() 
-        mesh_importer.count+=1
         self.fileseq = fileseq
         self.transform_matrix = transform_matrix
         self.render_attributes = []  # all the possible attributes, and type
@@ -23,25 +21,12 @@ class mesh_importer:
         self.min_value = 0
         self.max_value = 100
         self.mesh_name = None
-        self.obj_name = None
         self.material_name = None
-        if not mesh_name and not obj_name and not material_name:
-            self.name = self.name + str(mesh_importer.count)
+        if not mesh_name and not material_name:
             self.init_mesh()
         else:
-            self.name = self.name + str(mesh_importer.count)
-
-            mesh = bpy.data.meshes[mesh_name]
-            mesh.name = "Mesh_"+ self.name
-            self.mesh_name = mesh.name
-            
-            obj = bpy.data.objects[obj_name]
-            obj.name = "Obj_" + self.name
-            self.obj_name =  obj.name
-
-            material = bpy.data.materials[material_name]
-            material.name = "Material_"+ self.name
-            self.material_name = material.name
+            self.mesh_name = mesh_name
+            self.material_name= material_name
 
     def create_face_data(self, meshio_cells):
         # todo: support other mesh structure, such as tetrahedron
@@ -178,7 +163,6 @@ class mesh_importer:
         #  create object
         new_object = bpy.data.objects.new("Obj_"+self.name, mesh)
         bpy.data.collections[0].objects.link(new_object)
-        self.obj_name = new_object.name
         new_object.matrix_world = self.transform_matrix
         new_object.active_material = material
 
@@ -207,8 +191,9 @@ class mesh_importer:
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
-        if self.obj_name in bpy.data.objects:
-            bpy.data.objects[self.obj_name].select_set(True)
+        obj_name = self.get_obj_name()
+        if obj_name and obj_name in bpy.data.objects:
+            bpy.data.objects[obj_name].select_set(True)
             bpy.ops.object.delete()
 
     def set_max_value(self, r):
@@ -217,9 +202,17 @@ class mesh_importer:
     def set_min_value(self, r):
         self.min_value = r
     def get_obj(self):
-        return bpy.data.objects[self.obj_name]
+        name=  self.get_obj_name()
+        if name:
+            return bpy.data.objects[name]
     
     def check_valid(self):
-        if self.mesh_name not in bpy.data.meshes or self.obj_name not in bpy.data.objects or self.material_name not in bpy.data.materials:
+        if self.mesh_name not in bpy.data.meshes or not self.get_obj_name() or self.material_name not in bpy.data.materials:
             return False
         return True
+    
+    def get_obj_name(self):
+        for obj in bpy.data.objects:
+            if obj.type =="MESH" and obj.data.name ==self.mesh_name:
+                    return obj.name
+        return None

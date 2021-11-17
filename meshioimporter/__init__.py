@@ -12,4 +12,5 @@ __all__ = [
     "imported_seq_properties",
     "tool_properties",
     "load_post",
+    "subscribe_to_selected",
 ]

@@ -8,13 +8,12 @@ import traceback
 
 
 class particle_importer:
-    count = 0
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), emitter_obj_name=None, sphere_obj_name=None, material_name=None, tex_image_name=None, mesh_name=None, radius=0.01):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
+    particle_settings_name=None, sphere_obj_name=None, material_name=None, radius=0.01):
 
         # self.path=path
         self.fileseq = fileseq
         self.name = fileseq.basename()+"@"+fileseq.extension()
-        particle_importer.count+=1
         self.transform_matrix = transform_matrix
         self.render_attributes = []  # all the (name of ) color attributes
         self.used_render_attribute = None  # the attribute used for rendering
@@ -23,36 +22,24 @@ class particle_importer:
         self.start = 0
         self.end = 500
         self.particle_num = 0
-        self.emitter_obj_name = None
+        self.particle_settings_name = None
         self.sphere_obj_name = None
         self.material_name = None       
-        if not emitter_obj_name or not sphere_obj_name or not material_name:
-            self.name = self.name + str(particle_importer.count)
+        if not sphere_obj_name or not material_name or not particle_settings_name:
             self.init_particles()
         else:
-            self.name = self.name + str(particle_importer.count)
-            emitter = bpy.data.objects[emitter_obj_name]
-            emitter.name = "Cube_"+self.name 
-            self.emitter_obj_name = emitter.name
-
-            sphere = bpy.data.objects[sphere_obj_name]
-            sphere.name = "Sphere_"+self.name 
-            self.sphere_obj_name = sphere.name
-
-            material = bpy.data.materials[material_name]
-            material.name = "Material_"+self.name
-            self.material_name = material.name
-
-            self.particle_num = bpy.data.objects[self.emitter_obj_name].particle_systems[0].settings.count
+            self.particle_settings_name = particle_settings_name
+            self.sphere_obj_name = sphere_obj_name
+            self.material_name = material_name
+            self.particle_num = bpy.data.particles[self.particle_settings_name].count
 
     def init_particles(self):
         # create emitter object
         bpy.ops.mesh.primitive_cube_add(
             enter_editmode=False, location=(0, 0, 0))
         emitter_object = bpy.context.active_object
-        # if same name object already exists, blender will change name to e.g. "cube.001"
-        emitter_object.name = "Cube_"+self.name 
-        self.emitter_obj_name = emitter_object.name
+
+        emitter_object.name = "Emitter_"+self.name 
         emitter_object.matrix_world = self.transform_matrix
         emitter_object.hide_viewport = False
         emitter_object.hide_render = False
@@ -65,6 +52,9 @@ class particle_importer:
         bpy.context.object.show_instancer_for_render = False
         bpy.context.object.show_instancer_for_viewport = False
         # basic settings for the particles
+
+        self.particle_settings_name  =emitter_object.particle_systems[0].settings.name
+
         emitter_object.particle_systems[0].settings.frame_start = 0
         emitter_object.particle_systems[0].settings.frame_end = 0
         emitter_object.particle_systems[0].settings.lifetime = 1000
@@ -104,7 +94,7 @@ class particle_importer:
         emitter_object.particle_systems[0].settings.instance_object = sphere_obj
 
     def read_first_frame(self):
-        emitter_obj = bpy.data.objects[self.emitter_obj_name]
+        particle_settings = bpy.data.particles[self.particle_settings_name]
         try:
             mesh = meshio.read(
                 self.fileseq[0]
@@ -114,22 +104,7 @@ class particle_importer:
             traceback.print_exc()
 
         self.particle_num = len(mesh.points)
-        emitter_obj.particle_systems[0].settings.count = self.particle_num
-
-        #  some tricky way to directly access location and velocitys of particles
-        # depsgraph = bpy.context.evaluated_depsgraph_get()
-        # particle_systems = emitter_obj.evaluated_get(
-        #     depsgraph).particle_systems
-        # particles = particle_systems[0].particles
-
-        # points_pos = np.zeros((self.particle_num, 4))
-        # points_pos[:, -1] = 1
-        # points_pos[:, :3] = mesh.points
-        # transform_matrix = np.array(emitter_obj.matrix_world)
-        # points_pos = points_pos @ np.transpose(transform_matrix)
-        # points_pos = points_pos[:, :3]
-
-        # particles.foreach_set("location", points_pos.ravel())
+        particle_settings.count = self.particle_num
 
         if mesh.point_data:
             for k in mesh.point_data.keys():
@@ -197,7 +172,7 @@ class particle_importer:
                              self.fileseq[frame_number]+",\n please check console for more details", icon="ERROR")
             traceback.print_exc()
             return
-        emitter_object = bpy.data.objects[self.emitter_obj_name]
+        emitter_object = self.get_obj()
         if len(mesh.points) != self.particle_num:
             self.particle_num = len(mesh.points)
             emitter_object.particle_systems[0].settings.count = self.particle_num
@@ -238,10 +213,6 @@ class particle_importer:
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 vel_att = np.zeros((self.particle_num, 3))
                 vel_att[:, :b] = att_data
-                # vel_att[:, :b] = np.clip(
-                #     vel_att[:, :b], self.min_value, self.max_value)
-                # vel_att[:, :b] -= self.min_value
-                # vel_att /= (self.max_value-self.min_value)
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
             vel = [0] * 3*self.particle_num
@@ -264,8 +235,9 @@ class particle_importer:
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
-        if self.emitter_obj_name in bpy.data.objects:
-            bpy.data.objects[self.emitter_obj_name].select_set(True)
+        name = self.get_obj_name()
+        if name and  name in bpy.data.objects:
+            bpy.data.objects[name].select_set(True)
             bpy.ops.object.delete()
         bpy.ops.object.select_all(action="DESELECT")
         
@@ -278,9 +250,9 @@ class particle_importer:
             bpy.ops.object.delete() 
 
     def set_radius(self, r):
-        emitter_obj = bpy.data.objects[self.emitter_obj_name]
-        emitter_obj.particle_systems[0].settings.particle_size = r
-        emitter_obj.particle_systems[0].settings.display_size = r
+        particles_setting = bpy.data.particles[self.particle_settings_name]
+        particles_setting.particle_size = r
+        particles_setting.display_size = r
 
     def set_max_value(self, r):
         self.max_value = r
@@ -294,13 +266,22 @@ class particle_importer:
         material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def update_display(self, method):
-        emitter_obj = bpy.data.objects[self.emitter_obj_name]
-        emitter_obj.particle_systems[0].settings.display_method = method
+        particles_setting = bpy.data.particles[self.particle_settings_name]
+        particles_setting.display_method = method
     
     def get_obj(self):
-        return bpy.data.objects[self.emitter_obj_name]
+        name = self.get_obj_name()
+        if name:
+            return bpy.data.objects[name]
+        return None
     
     def check_valid(self):
-        if self.emitter_obj_name not in bpy.data.objects or self.sphere_obj_name not in bpy.data.objects or self.material_name not in bpy.data.materials:
+        if not self.get_obj_name() or self.sphere_obj_name not in bpy.data.objects or self.material_name not in bpy.data.materials:
             return False
         return True
+    
+    def get_obj_name(self):
+        for obj in bpy.data.objects:
+            if obj.type =="MESH" and len(obj.particle_systems)>0 and obj.particle_systems[0].settings.name ==self.particle_settings_name:
+                    return obj.name
+        return None

@@ -38,6 +38,7 @@ def register():
 
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
     bpy.app.handlers.load_post.append(load_post)
+    subscribe_to_selected()
 
 
 def unregister():

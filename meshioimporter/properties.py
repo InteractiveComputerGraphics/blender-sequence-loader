@@ -42,8 +42,10 @@ class color_attribtue(bpy.types.PropertyGroup):
 
 
 class imported_seq_properties(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(
+        name='name', description="name of the sequence, can be modified by user", update = update_name, )
     pattern: bpy.props.StringProperty(
-        name='pattern', description="pattern, using absolute path")
+        name='pattern', description="the (absolutoe or relative) path of the sequence")
     relative: bpy.props.BoolProperty(
         name='Use relative path', description="whether or not to use reletive path")
     type: bpy.props.IntProperty(
@@ -65,7 +67,6 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         name='max value', description='max value to clamp the field', update=update_max_value)
     min_value: bpy.props.FloatProperty(
         name='min value', description='min value to clamp the field', default=0, update=update_min_value)
-    obj_name: bpy.props.StringProperty()
     material_name: bpy.props.StringProperty()
 
     #  because now, importer list has different size with property imported.
@@ -78,6 +79,7 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     mesh_name: bpy.props.StringProperty()
 
     # particles only
+    particle_settings_name: bpy.props.StringProperty()
     radius: bpy.props.FloatProperty(name='radius', description='raidus of the particles',
                                     default=0.01, update=update_particle_radius, min=0, precision=6)
     display: bpy.props.EnumProperty(

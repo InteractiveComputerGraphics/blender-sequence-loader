@@ -25,3 +25,10 @@ def check_type(fs):
         return "particle"
     elif mesh.cells[0].type == "triangle":
         return "mesh"
+
+# list is the iteratible things, like bpy.data.objects, or bpy.data.meshes
+def find_next_name(old_name,list):
+    i=1
+    while old_name+str(i) in list:
+        i+=1
+    return old_name+str(i)
