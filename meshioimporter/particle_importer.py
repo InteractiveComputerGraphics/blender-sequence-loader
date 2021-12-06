@@ -9,7 +9,7 @@ import traceback
 
 class particle_importer:
     def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
-    particle_settings_name=None, sphere_obj_name=None, material_name=None, radius=0.01):
+    particle_settings_name=None, radius=0.01):
 
         # self.path=path
         self.fileseq = fileseq
@@ -23,14 +23,10 @@ class particle_importer:
         self.end = 500
         self.particle_num = 0
         self.particle_settings_name = None
-        self.sphere_obj_name = None
-        self.material_name = None       
-        if not sphere_obj_name or not material_name or not particle_settings_name:
+        if not particle_settings_name:
             self.init_particles()
         else:
             self.particle_settings_name = particle_settings_name
-            self.sphere_obj_name = sphere_obj_name
-            self.material_name = material_name
             self.particle_num = bpy.data.particles[self.particle_settings_name].count
 
     def init_particles(self):
@@ -71,7 +67,6 @@ class particle_importer:
         sphere_obj = bpy.context.active_object
         # same as emitter_obj, blender will change name
         sphere_obj.name = "Sphere_"+self.name 
-        self.sphere_obj_name = sphere_obj.name
         sphere_obj.hide_set(True)
         sphere_obj.hide_viewport = False
         sphere_obj.hide_render = True
@@ -80,12 +75,12 @@ class particle_importer:
         #  create new material
         material = bpy.data.materials.new("Material_"+self.name)
         material.use_nodes = True
-        self.material_name = material.name
+        # self.material_name = material.name
 
         #  init nodes and links of material
         #  because I want to set self.max_value as particles number by default, so I read frame first, then create material(it needs this self.max_value when setting default value for math node)
         self.read_first_frame()
-        self.init_materials()
+        self.init_materials(material.name)
 
         emitter_object.active_material = material
         sphere_obj.active_material = material
@@ -117,8 +112,8 @@ class particle_importer:
         self.max_value = self.particle_num
 
 
-    def init_materials(self):
-        material = bpy.data.materials[self.material_name]
+    def init_materials(self, material_name):
+        material = bpy.data.materials[material_name]
         nodes = material.node_tree.nodes
         links = material.node_tree.links
         nodes.clear()
@@ -127,15 +122,15 @@ class particle_importer:
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
         vecMath = nodes.new( type = 'ShaderNodeVectorMath' )
         vecMath.operation = 'DOT_PRODUCT'
-        math1 = nodes.new( type = 'ShaderNodeMath' )
-        math1.operation = 'SQRT'
-        math2 = nodes.new( type = 'ShaderNodeMath' )
-        math2.operation = 'SUBTRACT'
-        math2.inputs[1].default_value = self.min_value
-        math3 = nodes.new( type = 'ShaderNodeMath' )
-        math3.operation = 'MULTIPLY'
-        math3.inputs[1].default_value = 1.0/(self.max_value-self.min_value)
-        math3.use_clamp = True
+        # math1 = nodes.new( type = 'ShaderNodeMath' )
+        # math1.operation = 'SQRT'
+        # math2 = nodes.new( type = 'ShaderNodeMath' )
+        # math2.operation = 'SUBTRACT'
+        # math2.inputs[1].default_value = self.min_value
+        # math3 = nodes.new( type = 'ShaderNodeMath' )
+        # math3.operation = 'MULTIPLY'
+        # math3.inputs[1].default_value = 1.0/(self.max_value-self.min_value)
+        # math3.use_clamp = True
         ramp = nodes.new( type = 'ShaderNodeValToRGB' )
         ramp.color_ramp.elements[0].color = (0, 0, 1, 1)
         diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")   
@@ -147,10 +142,7 @@ class particle_importer:
         
         link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[0])
         link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[1])
-        link = links.new(vecMath.outputs["Value"],math1.inputs["Value"])
-        link = links.new(math1.outputs["Value"],math2.inputs[0])
-        link = links.new(math2.outputs["Value"],math3.inputs[0])
-        link = links.new( math3.outputs['Value'], ramp.inputs['Fac'] )
+        link = links.new(vecMath.outputs["Value"],ramp.inputs['Fac'])
         link = links.new(ramp.outputs["Color"], diffuse.inputs["Color"])
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
     
@@ -213,6 +205,10 @@ class particle_importer:
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 vel_att = np.zeros((self.particle_num, 3))
                 vel_att[:, :b] = att_data
+                vel_att[:, :b] = np.clip(
+                    vel_att[:, :b], self.min_value, self.max_value)
+                vel_att[:, :b] -= self.min_value
+                vel_att /= (self.max_value-self.min_value)
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
             vel = [0] * 3*self.particle_num
@@ -235,19 +231,29 @@ class particle_importer:
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
+        
+        name = self.get_sphere_obj_name()
+        if name and  name in bpy.data.objects:
+            sphere_obj = bpy.data.objects[name]
+            sphere_obj.hide_set(False)
+            sphere_obj.hide_viewport = False
+            sphere_obj.hide_select = False
+            sphere_obj.select_set(True)
+            bpy.ops.object.delete()
+        bpy.ops.object.select_all(action="DESELECT")
+
         name = self.get_obj_name()
         if name and  name in bpy.data.objects:
             bpy.data.objects[name].select_set(True)
             bpy.ops.object.delete()
         bpy.ops.object.select_all(action="DESELECT")
-        
-        if self.sphere_obj_name in bpy.data.objects:
-            sphere_obj = bpy.data.objects[self.sphere_obj_name]
-            sphere_obj.hide_set(False)
-            sphere_obj.hide_viewport = False
-            sphere_obj.hide_select = False
-            sphere_obj.select_set(True)
-            bpy.ops.object.delete() 
+        # if self.sphere_obj_name in bpy.data.objects:
+        #     sphere_obj = bpy.data.objects[self.sphere_obj_name]
+        #     sphere_obj.hide_set(False)
+        #     sphere_obj.hide_viewport = False
+        #     sphere_obj.hide_select = False
+        #     sphere_obj.select_set(True)
+        #     bpy.ops.object.delete() 
 
     def set_radius(self, r):
         particles_setting = bpy.data.particles[self.particle_settings_name]
@@ -256,14 +262,14 @@ class particle_importer:
 
     def set_max_value(self, r):
         self.max_value = r
-        material = bpy.data.materials[self.material_name]
-        material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
+        # material = bpy.data.materials[self.material_name]
+        # material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def set_min_value(self, r):
         self.min_value = r
-        material = bpy.data.materials[self.material_name]
-        material.node_tree.nodes[3].inputs[1].default_value = self.min_value
-        material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
+        # material = bpy.data.materials[self.material_name]
+        # material.node_tree.nodes[3].inputs[1].default_value = self.min_value
+        # material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def update_display(self, method):
         particles_setting = bpy.data.particles[self.particle_settings_name]
@@ -276,7 +282,7 @@ class particle_importer:
         return None
     
     def check_valid(self):
-        if not self.get_obj_name() or self.sphere_obj_name not in bpy.data.objects or self.material_name not in bpy.data.materials:
+        if not self.get_obj_name():
             return False
         return True
     
@@ -284,4 +290,10 @@ class particle_importer:
         for obj in bpy.data.objects:
             if obj.type =="MESH" and len(obj.particle_systems)>0 and obj.particle_systems[0].settings.name ==self.particle_settings_name:
                     return obj.name
+        return None
+
+    def get_sphere_obj_name(self):
+        particles_setting = bpy.data.particles[self.particle_settings_name]
+        if particles_setting.instance_object:
+            return particles_setting.instance_object.name
         return None

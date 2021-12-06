@@ -10,7 +10,7 @@ from .utils import *
 
 
 class mesh_importer:
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None,  material_name=None):
+    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None):
         self.name = fileseq.basename()+"@"+fileseq.extension() 
         self.fileseq = fileseq
         self.transform_matrix = transform_matrix
@@ -21,12 +21,10 @@ class mesh_importer:
         self.min_value = 0
         self.max_value = 100
         self.mesh_name = None
-        self.material_name = None
-        if not mesh_name and not material_name:
+        if not mesh_name:
             self.init_mesh()
         else:
             self.mesh_name = mesh_name
-            self.material_name= material_name
 
     def create_face_data(self, meshio_cells):
         # todo: support other mesh structure, such as tetrahedron
@@ -147,7 +145,6 @@ class mesh_importer:
         
         # init material
         material = bpy.data.materials.new("Material_" + self.name)
-        self.material_name = material.name
         material.use_nodes = True
         nodes = material.node_tree.nodes
         links = material.node_tree.links
@@ -207,7 +204,7 @@ class mesh_importer:
             return bpy.data.objects[name]
     
     def check_valid(self):
-        if self.mesh_name not in bpy.data.meshes or not self.get_obj_name() or self.material_name not in bpy.data.materials:
+        if self.mesh_name not in bpy.data.meshes or not self.get_obj_name() :
             return False
         return True
     

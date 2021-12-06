@@ -90,9 +90,9 @@ class meshio_loader_OT_load(bpy.types.Operator):
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
             imported_prop[-1].name = importer.get_obj_name()
-            imported_prop[-1].sphere_obj_name = importer.sphere_obj_name
+            # imported_prop[-1].sphere_obj_name = importer.sphere_obj_name
             imported_prop[-1].particle_settings_name = importer.particle_settings_name
-            imported_prop[-1].material_name = importer.material_name
+            # imported_prop[-1].material_name = importer.material_name
             bpy.app.handlers.frame_change_post.append(importer)
 
         if importer_prop.type == "mesh":
@@ -108,7 +108,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].type = 1
             
             imported_prop[-1].mesh_name = importer.mesh_name
-            imported_prop[-1].material_name = importer.material_name
+            # imported_prop[-1].material_name = importer.material_name
             imported_prop[-1].name = importer.get_obj_name()
             imported_prop[-1].max_value = 100
             for co_at in importer.get_color_attribute():

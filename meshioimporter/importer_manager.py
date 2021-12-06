@@ -40,12 +40,8 @@ def load_post(scene):
                 os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
             else:
                 fs = fileseq.findSequenceOnDisk(l.pattern)
-            Pi = particle_importer(fileseq=fs, particle_settings_name=l.particle_settings_name, sphere_obj_name=l.sphere_obj_name, material_name=l.material_name, radius=l.radius)
+            Pi = particle_importer(fileseq=fs, particle_settings_name=l.particle_settings_name, radius=l.radius)
             importer_list.append(Pi)
-
-            l.namge = Pi.get_obj_name()
-            l.sphere_obj_name = Pi.sphere_obj_name
-            l.material_name = Pi.material_name
             l.importer_list_index = len(importer_list)-1
             for all_att in l.all_attributes:
                 Pi.render_attributes.append(all_att.name)
@@ -63,11 +59,8 @@ def load_post(scene):
             else:
                 fs = fileseq.findSequenceOnDisk(l.pattern)
             Mi = mesh_importer(
-                fileseq=fs, mesh_name=l.mesh_name,  material_name=l.material_name)
+                fileseq=fs, mesh_name=l.mesh_name)
             importer_list.append(Mi)
-            l.name = Mi.get_obj_name()
-            l.mesh_name = Mi.mesh_name
-            l.material_name = Mi.material_name
             l.importer_list_index = len(importer_list)-1
 
             for all_att in l.all_attributes:

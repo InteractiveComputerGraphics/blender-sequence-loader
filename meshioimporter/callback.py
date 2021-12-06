@@ -234,6 +234,8 @@ def update_name(self,context):
     importer.get_obj().name = name
 
 def selected_callback():
+    if not bpy.context.view_layer.objects.active:
+        return
     imported_obj_list = bpy.context.scene.my_tool.imported
     if imported_obj_list:
         for ind,im in enumerate(imported_obj_list):
