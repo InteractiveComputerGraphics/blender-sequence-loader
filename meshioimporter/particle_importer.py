@@ -23,6 +23,7 @@ class particle_importer:
         self.end = 500
         self.particle_num = 0
         self.particle_settings_name = None
+        self.use_real_value = False
         if not particle_settings_name:
             self.init_particles()
         else:
@@ -122,15 +123,8 @@ class particle_importer:
         particleInfo = nodes.new(type="ShaderNodeParticleInfo")
         vecMath = nodes.new( type = 'ShaderNodeVectorMath' )
         vecMath.operation = 'DOT_PRODUCT'
-        # math1 = nodes.new( type = 'ShaderNodeMath' )
-        # math1.operation = 'SQRT'
-        # math2 = nodes.new( type = 'ShaderNodeMath' )
-        # math2.operation = 'SUBTRACT'
-        # math2.inputs[1].default_value = self.min_value
-        # math3 = nodes.new( type = 'ShaderNodeMath' )
-        # math3.operation = 'MULTIPLY'
-        # math3.inputs[1].default_value = 1.0/(self.max_value-self.min_value)
-        # math3.use_clamp = True
+        math1 = nodes.new( type = 'ShaderNodeMath' )
+        math1.operation = 'SQRT'
         ramp = nodes.new( type = 'ShaderNodeValToRGB' )
         ramp.color_ramp.elements[0].color = (0, 0, 1, 1)
         diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")   
@@ -142,7 +136,8 @@ class particle_importer:
         
         link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[0])
         link = links.new(particleInfo.outputs["Velocity"],vecMath.inputs[1])
-        link = links.new(vecMath.outputs["Value"],ramp.inputs['Fac'])
+        link = links.new(vecMath.outputs["Value"],math1.inputs["Value"])
+        link = links.new(math1.outputs["Value"],ramp.inputs['Fac'])
         link = links.new(ramp.outputs["Color"], diffuse.inputs["Color"])
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
     
@@ -204,11 +199,15 @@ class particle_importer:
                     show_message_box(
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 vel_att = np.zeros((self.particle_num, 3))
-                vel_att[:, :b] = att_data
-                vel_att[:, :b] = np.clip(
-                    vel_att[:, :b], self.min_value, self.max_value)
-                vel_att[:, :b] -= self.min_value
-                vel_att /= (self.max_value-self.min_value)
+                # if not use real value, then use clamped value
+                if not self.use_real_value:
+                    vel_att[:, 0] = np.linalg.norm(att_data, axis=1)
+                    vel_att[:, 0] -= self.min_value
+                    vel_att[:, 0] /= (self.max_value-self.min_value)
+                    vel_att[:, 0] = np.clip(
+                        vel_att[:, 0], 0,1)
+                else:
+                    vel_att[:, :b] = att_data
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
             vel = [0] * 3*self.particle_num
@@ -297,3 +296,5 @@ class particle_importer:
         if particles_setting.instance_object:
             return particles_setting.instance_object.name
         return None
+    def set_use_real_value(self,use_real_value):
+        self.use_real_value =use_real_value

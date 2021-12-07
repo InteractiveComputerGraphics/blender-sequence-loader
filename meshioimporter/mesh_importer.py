@@ -21,6 +21,7 @@ class mesh_importer:
         self.min_value = 0
         self.max_value = 100
         self.mesh_name = None
+        self.use_real_value = False
         if not mesh_name:
             self.init_mesh()
         else:
@@ -105,7 +106,7 @@ class mesh_importer:
                 self.render_attributes.append(n)
         # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
         if self.used_render_attribute:
-            v_col = mesh.vertex_colors.new()
+            v_col = mesh.attributes.new(name = "att",type="FLOAT_VECTOR",domain = "CORNER")
             att_data = meshio_mesh.point_data[self.used_render_attribute]
             mesh_colors = None
             if len(att_data.shape) >= 3:
@@ -122,18 +123,21 @@ class mesh_importer:
                     show_message_box(
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 
-                #  4-dim, rgba
-                mesh_colors = np.zeros((len(mesh_faces)*3, 4))
+                #  3-dim, xyz
+                mesh_colors = np.zeros((len(mesh_faces)*3, 3))
                 # copy the data from 0-b dims
-                mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
-                mesh_colors[:, :b] = np.clip(
-                    mesh_colors[:, :b], self.min_value, self.max_value)
-                mesh_colors[:, :b] -= self.min_value
-                mesh_colors /= (self.max_value-self.min_value)
+                
 
-                # set alpha channel to 1
-                mesh_colors[:, 3] = 1 
-                v_col.data.foreach_set('color', mesh_colors.ravel())
+                # if not use real value, then use clamped value
+                if not self.use_real_value:
+                    mesh_colors[:, 0]  =  np.linalg.norm(att_data[mesh_faces.ravel()], axis=1)
+                    mesh_colors[:, 0] -= self.min_value
+                    mesh_colors[:, 0] /= (self.max_value-self.min_value)
+                    mesh_colors[:, 0] = np.clip(
+                        mesh_colors[:, 0], 0,1)
+                else:
+                    mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
+                v_col.data.foreach_set('vector', mesh_colors.ravel())
 
         mesh.update()
         mesh.validate()
@@ -150,12 +154,28 @@ class mesh_importer:
         links = material.node_tree.links
         nodes.clear()
         links.clear()
+
+        attribute_node = nodes.new(type="ShaderNodeAttribute")
+        attribute_node.attribute_name ="att"
+        vecMath = nodes.new( type = 'ShaderNodeVectorMath' )
+        vecMath.operation = 'DOT_PRODUCT'
+        math1 = nodes.new( type = 'ShaderNodeMath' )
+        math1.operation = 'SQRT'
+        ramp = nodes.new( type = 'ShaderNodeValToRGB' )
+        ramp.color_ramp.elements[0].color = (0, 0, 1, 1)
+        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")   
         output = nodes.new(type="ShaderNodeOutputMaterial")
-        diffuse = nodes.new(type="ShaderNodeBsdfDiffuse")
-        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
-        vertex_color_node = nodes.new(type="ShaderNodeVertexColor")
-        link = links.new(
-            vertex_color_node.outputs["Color"], diffuse.inputs["Color"])
+
+        for i,n in enumerate(nodes):
+            n.location.x = i*300
+
+        
+        link = links.new(attribute_node.outputs["Vector"],vecMath.inputs[0])
+        link = links.new(attribute_node.outputs["Vector"],vecMath.inputs[1])
+        link = links.new(vecMath.outputs["Value"],math1.inputs["Value"])
+        link = links.new(math1.outputs["Value"],ramp.inputs['Fac'])
+        link = links.new(ramp.outputs["Color"], diffuse.inputs["Color"])
+        link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])            
         
         #  create object
         new_object = bpy.data.objects.new("Obj_"+self.name, mesh)
@@ -213,3 +233,5 @@ class mesh_importer:
             if obj.type =="MESH" and obj.data.name ==self.mesh_name:
                     return obj.name
         return None
+    def set_use_real_value(self,use_real_value):
+        self.use_real_value =use_real_value

@@ -117,3 +117,12 @@ class meshio_loader_OT_load(bpy.types.Operator):
             #  add importer to blender animation system
             bpy.app.handlers.frame_change_post.append(importer)
         return {"FINISHED"}
+
+
+# class meshio_loader_OT_load(bpy.types.Operator):
+#     '''
+#     This operator loads a sequnce
+#     '''
+#     bl_label = "Load Sequences"
+#     bl_idname = "sequence.load"
+#     bl_options = {"UNDO"}

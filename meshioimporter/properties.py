@@ -67,7 +67,10 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         name='max value', description='max value to clamp the field', update=update_max_value)
     min_value: bpy.props.FloatProperty(
         name='min value', description='min value to clamp the field', default=0, update=update_min_value)
-    material_name: bpy.props.StringProperty()
+    use_real_value: bpy.props.BoolProperty(
+        name= 'Use real value', description = "Wheter to use real attribute value or clamped value", default = False,
+        update = update_use_real_value
+    )
 
     #  because now, importer list has different size with property imported.
     #  when using imported_num, this can directly lead to the index of property imported, but not index of importer list
@@ -88,7 +91,6 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         items=[("RENDER", "Rendered", ""), ('DOT', 'Point', '')],
         update=update_display,
     )
-    sphere_obj_name: bpy.props.StringProperty()
 
 
 class tool_properties(bpy.types.PropertyGroup):

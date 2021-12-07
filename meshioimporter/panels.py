@@ -44,8 +44,10 @@ class sequence_list_panel(bpy.types.Panel):
             info_part = layout.column()
             info_part.prop(item, 'start')
             info_part.prop(item, 'end')
-            info_part.prop(item, 'min_value')
-            info_part.prop(item, 'max_value')
+            info_part.prop(item, 'use_real_value')
+            if not item.use_real_value:
+                info_part.prop(item, 'min_value')
+                info_part.prop(item, 'max_value')
             info_part.prop(item, 'all_attributes_enum')
 
             if item.type == 0:
