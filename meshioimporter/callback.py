@@ -243,7 +243,21 @@ def update_use_real_value(self,context):
         bpy.ops.sequence.remove()
         return
     use_real_value = context.scene.my_tool.imported[idx].use_real_value
+    context.scene.my_tool.imported[idx].use_clamped_value = not use_real_value
     importer.set_use_real_value(use_real_value)
+
+
+def update_use_clamped_value(self,context):
+    idx, importer_list_index = get_index(context)
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
+    if context.scene.my_tool.imported[idx].use_real_value !=  context.scene.my_tool.imported[idx].use_clamped_value:
+        return
+    context.scene.my_tool.imported[idx].use_real_value = not context.scene.my_tool.imported[idx].use_real_value
+
 
 
 

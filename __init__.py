@@ -29,6 +29,8 @@ classes = [
     color_attribtue,
     imported_seq_properties,
     tool_properties,
+    edit_sequence_panel,
+    sequence_OT_edit,
 ]
 
 

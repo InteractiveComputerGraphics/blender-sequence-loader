@@ -64,12 +64,17 @@ class imported_seq_properties(bpy.types.PropertyGroup):
 
     # general
     max_value: bpy.props.FloatProperty(
-        name='max value', description='max value to clamp the field', update=update_max_value)
+        name='Clamped by max value', description='max value to clamp the field', update=update_max_value)
     min_value: bpy.props.FloatProperty(
-        name='min value', description='min value to clamp the field', default=0, update=update_min_value)
+        name='Clamped by min value', description='min value to clamp the field', default=0, update=update_min_value)
     use_real_value: bpy.props.BoolProperty(
-        name= 'Use real value', description = "Wheter to use real attribute value or clamped value", default = False,
+        name= 'Use original attribute value', description = "Wheter to use real attribute value or not", default = False,
         update = update_use_real_value
+    )
+
+    use_clamped_value: bpy.props.BoolProperty(
+        name= 'Use clamped attribute value', description = "Wheter to use clamped attribute value or not", default = True,
+        update = update_use_clamped_value
     )
 
     #  because now, importer list has different size with property imported.
@@ -88,7 +93,7 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     display: bpy.props.EnumProperty(
         name="display method",
         description="the way to display particles in viewport, rendered or point",
-        items=[("RENDER", "Rendered", ""), ('DOT', 'Point', '')],
+        items=[('DOT', 'Point', ''),("RENDER", "Rendered", "")],
         update=update_display,
     )
 

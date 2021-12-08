@@ -91,6 +91,7 @@ class particle_importer:
 
     def read_first_frame(self):
         particle_settings = bpy.data.particles[self.particle_settings_name]
+        particle_settings.display_method = "DOT"
         try:
             mesh = meshio.read(
                 self.fileseq[0]

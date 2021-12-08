@@ -40,11 +40,12 @@ class sequence_list_panel(bpy.types.Panel):
 
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
-
             info_part = layout.column()
             info_part.prop(item, 'start')
             info_part.prop(item, 'end')
-            info_part.prop(item, 'use_real_value')
+            small_part = info_part.row()
+            small_part.prop(item, 'use_real_value')
+            small_part.prop(item, 'use_clamped_value')
             if not item.use_real_value:
                 info_part.prop(item, 'min_value')
                 info_part.prop(item, 'max_value')
@@ -53,6 +54,39 @@ class sequence_list_panel(bpy.types.Panel):
             if item.type == 0:
                 info_part.prop(item, 'radius')
                 info_part.prop(item, 'display')
+
+
+
+class edit_sequence_panel(bpy.types.Panel):
+    '''
+    This is the panel when trying to edit the path of existed sequence
+    '''
+    bl_label = "Edit Sequence Path"
+    bl_idname = "EDIT_PT_sequence"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = "UI"
+    bl_category = "Meshio Importer"
+    bl_parent_id = "SEQUENCES_PT_list"
+    bl_options = {"DEFAULT_CLOSED"}
+    def draw(self, context):
+        layout = self.layout
+        mytool = context.scene.my_tool
+        if len(mytool.imported) > 0:
+            importer_prop = mytool.importer
+
+            layout.prop(importer_prop, "path")
+            layout.prop(importer_prop, "relative")
+            layout.prop(importer_prop, "pattern")
+            layout.prop(importer_prop, "fileseq")
+            layout.prop(importer_prop, "type")
+            layout.operator("sequence.edit")
+
+
+
+
+
+
+
 
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):

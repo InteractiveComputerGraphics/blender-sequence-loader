@@ -13,4 +13,6 @@ __all__ = [
     "tool_properties",
     "load_post",
     "subscribe_to_selected",
+    "edit_sequence_panel",
+    "sequence_OT_edit"
 ]

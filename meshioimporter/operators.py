@@ -4,6 +4,7 @@ import os
 from .importer_manager import *
 from .particle_importer import *
 from .mesh_importer import *
+from .callback import get_index
 
 #  Here are load and delete operations 
 
@@ -119,10 +120,42 @@ class meshio_loader_OT_load(bpy.types.Operator):
         return {"FINISHED"}
 
 
-# class meshio_loader_OT_load(bpy.types.Operator):
-#     '''
-#     This operator loads a sequnce
-#     '''
-#     bl_label = "Load Sequences"
-#     bl_idname = "sequence.load"
-#     bl_options = {"UNDO"}
+class sequence_OT_edit(bpy.types.Operator):
+    '''
+    This operator edits a sequnce
+    '''
+    bl_label = "Edit Sequences"
+    bl_idname = "sequence.edit"
+    def execute(self, context):
+        global importer_list
+        scene = context.scene
+        importer_prop = scene.my_tool.importer
+        imported_prop = scene.my_tool.imported
+
+        if importer_prop.relative and  not bpy.data.is_saved:
+            show_message_box("When using relative path, please save file before using it", icon="ERROR")
+            return {"CANCELLED"}
+
+        fs = importer_prop.fileseq
+        if not fs or fs == "None":
+            return {'CANCELLED'}
+        if fs == "Manual":
+            if not importer_prop.pattern:
+                show_message_box("Pattern is empty", icon="ERROR")
+                return {"CANCELLED"}
+            fs = importer_prop.path+'/'+importer_prop.pattern
+        
+        pattern = fs
+        if importer_prop.relative:
+            pattern = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
+
+
+
+        fs = fileseq.findSequenceOnDisk(fs)
+
+        _, importer_list_index = get_index(context)
+        importer = importer_list[importer_list_index]
+
+        importer.fileseq = fs
+        return {"FINISHED"}
+        
