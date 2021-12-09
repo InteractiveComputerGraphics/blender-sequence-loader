@@ -170,7 +170,7 @@ class sequence_OT_edit(bpy.types.Operator):
             for co_at in importer.get_color_attribute():
                 imported_prop[idx].all_attributes.add()
                 imported_prop[idx].all_attributes[-1].name = co_at
-            imported_prop[idx].used_color_attribute.name = 'None'
+            imported_prop[idx].used_color_attribute.name = ""
             imported_prop[idx].pattern = pattern
             imported_prop[idx].relative = importer_prop.relative
         else:
@@ -183,7 +183,7 @@ class sequence_OT_edit(bpy.types.Operator):
             for co_at in importer.get_color_attribute():
                 imported_prop[idx].all_attributes.add()
                 imported_prop[idx].all_attributes[-1].name = co_at
-            imported_prop[idx].used_color_attribute.name = 'None'
+            imported_prop[idx].used_color_attribute.name = ""
             imported_prop[idx].pattern = pattern
             imported_prop[idx].relative = importer_prop.relative
         return {"FINISHED"}

@@ -18,6 +18,7 @@ class importer_properties(bpy.types.PropertyGroup):
         name="Directory",
         subtype="DIR_PATH",
         description="You need to go to the folder with the sequence, then click \"Accept\". ",
+        update = update_path
     )
     relative: bpy.props.BoolProperty(
         name='Use relative path', description="whether or not to use reletive path")

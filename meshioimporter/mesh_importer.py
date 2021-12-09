@@ -11,8 +11,12 @@ from .utils import *
 
 class mesh_importer:
     def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None):
-        self.name = fileseq.basename()+"@"+fileseq.extension() 
-        self.fileseq = fileseq
+        if  fileseq:
+            self.name = fileseq.basename()+"@"+fileseq.extension() 
+            self.fileseq = fileseq
+        else:
+            self.fileseq = None
+            self.name =""
         self.transform_matrix = transform_matrix
         self.render_attributes = []  # all the possible attributes, and type
         self.used_render_attribute = None  # the attribute used for rendering
@@ -188,6 +192,9 @@ class mesh_importer:
 
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
+            return
+        if not self.fileseq:
+            print("File sequence doesn't exist, please remove it or edit it")
             return
         frame_number = scene.frame_current
         frame_number = max(frame_number,self.start)

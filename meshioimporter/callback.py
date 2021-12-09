@@ -50,6 +50,9 @@ def update_color_attribute(self, context):
         item.used_color_attribute.name = 'None'
 
 
+def update_path(self,context):
+    context.scene.my_tool.importer.fileseq = "None"
+
 def callback_fileseq(self, context):
     '''
     Detects all the file sequences in the directory
@@ -65,6 +68,7 @@ def callback_fileseq(self, context):
         return [("None", "No sequence detected", "")]
     file_seq = []
     if len(f) >= 20:
+        file_seq.append(("None", "Please select the pattern", "")) 
         file_seq.append(
             ("Manual", "Manual, too much sequence detected, use pattern above", ""))
     else:      

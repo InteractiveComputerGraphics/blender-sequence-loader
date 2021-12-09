@@ -80,8 +80,9 @@ class edit_sequence_panel(bpy.types.Panel):
             layout.prop(importer_prop, "fileseq")
             layout.prop(importer_prop, "type")
             layout.operator("sequence.edit")
-
-
+            item = mytool.imported[mytool.imported_num]
+            layout.label(text="use relative: "+str(item.relative))
+            layout.label(text="current path: "+item.pattern)
 
 
 
