@@ -57,11 +57,15 @@ def load_post(scene):
         # mesh importer
         elif l.type == 1:
             fs=None
+            path = None
             if l.relative:
-                fs = fileseq.findSequenceOnDisk(
-                os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
+                path = os.path.dirname(bpy.data.filepath)+"/"+l.pattern
             else:
-                fs = fileseq.findSequenceOnDisk(l.pattern)
+                path = l.pattern
+            try:
+                fs = fileseq.findSequenceOnDisk(path)
+            except:
+                show_message_box("Can't find sequence: "+ path+ "  please editing the path or remove it",icon = "ERROR")
             Mi = mesh_importer(
                 fileseq=fs, mesh_name=l.mesh_name)
             importer_list.append(Mi)
