@@ -35,11 +35,15 @@ def load_post(scene):
         # particle importer
         if l.type == 0:
             fs=None
+            path = None
             if l.relative:
-                fs = fileseq.findSequenceOnDisk(
-                os.path.dirname(bpy.data.filepath)+"/"+l.pattern)
+                path = os.path.dirname(bpy.data.filepath)+"/"+l.pattern
             else:
-                fs = fileseq.findSequenceOnDisk(l.pattern)
+                path = l.pattern
+            try:
+                fs = fileseq.findSequenceOnDisk(path)
+            except:
+                show_message_box("Can't find sequence: "+ path+ "  please editing the path or remove it",icon = "ERROR")
             Pi = particle_importer(fileseq=fs, particle_settings_name=l.particle_settings_name, radius=l.radius)
             importer_list.append(Pi)
             l.importer_list_index = len(importer_list)-1

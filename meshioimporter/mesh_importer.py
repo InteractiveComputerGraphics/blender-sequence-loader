@@ -235,3 +235,6 @@ class mesh_importer:
         return None
     def set_use_real_value(self,use_real_value):
         self.use_real_value =use_real_value
+    
+    def type(self):
+        return "mesh"

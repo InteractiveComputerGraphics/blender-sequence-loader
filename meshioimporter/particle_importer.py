@@ -11,14 +11,17 @@ class particle_importer:
     def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
     particle_settings_name=None, radius=0.01):
 
-        # self.path=path
-        self.fileseq = fileseq
-        self.name = fileseq.basename()+"@"+fileseq.extension()
+        if fileseq:
+            self.fileseq = fileseq
+            self.name = fileseq.basename()+"@"+fileseq.extension()
+        else:
+            self.fileseq = None
+            self.name = ""
         self.transform_matrix = transform_matrix
         self.render_attributes = []  # all the (name of ) color attributes
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0  # the min value of this attribute
-        self.max_value = 0  # the max value of this attribute, will be initlized as number of particles
+        self.max_value = 100  # the max value of this attribute, will be initlized as number of particles
         self.start = 0
         self.end = 500
         self.particle_num = 0
@@ -57,6 +60,7 @@ class particle_importer:
         emitter_object.particle_systems[0].settings.lifetime = 1000
         emitter_object.particle_systems[0].settings.particle_size = 0.01
         emitter_object.particle_systems[0].settings.display_size = 0.01
+        emitter_object.particle_systems[0].settings.display_method = "DOT"
 
 
         bpy.ops.object.select_all(action="DESELECT")
@@ -79,7 +83,6 @@ class particle_importer:
         # self.material_name = material.name
 
         #  init nodes and links of material
-        #  because I want to set self.max_value as particles number by default, so I read frame first, then create material(it needs this self.max_value when setting default value for math node)
         self.read_first_frame()
         self.init_materials(material.name)
 
@@ -91,7 +94,6 @@ class particle_importer:
 
     def read_first_frame(self):
         particle_settings = bpy.data.particles[self.particle_settings_name]
-        particle_settings.display_method = "DOT"
         try:
             mesh = meshio.read(
                 self.fileseq[0]
@@ -111,7 +113,6 @@ class particle_importer:
                 "no attributes avaible, all particles will be rendered as the same color"
             )
 
-        self.max_value = self.particle_num
 
 
     def init_materials(self, material_name):
@@ -146,6 +147,9 @@ class particle_importer:
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
             return
+        if not self.fileseq:
+            print("File sequence doesn't exist, please remove it or edit it")
+            return
         frame_number = scene.frame_current
         frame_number = max(frame_number,self.start)
         frame_number = min(frame_number,self.end)
@@ -156,8 +160,8 @@ class particle_importer:
                 self.fileseq[frame_number]
             )
         except Exception as e:
-            show_message_box("meshio error when reading: " +
-                             self.fileseq[frame_number]+",\n please check console for more details", icon="ERROR")
+            print("meshio error when reading: " +
+                             self.fileseq[frame_number])
             traceback.print_exc()
             return
         emitter_object = self.get_obj()
@@ -247,13 +251,6 @@ class particle_importer:
             bpy.data.objects[name].select_set(True)
             bpy.ops.object.delete()
         bpy.ops.object.select_all(action="DESELECT")
-        # if self.sphere_obj_name in bpy.data.objects:
-        #     sphere_obj = bpy.data.objects[self.sphere_obj_name]
-        #     sphere_obj.hide_set(False)
-        #     sphere_obj.hide_viewport = False
-        #     sphere_obj.hide_select = False
-        #     sphere_obj.select_set(True)
-        #     bpy.ops.object.delete() 
 
     def set_radius(self, r):
         particles_setting = bpy.data.particles[self.particle_settings_name]
@@ -262,14 +259,9 @@ class particle_importer:
 
     def set_max_value(self, r):
         self.max_value = r
-        # material = bpy.data.materials[self.material_name]
-        # material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def set_min_value(self, r):
         self.min_value = r
-        # material = bpy.data.materials[self.material_name]
-        # material.node_tree.nodes[3].inputs[1].default_value = self.min_value
-        # material.node_tree.nodes[4].inputs[1].default_value = 1/ (self.max_value - self.min_value)
 
     def update_display(self, method):
         particles_setting = bpy.data.particles[self.particle_settings_name]
@@ -299,3 +291,6 @@ class particle_importer:
         return None
     def set_use_real_value(self,use_real_value):
         self.use_real_value =use_real_value
+
+    def type(self):
+        return "particle"

@@ -153,9 +153,38 @@ class sequence_OT_edit(bpy.types.Operator):
 
         fs = fileseq.findSequenceOnDisk(fs)
 
-        _, importer_list_index = get_index(context)
+        idx, importer_list_index = get_index(context)
         importer = importer_list[importer_list_index]
-
-        importer.fileseq = fs
+        if importer_prop.type != importer.type():
+            print(importer_prop.type)
+            print(importer.type())
+            show_message_box("You are editing with a different type of sequences",icon = "ERROR")
+            return {"CANCELLED"}
+        if importer.type()=="particle":
+            importer.fileseq = fs
+            importer.render_attributes = []  
+            importer.used_render_attribute = None
+            importer.read_first_frame()
+            imported_prop[idx].all_attributes.clear()
+            imported_prop[idx].all_attributes_enum = "None"
+            for co_at in importer.get_color_attribute():
+                imported_prop[idx].all_attributes.add()
+                imported_prop[idx].all_attributes[-1].name = co_at
+            imported_prop[idx].used_color_attribute.name = 'None'
+            imported_prop[idx].pattern = pattern
+            imported_prop[idx].relative = importer_prop.relative
+        else:
+            importer.fileseq = fs
+            importer.render_attributes = []  
+            importer.used_render_attribute = None
+            importer.load_mesh(fs[0])
+            imported_prop[idx].all_attributes.clear()
+            imported_prop[idx].all_attributes_enum = "None"
+            for co_at in importer.get_color_attribute():
+                imported_prop[idx].all_attributes.add()
+                imported_prop[idx].all_attributes[-1].name = co_at
+            imported_prop[idx].used_color_attribute.name = 'None'
+            imported_prop[idx].pattern = pattern
+            imported_prop[idx].relative = importer_prop.relative
         return {"FINISHED"}
         
