@@ -86,7 +86,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].pattern = pattern
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
-            imported_prop[-1].max_value = importer.particle_num
+            imported_prop[-1].max_value = importer.max_value
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
@@ -111,7 +111,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].mesh_name = importer.mesh_name
             # imported_prop[-1].material_name = importer.material_name
             imported_prop[-1].name = importer.get_obj_name()
-            imported_prop[-1].max_value = 100
+            imported_prop[-1].max_value = importer.max_value
             for co_at in importer.get_color_attribute():
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
@@ -156,8 +156,6 @@ class sequence_OT_edit(bpy.types.Operator):
         idx, importer_list_index = get_index(context)
         importer = importer_list[importer_list_index]
         if importer_prop.type != importer.type():
-            print(importer_prop.type)
-            print(importer.type())
             show_message_box("You are editing with a different type of sequences",icon = "ERROR")
             return {"CANCELLED"}
         if importer.type()=="particle":

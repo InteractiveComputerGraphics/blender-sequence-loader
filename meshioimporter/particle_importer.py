@@ -22,6 +22,8 @@ class particle_importer:
         self.used_render_attribute = None  # the attribute used for rendering
         self.min_value = 0  # the min value of this attribute
         self.max_value = 100  # the max value of this attribute, will be initlized as number of particles
+        self.current_min =0
+        self.current_max =0
         self.start = 0
         self.end = 500
         self.particle_num = 0
@@ -207,6 +209,8 @@ class particle_importer:
                 # if not use real value, then use clamped value
                 if not self.use_real_value:
                     vel_att[:, 0] = np.linalg.norm(att_data, axis=1)
+                    self.current_min = np.min(vel_att[:, 0])
+                    self.current_max = np.max(vel_att[:, 0])
                     vel_att[:, 0] -= self.min_value
                     vel_att[:, 0] /= (self.max_value-self.min_value)
                     vel_att[:, 0] = np.clip(

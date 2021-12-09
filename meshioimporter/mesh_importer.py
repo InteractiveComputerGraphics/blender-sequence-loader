@@ -24,6 +24,8 @@ class mesh_importer:
         self.end = 500
         self.min_value = 0
         self.max_value = 100
+        self.current_min =0
+        self.current_max =0
         self.mesh_name = None
         self.use_real_value = False
         if not mesh_name:
@@ -135,6 +137,8 @@ class mesh_importer:
                 # if not use real value, then use clamped value
                 if not self.use_real_value:
                     mesh_colors[:, 0]  =  np.linalg.norm(att_data[mesh_faces.ravel()], axis=1)
+                    self.current_min = np.min(mesh_colors[:, 0])
+                    self.current_max = np.max(mesh_colors[:, 0])
                     mesh_colors[:, 0] -= self.min_value
                     mesh_colors[:, 0] /= (self.max_value-self.min_value)
                     mesh_colors[:, 0] = np.clip(

@@ -73,6 +73,11 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         update = update_use_real_value
     )
 
+    ref_max_value: bpy.props.FloatProperty(
+        name='Max (norm) value in current frame', description='max value in current frame', get = get_ref_max_value)
+    ref_min_value: bpy.props.FloatProperty(
+        name='Min (norm) value in current frame', description='min value in current frame', get = get_ref_min_value)
+
     use_clamped_value: bpy.props.BoolProperty(
         name= 'Use clamped attribute value', description = "Wheter to use clamped attribute value or not", default = True,
         update = update_use_clamped_value

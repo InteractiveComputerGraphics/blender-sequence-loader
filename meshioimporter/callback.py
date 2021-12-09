@@ -263,6 +263,17 @@ def update_use_clamped_value(self,context):
     context.scene.my_tool.imported[idx].use_real_value = not context.scene.my_tool.imported[idx].use_real_value
 
 
+def get_ref_max_value(self):
+    idx, importer_list_index = get_index(bpy.context)
+    importer = importer_list[importer_list_index]
+    return importer.current_max
+
+def get_ref_min_value(self):
+    idx, importer_list_index = get_index(bpy.context)
+    importer = importer_list[importer_list_index]
+    return importer.current_min
+
+
 
 
 def selected_callback():
