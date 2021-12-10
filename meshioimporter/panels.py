@@ -48,8 +48,8 @@ class sequence_list_panel(bpy.types.Panel):
             small_part.prop(item, 'use_clamped_value')
             if not item.use_real_value:
                 small_part = info_part.row()
-                small_part.prop(item,'ref_max_value')
                 small_part.prop(item,'ref_min_value')
+                small_part.prop(item,'ref_max_value')
                 small_part = info_part.row()
                 small_part.prop(item, 'min_value')
                 small_part.prop(item, 'max_value')
