@@ -3,9 +3,7 @@ from .particle_importer import *
 import fileseq
 import bpy
 from bpy.app.handlers import persistent
-importer = None
 importer_list = []
-imported_count = 0
 
 from .callback import selected_callback
 

@@ -42,9 +42,6 @@ class meshio_loader_OT_load(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        
-
-        global importer
         global importer_list
         scene = context.scene
         importer_prop = scene.my_tool.importer
@@ -67,15 +64,18 @@ class meshio_loader_OT_load(bpy.types.Operator):
         if importer_prop.relative:
             pattern = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
 
-
-
         fs = fileseq.findSequenceOnDisk(fs)
 
+        data_type=None
+        color_attributes =None 
+        try:
+            data_type, color_attributes = pre_check(fs[0])
+        except Exception as e:
+            self.report({"ERROR_INVALID_INPUT"},"loading: "+str(fs)+" failed, here is the error:,\n"+ traceback.format_exc())
+            print("loading: "+str(fs)+" failed, here is the error:,\n"+ traceback.format_exc())
+            return {"CANCELLED"}
 
-        if importer_prop.type == "particle":
-            if importer:
-                importer = None
-
+        if data_type =='particle':
             importer = particle_importer(fs)
             importer_list.append(importer)
             #  save information, will be used when restart .blender file
@@ -87,7 +87,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
             imported_prop[-1].max_value = importer.max_value
-            for co_at in importer.get_color_attribute():
+            for co_at in color_attributes():
+                importer.color_attributes.append(co_at)
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
             imported_prop[-1].name = importer.get_obj_name()
@@ -96,9 +97,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             # imported_prop[-1].material_name = importer.material_name
             bpy.app.handlers.frame_change_post.append(importer)
 
-        if importer_prop.type == "mesh":
-            if importer:
-                importer = None
+        elif data_type == "mesh":
+
             importer = mesh_importer(fs)
             importer_list.append(importer)
             #  save information, will be used when restart .blender file
@@ -112,7 +112,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
             # imported_prop[-1].material_name = importer.material_name
             imported_prop[-1].name = importer.get_obj_name()
             imported_prop[-1].max_value = importer.max_value
-            for co_at in importer.get_color_attribute():
+            for co_at in color_attributes:
+                importer.color_attributes.append(co_at)
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at
             #  add importer to blender animation system

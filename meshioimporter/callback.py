@@ -2,7 +2,6 @@ import bpy
 import fileseq
 from .utils import *
 from .importer_manager import *
-import traceback
 
 #  Codes here are mostly about the callback functions and update functions used in properties.py 
 
@@ -77,35 +76,6 @@ def callback_fileseq(self, context):
             file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
         file_seq.append(("Manual", "Manually set the pattern, use the pattern entered above", ""))
     return file_seq
-
-
-#  this function precheck and set the type of this sequence
-def update_fileseq(self, context):
-    '''
-    When a file sequence selected, this function here do some pre-check, e.g. check if it's particle or mesh.
-    '''
-    file_seq_items_name = context.scene.my_tool.importer.fileseq
-    if file_seq_items_name == "None":
-        return
-    f = None
-    if file_seq_items_name == "Manual":
-        try:
-            p = context.scene.my_tool.importer.path
-            pattern = context.scene.my_tool.importer.pattern
-            f = fileseq.findSequenceOnDisk(p + "/" + pattern)
-        except:
-            show_message_box(
-                "can't find this sequence with pattern \"" + pattern+"\"", icon="ERROR")
-    else:
-        f = fileseq.findSequenceOnDisk(file_seq_items_name)
-    if f:
-        try:
-            context.scene.my_tool.importer.type = check_type(f[0])
-        except Exception as e:
-            show_message_box("meshio error when reading: " +
-                             f[0]+",\n please check console for more details. And please don't load sequence.", icon="ERROR")
-            traceback.print_exc()
-            return
 
 
 def update_particle_radius(self, context):
@@ -209,6 +179,8 @@ def update_end(self,context):
 def update_imported_num(self,context):
     imported_obj_list = context.scene.my_tool.imported
     if imported_obj_list:
+        if bpy.context.active_object.mode != "OBJECT":
+            return
         idx = context.scene.my_tool.imported_num
         bpy.ops.object.select_all(action='DESELECT')
         importer = importer_list[imported_obj_list[idx].importer_list_index]

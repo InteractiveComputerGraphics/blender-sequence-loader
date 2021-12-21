@@ -18,8 +18,8 @@ class mesh_importer:
             self.fileseq = None
             self.name =""
         self.transform_matrix = transform_matrix
-        self.render_attributes = []  # all the possible attributes, and type
-        self.used_render_attribute = None  # the attribute used for rendering
+        self.color_attributes = []  # all the possible attributes, and type
+        self.used_color_attribute = None  # the attribute used for rendering
         self.start = 0
         self.end = 500
         self.min_value = 0
@@ -29,7 +29,7 @@ class mesh_importer:
         self.mesh_name = None
         self.use_real_value = False
         if not mesh_name:
-            self.init_mesh()
+            self.initilize()
         else:
             self.mesh_name = mesh_name
 
@@ -37,58 +37,70 @@ class mesh_importer:
         # todo: support other mesh structure, such as tetrahedron
         return meshio_cells[0][1]
 
-    def load_mesh(self, total_path):
-        '''
-        load the mesh in each frame
-        '''
-        try:
-            meshio_mesh = meshio.read(total_path)
-        except Exception as e:
-            show_message_box("meshio error when reading: "+total_path +
-                             ",\n please check console for more details", icon="ERROR")
-            traceback.print_exc()
-            return
 
+    #  update the mesh information
+    def update_mesh(self,meshio_mesh):
+
+        #  information read from meshio_mesh
         mesh_vertices = meshio_mesh.points
-        vertices_count = len(meshio_mesh.points)
+        n_verts = len(meshio_mesh.points)
         mesh_faces = self.create_face_data(meshio_mesh.cells)
-        shade_scheme = False
+        face_shape = mesh_faces.shape
+        
+        #  inforamtion read from blender mesh
         mesh = bpy.data.meshes[self.mesh_name]
+        shade_scheme = False       
         if mesh.polygons:
             shade_scheme = mesh.polygons[0].use_smooth
 
-        #  delete the old mesh, if it has
-        bm = bmesh.new()
-        bm.from_mesh(mesh)
-        bm.clear()
-        bm.to_mesh(mesh)
-        bm.free()
-        # then create a new mesh
+        #  1. Update the number of vertices/ edges/ faces 
+        if len(mesh.vertices) == n_verts and len(mesh.polygons) == face_shape[0] and len(mesh.loops) ==face_shape[0]*face_shape[1]:
+            # the strucutre doesn't change, no need to add or remove vertices/ edges/  polygons, then directly go to next step
+            pass
+        else:
+            #  As far as I know
+            #  1. bpy.mesh can add new vertices, but can't delete them
+            #  2. bmesh can delete a list of vertices, but can only add verts/ edges/ faces only one by one 
+            #  So has to use them together
+            #  
+            #  Another options is switch to edit mode, I personally don't think this is a good idea
+            # 
 
-        # load the vertices 
-        mesh.vertices.add(vertices_count)
+            if len(mesh.vertices) <= n_verts:
+                # added more vertices
+                mesh.vertices.add(n_verts - len(mesh.vertices))
+            else:
+                #  remove the extra vertices
+                bm = bmesh.new()
+                bm.from_mesh(mesh)
+                bm.verts.ensure_lookup_table()
+                verts_ready_to_remove = [bm.verts[i] for i in range(0,len(mesh.vertices)-n_verts)]
+                bmesh.ops.delete(bm, geom=verts_ready_to_remove, context = "VERTS")
+                bm.to_mesh(mesh)
+                bm.free()
+
+            #  only need to add new polygons and loops,
+            #  if more than mesh needed, it will be removed later by mesh.update() and mesh.validate()
+            if  len(mesh.loops) <face_shape[0]*face_shape[1]:
+                mesh.loops.add(face_shape[0]*face_shape[1] - len(mesh.loops))
+                mesh.loops.foreach_set('vertex_index',[0] *face_shape[0]*face_shape[1])
+                mesh.loops.foreach_set('edge_index',[0] *face_shape[0]*face_shape[1])
+
+            if len(mesh.polygons) < face_shape[0]:
+                mesh.polygons.add(face_shape[0] - len(mesh.polygons))
+                mesh.polygons.foreach_set("loop_start",[0]*len(mesh.polygons))
+                mesh.polygons.foreach_set("loop_total",[0]*len(mesh.polygons))
+
+        #  set position of vertices
         mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
 
-        # code from ply impoter of blender, https://github.com/blender/blender-addons/blob/master/io_mesh_ply/import_ply.py#L363
-        # loops_vert_idx = []
-        # faces_loop_start = []
-        # faces_loop_total = []
-        # lidx = 0
-        # for f in mesh_faces:
-        #     nbr_vidx = len(f)
-        #     loops_vert_idx.extend(f)
-        #     faces_loop_start.append(lidx)
-        #     faces_loop_total.append(nbr_vidx)
-        #     lidx += nbr_vidx
-
-        #  optimized from code above
-        # Check if there are any faces at all
+        #  2. Set the connectivity of mesh
         if len(mesh_faces) > 0:
             # Assume the same polygonal connectivity (e.g. all are triangles, then nploy =3 ) for all faces
             npoly = mesh_faces.shape[1]
             loops_vert_idx = mesh_faces.ravel()
-            faces_loop_total = np.ones(
-                (len(mesh_faces)), dtype=np.int32) * npoly
+            loops_vert_idx = np.pad(loops_vert_idx, (0,len(mesh.loops)-mesh_faces.shape[1]*mesh_faces.shape[0]))
+            faces_loop_total = np.ones((len(mesh_faces)), dtype=np.int32) * npoly
             faces_loop_start = np.cumsum(faces_loop_total)
 
             # Add a zero as first entry
@@ -97,23 +109,40 @@ class mesh_importer:
             if len(faces_loop_start) > 0:
                 faces_loop_start[0] = 0
 
-            mesh.loops.add(len(loops_vert_idx))
-            mesh.polygons.add(len(mesh_faces))
+            # because mesh.polygons may contain more than required, so pad the faces_loop_start and faces_loop_total with 0
+            # the extra 0s will be removed by mesh.update() and mesh.validate()
+            faces_loop_start = np.pad(faces_loop_start, (0,len(mesh.polygons)-mesh_faces.shape[0]))
+            faces_loop_total = np.pad(faces_loop_total, (0,len(mesh.polygons)-mesh_faces.shape[0]))
+
 
             mesh.loops.foreach_set("vertex_index", loops_vert_idx)
             mesh.polygons.foreach_set("loop_start", faces_loop_start)
             mesh.polygons.foreach_set("loop_total", faces_loop_total)
-            # settings about if use shade_smooth or shade_flat
-            mesh.polygons.foreach_set(
-                "use_smooth", [shade_scheme]*len(faces_loop_total))
 
-        if not self.render_attributes:
-            for n in meshio_mesh.point_data.keys():
-                self.render_attributes.append(n)
-        # because everytime using bmesh.clear(), vertex color will be lost, and it has to be created again
-        if self.used_render_attribute:
-            v_col = mesh.attributes.new(name = "att",type="FLOAT_VECTOR",domain = "CORNER")
-            att_data = meshio_mesh.point_data[self.used_render_attribute]
+
+            #  haven't found any efficient way to remove the loose edges
+            #  so have to do it with additional step 
+            mesh.update()
+            mesh.validate()
+            bm = bmesh.new()
+            bm.from_mesh(mesh)
+            bm.edges.ensure_lookup_table()
+            #  find loose edges
+            edges_ready_to_remove = [e for e in bm.edges if e.is_wire]
+            bmesh.ops.delete(bm, geom=edges_ready_to_remove, context = "EDGES_FACES")
+            bm.to_mesh(mesh)
+            bm.free()
+
+        # settings about if use shade_smooth or shade_flat
+        mesh.polygons.foreach_set("use_smooth", [shade_scheme]*len(faces_loop_total))
+
+    def update_color_attributes(self,meshio_mesh):
+        mesh = bpy.data.meshes[self.mesh_name]
+        mesh_faces = self.create_face_data(meshio_mesh.cells)
+
+        if self.used_color_attribute:
+            v_col = mesh.attributes['att']
+            att_data = meshio_mesh.point_data[self.used_color_attribute]
             mesh_colors = None
             if len(att_data.shape) >= 3:
                 show_message_box(
@@ -147,12 +176,27 @@ class mesh_importer:
                     mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
                 v_col.data.foreach_set('vector', mesh_colors.ravel())
 
-        mesh.update()
-        mesh.validate()
+    def load_mesh(self, total_path):
+        try:
+            meshio_mesh = meshio.read(total_path)
+        except Exception as e:
+            if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                bpy.ops.screen.animation_cancel()
+            show_message_box("meshio error when reading: "+total_path +
+                             ",\n please check console for more details", icon="ERROR")
+            traceback.print_exc()
+            return None
+        
 
-    def init_mesh(self):
+        self.update_mesh(meshio_mesh)
+        
+        self.update_color_attributes(meshio_mesh)
+
+    def initilize(self):
 
         mesh = bpy.data.meshes.new(name="Mesh_"+ self.name)
+        mesh.attributes.new(name = "att",type="FLOAT_VECTOR",domain = "CORNER")
         self.mesh_name = mesh.name
         
         # init material
@@ -192,6 +236,7 @@ class mesh_importer:
         new_object.active_material = material
 
         total_path = self.fileseq[0]
+
         self.load_mesh(total_path)
 
     def __call__(self, scene, depsgraph=None):
@@ -209,13 +254,13 @@ class mesh_importer:
         self.load_mesh(total_path)
 
     def get_color_attribute(self):
-        return self.render_attributes
+        return self.color_attributes
 
     def set_color_attribute(self, attr_name):
-        if attr_name and attr_name in self.render_attributes:
-            self.used_render_attribute = attr_name
+        if attr_name and attr_name in self.color_attributes:
+            self.used_color_attribute = attr_name
         else:
-            self.used_render_attribute = None
+            self.used_color_attribute = None
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")

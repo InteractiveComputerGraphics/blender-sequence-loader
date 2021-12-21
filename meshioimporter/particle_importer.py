@@ -18,8 +18,8 @@ class particle_importer:
             self.fileseq = None
             self.name = ""
         self.transform_matrix = transform_matrix
-        self.render_attributes = []  # all the (name of ) color attributes
-        self.used_render_attribute = None  # the attribute used for rendering
+        self.color_attributes = []  # all the (name of ) color attributes
+        self.used_color_attribute = None  # the attribute used for rendering
         self.min_value = 0  # the min value of this attribute
         self.max_value = 100  # the max value of this attribute, will be initlized as number of particles
         self.current_min =0
@@ -107,13 +107,13 @@ class particle_importer:
         self.particle_num = len(mesh.points)
         particle_settings.count = self.particle_num
 
-        if mesh.point_data:
-            for k in mesh.point_data.keys():
-                self.render_attributes.append(k)
-        else:
-            show_message_box(
-                "no attributes avaible, all particles will be rendered as the same color"
-            )
+        # if mesh.point_data:
+        #     for k in mesh.point_data.keys():
+        #         self.color_attributes.append(k)
+        # else:
+        #     show_message_box(
+        #         "no attributes avaible, all particles will be rendered as the same color"
+        #     )
 
 
 
@@ -191,8 +191,8 @@ class particle_importer:
 
         # update rendering and color(velocity) info
         #  The idea here is to use velocity of particles to store the information of color attributes, because particles position are manually set, so the velocity has no visual effect. And later, use velocity in particle_shading_node, to draw the color. 
-        if self.used_render_attribute:
-            att_str = self.used_render_attribute
+        if self.used_color_attribute:
+            att_str = self.used_color_attribute
             att_data = mesh.point_data[att_str]
             if len(att_data.shape) >= 3:
                 #  normally, this one shouldn't happen
@@ -224,14 +224,14 @@ class particle_importer:
 
 
     def get_color_attribute(self):
-        return self.render_attributes
+        return self.color_attributes
 
     def set_color_attribute(self, attribute_str):
         if not attribute_str:
-            self.used_render_attribute = None
+            self.used_color_attribute = None
             return
-        if attribute_str in self.render_attributes:
-            self.used_render_attribute = attribute_str
+        if attribute_str in self.color_attributes:
+            self.used_color_attribute = attribute_str
         else:
             show_message_box(
                 "attributes error: this attributs is not available in 1st frame of file"

@@ -26,16 +26,9 @@ class importer_properties(bpy.types.PropertyGroup):
         name="File Sequences",
         description="Please choose the file sequences you want",
         items=callback_fileseq,
-        update=update_fileseq,
     )
     pattern: bpy.props.StringProperty(
         name="Pattern", description="You can specify the pattern here, in case the sequence can't be deteced.")
-    type: bpy.props.EnumProperty(
-        name="Type",
-        description="choose particles or mesh",
-        items=[("mesh", "Add Mesh", ""), ("particle", "Add Particles", "")],
-    )
-
 
 #  Because I can't create a CollectionProperty of StringProperty, so I have to create a CollectionProperty of PropertyGroup (color attribute), and the PropertyGroup has the only information, which is the name of color attribute.
 class color_attribtue(bpy.types.PropertyGroup):
