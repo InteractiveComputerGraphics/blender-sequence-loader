@@ -178,9 +178,10 @@ def update_end(self,context):
 
 def update_imported_num(self,context):
     imported_obj_list = context.scene.my_tool.imported
-    if imported_obj_list:
+    if bpy.context.active_object:
         if bpy.context.active_object.mode != "OBJECT":
             return
+    if imported_obj_list:
         idx = context.scene.my_tool.imported_num
         bpy.ops.object.select_all(action='DESELECT')
         importer = importer_list[imported_obj_list[idx].importer_list_index]
@@ -256,3 +257,17 @@ def selected_callback():
         for ind,im in enumerate(imported_obj_list):
             if im.name == bpy.context.view_layer.objects.active.name:
                 bpy.context.scene.my_tool.imported_num = ind
+
+
+def update_script_name(self,context):
+    idx, importer_list_index = get_index(bpy.context)
+    importer = importer_list[importer_list_index]
+    if not importer.check_valid():
+        show_message_box("Sequence has been changed or removed")
+        bpy.ops.sequence.remove()
+        return
+    script_name = context.scene.my_tool.imported[idx].script_name
+    importer.script_name = script_name
+
+    
+    

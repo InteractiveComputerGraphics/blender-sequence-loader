@@ -46,7 +46,8 @@ def load_post(scene):
             importer_list.append(Pi)
             l.importer_list_index = len(importer_list)-1
             for all_att in l.all_attributes:
-                Pi.render_attributes.append(all_att.name)
+                Pi.color_attributes.append(all_att.name)
+            Pi.script_name = l.script_name
             Pi.set_color_attribute(l.used_color_attribute.name)
             Pi.set_max_value(l.max_value)
             Pi.set_min_value(l.min_value)
@@ -70,7 +71,8 @@ def load_post(scene):
             l.importer_list_index = len(importer_list)-1
 
             for all_att in l.all_attributes:
-                Mi.render_attributes.append(all_att.name)
+                Mi.color_attributes.append(all_att.name)
+            Mi.script_name = l.script_name
             Mi.set_color_attribute(l.used_color_attribute.name)
             Mi.set_max_value(l.max_value)
             Mi.set_min_value(l.min_value)

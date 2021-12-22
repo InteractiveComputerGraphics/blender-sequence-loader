@@ -87,7 +87,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             imported_prop[-1].relative = importer_prop.relative
             imported_prop[-1].type = 0
             imported_prop[-1].max_value = importer.max_value
-            for co_at in color_attributes():
+            for co_at in color_attributes:
                 importer.color_attributes.append(co_at)
                 imported_prop[-1].all_attributes.add()
                 imported_prop[-1].all_attributes[-1].name = co_at

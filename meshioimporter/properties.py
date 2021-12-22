@@ -82,6 +82,10 @@ class imported_seq_properties(bpy.types.PropertyGroup):
     importer_list_index: bpy.props.IntProperty(
         name='importer_list_index', default=0, min=0)
 
+    #  to load the user self-defined function
+    script_name:bpy.props.StringProperty(name='Customized File',update =update_script_name)
+
+
     # mesh only
     mesh_name: bpy.props.StringProperty()
 

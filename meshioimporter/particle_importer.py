@@ -29,6 +29,7 @@ class particle_importer:
         self.particle_num = 0
         self.particle_settings_name = None
         self.use_real_value = False
+        self.script_name = None
         if not particle_settings_name:
             self.init_particles()
         else:
@@ -153,19 +154,38 @@ class particle_importer:
             print("File sequence doesn't exist, please remove it or edit it")
             return
         frame_number = scene.frame_current
-        frame_number = max(frame_number,self.start)
-        frame_number = min(frame_number,self.end)
-        frame_number -= self.start
-        frame_number = frame_number % len(self.fileseq)
-        try:
-            mesh = meshio.read(
-                self.fileseq[frame_number]
-            )
-        except Exception as e:
-            print("meshio error when reading: " +
-                             self.fileseq[frame_number])
-            traceback.print_exc()
-            return
+        # frame_number = max(frame_number,self.start)
+        # frame_number = min(frame_number,self.end)
+        # frame_number -= self.start
+        # frame_number = frame_number % len(self.fileseq)
+        mesh = None
+        if self.script_name:
+            try:
+                exec(bpy.data.texts[self.script_name].as_string(),globals())
+                # print(bpy.data.texts[self.script_name].as_string())
+                mesh = preprocess(self.fileseq,frame_number)
+                # print(frame_number)
+            except Exception as e:
+                if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                    bpy.ops.screen.animation_cancel()
+                show_message_box("running script"+self.script_name +"failed")
+                traceback.print_exc()
+                return
+
+        else:
+            frame_number = frame_number % len(self.fileseq)
+            try:
+                mesh = meshio.read(
+                    self.fileseq[frame_number]
+                )
+            except Exception as e:
+                if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                    bpy.ops.screen.animation_cancel()
+                show_message_box("meshio error when reading: " + self.fileseq[frame_number])
+                traceback.print_exc()
+                return
         emitter_object = self.get_obj()
         if len(mesh.points) != self.particle_num:
             self.particle_num = len(mesh.points)

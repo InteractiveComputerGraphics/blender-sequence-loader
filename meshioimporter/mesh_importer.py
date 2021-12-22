@@ -27,6 +27,7 @@ class mesh_importer:
         self.current_min =0
         self.current_max =0
         self.mesh_name = None
+        self.script_name = None
         self.use_real_value = False
         if not mesh_name:
             self.initilize()
@@ -61,23 +62,20 @@ class mesh_importer:
             #  As far as I know
             #  1. bpy.mesh can add new vertices, but can't delete them
             #  2. bmesh can delete a list of vertices, but can only add verts/ edges/ faces only one by one 
-            #  So has to use them together
-            #  
+            #  So has to combine them together
+            #  In short
+            #  verticces, loops and polygons are added by new()
+            #  edges are added automatically by mesh.update() and mesh.validate()
+            #   
+            #  loose vertices, edges are deleted manully by bmesh
+            #  loops and polygons are deletede by mesh.update() and mesh.validate()
+            #   
             #  Another options is switch to edit mode, I personally don't think this is a good idea
             # 
 
             if len(mesh.vertices) <= n_verts:
                 # added more vertices
                 mesh.vertices.add(n_verts - len(mesh.vertices))
-            else:
-                #  remove the extra vertices
-                bm = bmesh.new()
-                bm.from_mesh(mesh)
-                bm.verts.ensure_lookup_table()
-                verts_ready_to_remove = [bm.verts[i] for i in range(0,len(mesh.vertices)-n_verts)]
-                bmesh.ops.delete(bm, geom=verts_ready_to_remove, context = "VERTS")
-                bm.to_mesh(mesh)
-                bm.free()
 
             #  only need to add new polygons and loops,
             #  if more than mesh needed, it will be removed later by mesh.update() and mesh.validate()
@@ -92,7 +90,9 @@ class mesh_importer:
                 mesh.polygons.foreach_set("loop_total",[0]*len(mesh.polygons))
 
         #  set position of vertices
-        mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
+        vertices_positions = meshio_mesh.points.ravel()
+        vertices_positions = np.pad(vertices_positions, (0, (len(mesh.vertices) - n_verts ) *3  ))
+        mesh.vertices.foreach_set("co", vertices_positions)
 
         #  2. Set the connectivity of mesh
         if len(mesh_faces) > 0:
@@ -126,12 +126,18 @@ class mesh_importer:
             mesh.validate()
             bm = bmesh.new()
             bm.from_mesh(mesh)
+            
+            #  remove loose vertices
+            bm.verts.ensure_lookup_table()
+            verts_ready_to_remove = [v for v in bm.verts if v.is_wire]
+            bmesh.ops.delete(bm, geom=verts_ready_to_remove, context = "VERTS")
+            #  remove loose edges
             bm.edges.ensure_lookup_table()
-            #  find loose edges
             edges_ready_to_remove = [e for e in bm.edges if e.is_wire]
             bmesh.ops.delete(bm, geom=edges_ready_to_remove, context = "EDGES_FACES")
             bm.to_mesh(mesh)
             bm.free()
+
 
         # settings about if use shade_smooth or shade_flat
         mesh.polygons.foreach_set("use_smooth", [shade_scheme]*len(faces_loop_total))
@@ -176,22 +182,6 @@ class mesh_importer:
                     mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
                 v_col.data.foreach_set('vector', mesh_colors.ravel())
 
-    def load_mesh(self, total_path):
-        try:
-            meshio_mesh = meshio.read(total_path)
-        except Exception as e:
-            if bpy.context.screen.is_animation_playing:
-                #  if playing animation, then stop it, otherwise it will keep showing message box
-                bpy.ops.screen.animation_cancel()
-            show_message_box("meshio error when reading: "+total_path +
-                             ",\n please check console for more details", icon="ERROR")
-            traceback.print_exc()
-            return None
-        
-
-        self.update_mesh(meshio_mesh)
-        
-        self.update_color_attributes(meshio_mesh)
 
     def initilize(self):
 
@@ -237,7 +227,22 @@ class mesh_importer:
 
         total_path = self.fileseq[0]
 
-        self.load_mesh(total_path)
+        meshio_mesh = None
+        try:
+            meshio_mesh = meshio.read(total_path)
+        except Exception as e:
+            if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                bpy.ops.screen.animation_cancel()
+            show_message_box("meshio error when reading: "+total_path +
+                            ",\n please check console for more details", icon="ERROR")
+            traceback.print_exc()
+            return None
+        
+
+        self.update_mesh(meshio_mesh)
+        
+        self.update_color_attributes(meshio_mesh)
 
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
@@ -246,12 +251,41 @@ class mesh_importer:
             print("File sequence doesn't exist, please remove it or edit it")
             return
         frame_number = scene.frame_current
-        frame_number = max(frame_number,self.start)
-        frame_number = min(frame_number,self.end)
-        frame_number -= self.start
-        frame_number = frame_number % len(self.fileseq)
-        total_path = self.fileseq[frame_number]
-        self.load_mesh(total_path)
+
+
+        meshio_mesh = None
+        if self.script_name:
+            try:
+                exec(bpy.data.texts[self.script_name].as_string(),globals())
+                # print(bpy.data.texts[self.script_name].as_string())
+                meshio_mesh = preprocess(self.fileseq,frame_number)
+                # print(frame_number)
+            except Exception as e:
+                if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                    bpy.ops.screen.animation_cancel()
+                show_message_box("running script"+self.script_name +"failed")
+                traceback.print_exc()
+                return
+
+        else:
+            try:
+                frame_number = frame_number % len(self.fileseq)
+                total_path = self.fileseq[frame_number]
+                meshio_mesh = meshio.read(total_path)
+            except Exception as e:
+                if bpy.context.screen.is_animation_playing:
+                    #  if playing animation, then stop it, otherwise it will keep showing message box
+                    bpy.ops.screen.animation_cancel()
+                show_message_box("meshio error when reading: "+total_path +
+                                ",\n please check console for more details", icon="ERROR")
+                traceback.print_exc()
+                return None
+        
+
+        self.update_mesh(meshio_mesh)
+        
+        self.update_color_attributes(meshio_mesh)
 
     def get_color_attribute(self):
         return self.color_attributes

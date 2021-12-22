@@ -41,8 +41,7 @@ class sequence_list_panel(bpy.types.Panel):
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
             info_part = layout.column()
-            info_part.prop(item, 'start')
-            info_part.prop(item, 'end')
+            info_part.prop_search(item,'script_name',bpy.data,'texts')
             small_part = info_part.row()
             small_part.prop(item, 'use_real_value')
             small_part.prop(item, 'use_clamped_value')
