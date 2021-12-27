@@ -1,9 +1,7 @@
 import bpy
 import meshio
 import fileseq
-import bmesh
 import numpy as np
-import bmesh
 from mathutils import Matrix
 import traceback
 from .utils import *
@@ -20,8 +18,6 @@ class mesh_importer:
         self.transform_matrix = transform_matrix
         self.color_attributes = []  # all the possible attributes, and type
         self.used_color_attribute = None  # the attribute used for rendering
-        self.start = 0
-        self.end = 500
         self.min_value = 0
         self.max_value = 100
         self.current_min =0
@@ -44,9 +40,12 @@ class mesh_importer:
 
         #  information read from meshio_mesh
         mesh_vertices = meshio_mesh.points
-        n_verts = len(meshio_mesh.points)
+        
         mesh_faces = self.create_face_data(meshio_mesh.cells)
         face_shape = mesh_faces.shape
+        n_verts = len(meshio_mesh.points)
+        npoly = mesh_faces.shape[1]
+        n_primitives = mesh_faces.shape[0]
         
         #  inforamtion read from blender mesh
         mesh = bpy.data.meshes[self.mesh_name]
@@ -59,84 +58,35 @@ class mesh_importer:
             # the strucutre doesn't change, no need to add or remove vertices/ edges/  polygons, then directly go to next step
             pass
         else:
-            #  As far as I know
-            #  1. bpy.mesh can add new vertices, but can't delete them
-            #  2. bmesh can delete a list of vertices, but can only add verts/ edges/ faces only one by one 
-            #  So has to combine them together
-            #  In short
-            #  verticces, loops and polygons are added by new()
-            #  edges are added automatically by mesh.update() and mesh.validate()
-            #   
-            #  loose vertices, edges are deleted manully by bmesh
-            #  loops and polygons are deletede by mesh.update() and mesh.validate()
-            #   
-            #  Another options is switch to edit mode, I personally don't think this is a good idea
-            # 
-
-            if len(mesh.vertices) <= n_verts:
-                # added more vertices
-                mesh.vertices.add(n_verts - len(mesh.vertices))
-
-            #  only need to add new polygons and loops,
-            #  if more than mesh needed, it will be removed later by mesh.update() and mesh.validate()
-            if  len(mesh.loops) <face_shape[0]*face_shape[1]:
-                mesh.loops.add(face_shape[0]*face_shape[1] - len(mesh.loops))
-                mesh.loops.foreach_set('vertex_index',[0] *face_shape[0]*face_shape[1])
-                mesh.loops.foreach_set('edge_index',[0] *face_shape[0]*face_shape[1])
-
-            if len(mesh.polygons) < face_shape[0]:
-                mesh.polygons.add(face_shape[0] - len(mesh.polygons))
-                mesh.polygons.foreach_set("loop_start",[0]*len(mesh.polygons))
-                mesh.polygons.foreach_set("loop_total",[0]*len(mesh.polygons))
+            # since the structure has been changed, so delete it first, then create a new one
+            # and reconstruct some other attributes here(if there are), e.g. uv maps, etc.
+            mesh.clear_geometry()
+            mesh.vertices.add(n_verts )
+            mesh.loops.add(npoly * n_primitives )
+            mesh.polygons.add(n_primitives)
+            mesh.attributes.new(name = "att",type="FLOAT_VECTOR",domain = "CORNER")
 
         #  set position of vertices
-        vertices_positions = meshio_mesh.points.ravel()
-        vertices_positions = np.pad(vertices_positions, (0, (len(mesh.vertices) - n_verts ) *3  ))
-        mesh.vertices.foreach_set("co", vertices_positions)
+        mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
 
         #  2. Set the connectivity of mesh
-        if len(mesh_faces) > 0:
-            # Assume the same polygonal connectivity (e.g. all are triangles, then nploy =3 ) for all faces
-            npoly = mesh_faces.shape[1]
-            loops_vert_idx = mesh_faces.ravel()
-            loops_vert_idx = np.pad(loops_vert_idx, (0,len(mesh.loops)-mesh_faces.shape[1]*mesh_faces.shape[0]))
-            faces_loop_total = np.ones((len(mesh_faces)), dtype=np.int32) * npoly
-            faces_loop_start = np.cumsum(faces_loop_total)
+        # Only tested for (non-empty) triangle meshes, should be work fine with other mesh strucutres, e.g. quad mesh
+        loops_vert_idx = mesh_faces.ravel()
 
-            # Add a zero as first entry
-            faces_loop_start = np.roll(faces_loop_start, 1)
+        faces_loop_total = np.ones((len(mesh_faces)), dtype=np.int32) * npoly
+        faces_loop_start = np.cumsum(faces_loop_total)
 
-            if len(faces_loop_start) > 0:
-                faces_loop_start[0] = 0
+        # Add a zero as first entry
+        faces_loop_start = np.roll(faces_loop_start, 1)
 
-            # because mesh.polygons may contain more than required, so pad the faces_loop_start and faces_loop_total with 0
-            # the extra 0s will be removed by mesh.update() and mesh.validate()
-            faces_loop_start = np.pad(faces_loop_start, (0,len(mesh.polygons)-mesh_faces.shape[0]))
-            faces_loop_total = np.pad(faces_loop_total, (0,len(mesh.polygons)-mesh_faces.shape[0]))
+        faces_loop_start[0] = 0
 
+        mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+        mesh.polygons.foreach_set("loop_start", faces_loop_start)
+        mesh.polygons.foreach_set("loop_total", faces_loop_total)
 
-            mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-            mesh.polygons.foreach_set("loop_start", faces_loop_start)
-            mesh.polygons.foreach_set("loop_total", faces_loop_total)
-
-
-            #  haven't found any efficient way to remove the loose edges
-            #  so have to do it with additional step 
-            mesh.update()
-            mesh.validate()
-            bm = bmesh.new()
-            bm.from_mesh(mesh)
-            
-            #  remove loose vertices
-            bm.verts.ensure_lookup_table()
-            verts_ready_to_remove = [v for v in bm.verts if v.is_wire]
-            bmesh.ops.delete(bm, geom=verts_ready_to_remove, context = "VERTS")
-            #  remove loose edges
-            bm.edges.ensure_lookup_table()
-            edges_ready_to_remove = [e for e in bm.edges if e.is_wire]
-            bmesh.ops.delete(bm, geom=edges_ready_to_remove, context = "EDGES_FACES")
-            bm.to_mesh(mesh)
-            bm.free()
+        mesh.update()
+        mesh.validate()
 
 
         # settings about if use shade_smooth or shade_flat
@@ -242,17 +192,19 @@ class mesh_importer:
 
         self.update_mesh(meshio_mesh)
         
-        self.update_color_attributes(meshio_mesh)
+        # self.update_color_attributes(meshio_mesh)
 
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
             return
         if not self.fileseq:
-            print("File sequence doesn't exist, please remove it or edit it")
+            if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                bpy.ops.screen.animation_cancel()
+            show_message_box("file sequence doesn't exist, please edit it or remove it")
             return
+
         frame_number = scene.frame_current
-
-
         meshio_mesh = None
         if self.script_name:
             try:

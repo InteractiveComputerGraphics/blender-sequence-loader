@@ -144,37 +144,6 @@ def update_display(self, context):
     importer.update_display(method)
 
 
-def update_start(self,context):
-    idx, importer_list_index = get_index(context)
-    idx = context.scene.my_tool.imported_num
-    start = context.scene.my_tool.imported[idx].start
-    end = context.scene.my_tool.imported[idx].end
-    if start< end:
-        importer = importer_list[importer_list_index]
-        if not importer.check_valid():
-            show_message_box("Sequence has been changed or removed")
-            bpy.ops.sequence.remove()
-            return
-        importer.start = start
-    else:
-        show_message_box(
-            "start frame should be smaller than end frame", icon="ERROR")
-
-def update_end(self,context):
-    idx, importer_list_index = get_index(context)
-    start = context.scene.my_tool.imported[idx].start
-    end = context.scene.my_tool.imported[idx].end
-    if start< end:
-        importer = importer_list[importer_list_index]
-        if not importer.check_valid():
-            show_message_box("Sequence has been changed or removed")
-            bpy.ops.sequence.remove()
-            return
-        importer.end = end
-    else:
-        show_message_box(
-            "start frame should be smaller than end frame", icon="ERROR")
-
 
 def update_imported_num(self,context):
     imported_obj_list = context.scene.my_tool.imported

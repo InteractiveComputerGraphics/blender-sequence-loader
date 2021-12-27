@@ -24,8 +24,6 @@ class particle_importer:
         self.max_value = 100  # the max value of this attribute, will be initlized as number of particles
         self.current_min =0
         self.current_max =0
-        self.start = 0
-        self.end = 500
         self.particle_num = 0
         self.particle_settings_name = None
         self.use_real_value = False
@@ -154,10 +152,6 @@ class particle_importer:
             print("File sequence doesn't exist, please remove it or edit it")
             return
         frame_number = scene.frame_current
-        # frame_number = max(frame_number,self.start)
-        # frame_number = min(frame_number,self.end)
-        # frame_number -= self.start
-        # frame_number = frame_number % len(self.fileseq)
         mesh = None
         if self.script_name:
             try:

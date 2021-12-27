@@ -52,9 +52,6 @@ class imported_seq_properties(bpy.types.PropertyGroup):
         items=callback_color_attribute,
         update=update_color_attribute,
     )
-    start: bpy.props.IntProperty(
-        name='start', description='start frame number',update = update_start,min=0,default = 0)
-    end: bpy.props.IntProperty(name='end', description='end frame number',update = update_end,min=1,default = 500)
 
     # general
     max_value: bpy.props.FloatProperty(
