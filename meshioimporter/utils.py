@@ -9,27 +9,34 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
     '''
 
     def draw(self, context):
-        self.layout.label(text=message)
-
+        lines = message.splitlines()
+        for line in lines:
+            self.layout.label(text=line)
+    print("Information: ", title)
     print(message)
+    print()
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+
 
 def pre_check(fs):
     '''
-    It checkes the type of the file, it could be either a triangle mesh or particles.
-    
-    Can be extended to other cases.
+    Do some pre-checking of animation sequences, while clicking on the 'load sequence' button
     '''
     mesh = meshio.read(fs)
     color_attributes = mesh.point_data.keys()
     if mesh.cells[0].type == "vertex":
-        return "particle",color_attributes
+        return "particle", color_attributes
     elif mesh.cells[0].type == "triangle":
-        return "mesh",color_attributes
+        return "mesh", color_attributes
+    elif mesh.cells[0].type == "quad":
+        return "mesh", color_attributes
 
-# list is the iteratible things, like bpy.data.objects, or bpy.data.meshes
-def find_next_name(old_name,list):
-    i=1
+
+def find_next_name(old_name, list):
+    '''
+    Find the next name in the given list, e.g. bpy.data.objects, bpy.data.meshes and so on
+    '''
+    i = 1
     while old_name+str(i) in list:
-        i+=1
+        i += 1
     return old_name+str(i)

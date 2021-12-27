@@ -3,8 +3,7 @@ import fileseq
 from .utils import *
 from .importer_manager import *
 
-#  Codes here are mostly about the callback functions and update functions used in properties.py 
-
+#  Code here are mostly about the callback functions and update functions used in properties.py
 
 
 def get_index(context):
@@ -49,8 +48,9 @@ def update_color_attribute(self, context):
         item.used_color_attribute.name = 'None'
 
 
-def update_path(self,context):
+def update_path(self, context):
     context.scene.my_tool.importer.fileseq = "None"
+
 
 def callback_fileseq(self, context):
     '''
@@ -67,11 +67,10 @@ def callback_fileseq(self, context):
         return [("None", "No sequence detected", "")]
     file_seq = []
     if len(f) >= 20:
-        file_seq.append(("None", "Please select the pattern", "")) 
-        file_seq.append(
-            ("Manual", "Manual, too much sequence detected, use pattern above", ""))
-    else:      
-        file_seq.append(("None", "Please select the pattern", "")) 
+        file_seq.append(("None", "Please select the pattern", ""))
+        file_seq.append(("Manual", "Manual, too much sequence detected, use pattern above", ""))
+    else:
+        file_seq.append(("None", "Please select the pattern", ""))
         for seq in f:
             file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
         file_seq.append(("Manual", "Manually set the pattern, use the pattern entered above", ""))
@@ -107,8 +106,7 @@ def update_max_value(self, context):
     if max >= min:
         importer.set_max_value(max)
     else:
-        show_message_box(
-            "max value shoule be larger than min value", icon="ERROR")
+        show_message_box("max value shoule be larger than min value", icon="ERROR")
 
 
 def update_min_value(self, context):
@@ -126,8 +124,7 @@ def update_min_value(self, context):
     if min <= max:
         importer.set_min_value(min)
     else:
-        show_message_box(
-            "min value shoule be smaller than max value", icon="ERROR")
+        show_message_box("min value shoule be smaller than max value", icon="ERROR")
 
 
 def update_display(self, context):
@@ -144,8 +141,7 @@ def update_display(self, context):
     importer.update_display(method)
 
 
-
-def update_imported_num(self,context):
+def update_imported_num(self, context):
     imported_obj_list = context.scene.my_tool.imported
     if bpy.context.active_object:
         if bpy.context.active_object.mode != "OBJECT":
@@ -161,7 +157,8 @@ def update_imported_num(self,context):
             show_message_box("Sequence has been changed or removed")
             bpy.ops.sequence.remove()
 
-def update_name(self,context):
+
+def update_name(self, context):
     idx, importer_list_index = get_index(context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
@@ -170,18 +167,17 @@ def update_name(self,context):
         return
     name = context.scene.my_tool.imported[idx].name
     # if name doesn't change
-    if importer.get_obj().name==name:
+    if importer.get_obj().name == name:
         return
     for obj in bpy.data.objects:
-        if name ==obj.name:
+        if name == obj.name:
             show_message_box("Name already exists")
             bpy.ops.ed.undo()
             return
     importer.get_obj().name = name
 
 
-
-def update_use_real_value(self,context):
+def update_use_real_value(self, context):
     idx, importer_list_index = get_index(context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
@@ -193,14 +189,14 @@ def update_use_real_value(self,context):
     importer.set_use_real_value(use_real_value)
 
 
-def update_use_clamped_value(self,context):
+def update_use_clamped_value(self, context):
     idx, importer_list_index = get_index(context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
         show_message_box("Sequence has been changed or removed")
         bpy.ops.sequence.remove()
         return
-    if context.scene.my_tool.imported[idx].use_real_value !=  context.scene.my_tool.imported[idx].use_clamped_value:
+    if context.scene.my_tool.imported[idx].use_real_value != context.scene.my_tool.imported[idx].use_clamped_value:
         return
     context.scene.my_tool.imported[idx].use_real_value = not context.scene.my_tool.imported[idx].use_real_value
 
@@ -210,25 +206,14 @@ def get_ref_max_value(self):
     importer = importer_list[importer_list_index]
     return importer.current_max
 
+
 def get_ref_min_value(self):
     idx, importer_list_index = get_index(bpy.context)
     importer = importer_list[importer_list_index]
     return importer.current_min
 
 
-
-
-def selected_callback():
-    if not bpy.context.view_layer.objects.active:
-        return
-    imported_obj_list = bpy.context.scene.my_tool.imported
-    if imported_obj_list:
-        for ind,im in enumerate(imported_obj_list):
-            if im.name == bpy.context.view_layer.objects.active.name:
-                bpy.context.scene.my_tool.imported_num = ind
-
-
-def update_script_name(self,context):
+def update_script_name(self, context):
     idx, importer_list_index = get_index(bpy.context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
@@ -238,5 +223,12 @@ def update_script_name(self,context):
     script_name = context.scene.my_tool.imported[idx].script_name
     importer.script_name = script_name
 
-    
-    
+
+def selected_callback():
+    if not bpy.context.view_layer.objects.active:
+        return
+    imported_obj_list = bpy.context.scene.my_tool.imported
+    if imported_obj_list:
+        for ind, im in enumerate(imported_obj_list):
+            if im.name == bpy.context.view_layer.objects.active.name:
+                bpy.context.scene.my_tool.imported_num = ind

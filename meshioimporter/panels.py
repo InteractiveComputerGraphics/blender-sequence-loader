@@ -6,6 +6,7 @@ class SEQUENCE_UL_list(bpy.types.UIList):
     '''
     This controls the list of imported sequneces.
     '''
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         ob = data
         slot = item
@@ -41,14 +42,14 @@ class sequence_list_panel(bpy.types.Panel):
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
             info_part = layout.column()
-            info_part.prop_search(item,'script_name',bpy.data,'texts')
+            info_part.prop_search(item, 'script_name', bpy.data, 'texts')
             small_part = info_part.row()
             small_part.prop(item, 'use_real_value')
             small_part.prop(item, 'use_clamped_value')
             if not item.use_real_value:
                 small_part = info_part.row()
-                small_part.prop(item,'ref_min_value')
-                small_part.prop(item,'ref_max_value')
+                small_part.prop(item, 'ref_min_value')
+                small_part.prop(item, 'ref_max_value')
                 small_part = info_part.row()
                 small_part.prop(item, 'min_value')
                 small_part.prop(item, 'max_value')
@@ -57,7 +58,6 @@ class sequence_list_panel(bpy.types.Panel):
             if item.type == 0:
                 info_part.prop(item, 'radius')
                 info_part.prop(item, 'display')
-
 
 
 class edit_sequence_panel(bpy.types.Panel):
@@ -71,6 +71,7 @@ class edit_sequence_panel(bpy.types.Panel):
     bl_category = "Meshio Importer"
     bl_parent_id = "SEQUENCES_PT_list"
     bl_options = {"DEFAULT_CLOSED"}
+
     def draw(self, context):
         layout = self.layout
         mytool = context.scene.my_tool
@@ -85,11 +86,6 @@ class edit_sequence_panel(bpy.types.Panel):
             item = mytool.imported[mytool.imported_num]
             layout.label(text="use relative: "+str(item.relative))
             layout.label(text="current path: "+item.pattern)
-
-
-
-
-
 
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
