@@ -167,7 +167,7 @@ class sequence_OT_edit(bpy.types.Operator):
             importer.read_first_frame()
             imported_prop[idx].all_attributes.clear()
             imported_prop[idx].all_attributes_enum = "None"
-            for co_at in importer.get_color_attribute():
+            for co_at in importer.color_attribute:
                 imported_prop[idx].all_attributes.add()
                 imported_prop[idx].all_attributes[-1].name = co_at
             imported_prop[idx].used_color_attribute.name = ""
@@ -180,7 +180,7 @@ class sequence_OT_edit(bpy.types.Operator):
             importer.load_mesh(fs[0])
             imported_prop[idx].all_attributes.clear()
             imported_prop[idx].all_attributes_enum = "None"
-            for co_at in importer.get_color_attribute():
+            for co_at in importer.color_attribute:
                 imported_prop[idx].all_attributes.add()
                 imported_prop[idx].all_attributes[-1].name = co_at
             imported_prop[idx].used_color_attribute.name = ""

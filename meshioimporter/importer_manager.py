@@ -46,8 +46,8 @@ def load_post(scene):
                 Pi.color_attributes.append(all_att.name)
             Pi.script_name = l.script_name
             Pi.set_color_attribute(l.used_color_attribute.name)
-            Pi.set_max_value(l.max_value)
-            Pi.set_min_value(l.min_value)
+            Pi.max_value = l.max_value
+            Pi.min_value = l.min_value
 
             bpy.app.handlers.frame_change_post.append(Pi)
         # mesh importer
@@ -71,7 +71,7 @@ def load_post(scene):
                 Mi.color_attributes.append(all_att.name)
             Mi.script_name = l.script_name
             Mi.set_color_attribute(l.used_color_attribute.name)
-            Mi.set_max_value(l.max_value)
-            Mi.set_min_value(l.min_value)
+            Mi.max_value = l.max_value
+            Mi.min_value = l.min_value
             bpy.app.handlers.frame_change_post.append(Mi)
     subscribe_to_selected()

@@ -7,6 +7,14 @@ from .importer_manager import *
 
 
 def get_index(context):
+    # Because in my implementation, when delete/remove the sequence, it only delete the bpy.data.object
+    # But it doesn't do anything about particle_importer or mesh_importer
+    # Inside the particle_importer, it will always skip the __call__ function, because check_valid returns false
+    # So here get_index, returns two indices, 
+    # The first index is the index of selected sequences among all the existing sequences
+    # The second index is the index of importer, among all the importers(some importer may be be not valid)
+    # So, in general, the second one is larger than the first one
+    # If no sequence has been ever removed, then the second index is equal to the first index
     mytool = context.scene.my_tool
     idx = mytool.imported_num
     imported_obj_list = context.scene.my_tool.imported
@@ -49,6 +57,7 @@ def update_color_attribute(self, context):
 
 
 def update_path(self, context):
+    # When the path has been changed, reset the selected sequence to None
     context.scene.my_tool.importer.fileseq = "None"
 
 
@@ -104,7 +113,7 @@ def update_max_value(self, context):
         bpy.ops.sequence.remove()
         return
     if max >= min:
-        importer.set_max_value(max)
+        importer.max_value = max
     else:
         show_message_box("max value shoule be larger than min value", icon="ERROR")
 
@@ -122,7 +131,7 @@ def update_min_value(self, context):
         bpy.ops.sequence.remove()
         return
     if min <= max:
-        importer.set_min_value(min)
+        importer.min_value = min
     else:
         show_message_box("min value shoule be smaller than max value", icon="ERROR")
 
@@ -142,6 +151,7 @@ def update_display(self, context):
 
 
 def update_imported_num(self, context):
+    # Here is when select sequences, then change the corresponding object to active object
     imported_obj_list = context.scene.my_tool.imported
     if bpy.context.active_object:
         if bpy.context.active_object.mode != "OBJECT":
@@ -159,6 +169,7 @@ def update_imported_num(self, context):
 
 
 def update_name(self, context):
+    # Here is the when update the name of sequence, then update the name of corresponding object 
     idx, importer_list_index = get_index(context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
@@ -186,7 +197,7 @@ def update_use_real_value(self, context):
         return
     use_real_value = context.scene.my_tool.imported[idx].use_real_value
     context.scene.my_tool.imported[idx].use_clamped_value = not use_real_value
-    importer.set_use_real_value(use_real_value)
+    importer.use_real_value = use_real_value
 
 
 def update_use_clamped_value(self, context):

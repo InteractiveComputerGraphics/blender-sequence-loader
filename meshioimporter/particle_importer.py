@@ -24,17 +24,15 @@ class particle_importer:
         self.max_value = 100  # the max value of this attribute, will be initlized as number of particles
         self.current_min = 0
         self.current_max = 0
-        self.particle_num = 0
         self.particle_settings_name = None
         self.use_real_value = False
         self.script_name = None
         if not particle_settings_name:
-            self.init_particles()
+            self.initilize()
         else:
             self.particle_settings_name = particle_settings_name
-            self.particle_num = bpy.data.particles[self.particle_settings_name].count
 
-    def init_particles(self):
+    def initilize(self):
         # create emitter object
         bpy.ops.mesh.primitive_cube_add(
             enter_editmode=False, location=(0, 0, 0))
@@ -102,16 +100,7 @@ class particle_importer:
             show_message_box("Can't read first frame file", icon="ERROR")
             traceback.print_exc()
 
-        self.particle_num = len(mesh.points)
-        particle_settings.count = self.particle_num
-
-        # if mesh.point_data:
-        #     for k in mesh.point_data.keys():
-        #         self.color_attributes.append(k)
-        # else:
-        #     show_message_box(
-        #         "no attributes avaible, all particles will be rendered as the same color"
-        #     )
+        particle_settings.count = len(mesh.points)
 
     def init_materials(self, material_name):
         material = bpy.data.materials[material_name]
@@ -144,8 +133,13 @@ class particle_importer:
         if not self.check_valid():
             return
         if not self.fileseq:
-            print("File sequence doesn't exist, please remove it or edit it")
+            # The sequence data file has been removed, but blender object still there
+            if bpy.context.screen.is_animation_playing:
+                #  if playing animation, then stop it, otherwise it will keep showing message box
+                bpy.ops.screen.animation_cancel()
+            show_message_box("file sequence doesn't exist, please edit it or remove it")
             return
+            
         frame_number = scene.frame_current
         mesh = None
         if self.script_name:
@@ -158,16 +152,14 @@ class particle_importer:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
                     bpy.ops.screen.animation_cancel()
-                show_message_box("running script"+self.script_name + "failed")
+                show_message_box("running script "+self.script_name + " failed")
                 traceback.print_exc()
                 return
 
         else:
             frame_number = frame_number % len(self.fileseq)
             try:
-                mesh = meshio.read(
-                    self.fileseq[frame_number]
-                )
+                mesh = meshio.read(self.fileseq[frame_number])
             except Exception as e:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
@@ -175,22 +167,21 @@ class particle_importer:
                 show_message_box("meshio error when reading: " + self.fileseq[frame_number])
                 traceback.print_exc()
                 return
-        emitter_object = self.get_obj()
-        if len(mesh.points) != self.particle_num:
-            self.particle_num = len(mesh.points)
-            emitter_object.particle_systems[0].settings.count = self.particle_num
 
-        #  update location info
         if depsgraph is None:
             #  wish this line will never be executed
-            show_message_box("it shouldn't happen")
+            show_message_box("depsgraph is onen. This shouldn't happen")
             depsgraph = bpy.context.evaluated_depsgraph_get()
 
-        particle_systems = emitter_object.evaluated_get(
-            depsgraph).particle_systems
+        emitter_object = self.get_obj()
+        #  change particles number
+        if len(mesh.points) != emitter_object.particle_systems[0].settings.count:
+            emitter_object.particle_systems[0].settings.count = len(mesh.points)
+        particle_num = len(mesh.points)
+        particle_systems = emitter_object.evaluated_get(depsgraph).particle_systems
         particles = particle_systems[0].particles
 
-        points_pos = np.zeros((self.particle_num, 4))
+        points_pos = np.zeros((particle_num, 4))
         points_pos[:, -1] = 1
         points_pos[:, :3] = mesh.points
         transform_matrix = np.array(emitter_object.matrix_world)
@@ -214,7 +205,7 @@ class particle_importer:
                 if b > 3:
                     show_message_box(
                         "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-                vel_att = np.zeros((self.particle_num, 3))
+                vel_att = np.zeros((particle_num, 3))
                 # if not use real value, then use clamped value
                 if not self.use_real_value:
                     vel_att[:, 0] = np.linalg.norm(att_data, axis=1)
@@ -228,22 +219,15 @@ class particle_importer:
                     vel_att[:, :b] = att_data
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
-            vel = [0] * 3*self.particle_num
+            vel = [0] * 3*particle_num
             particles.foreach_set("velocity", vel)
-
-    def get_color_attribute(self):
-        return self.color_attributes
-
-    def set_color_attribute(self, attribute_str):
-        if not attribute_str:
-            self.used_color_attribute = None
-            return
-        if attribute_str in self.color_attributes:
-            self.used_color_attribute = attribute_str
+            
+    
+    def set_color_attribute(self, attr_name):
+        if attr_name and attr_name in self.color_attributes:
+            self.used_color_attribute = attr_name
         else:
-            show_message_box(
-                "attributes error: this attributs is not available in 1st frame of file"
-            )
+            self.used_color_attribute = None
 
     def clear(self):
         bpy.ops.object.select_all(action="DESELECT")
@@ -269,11 +253,6 @@ class particle_importer:
         particles_setting.particle_size = r
         particles_setting.display_size = r
 
-    def set_max_value(self, r):
-        self.max_value = r
-
-    def set_min_value(self, r):
-        self.min_value = r
 
     def update_display(self, method):
         particles_setting = bpy.data.particles[self.particle_settings_name]
@@ -301,9 +280,6 @@ class particle_importer:
         if particles_setting.instance_object:
             return particles_setting.instance_object.name
         return None
-
-    def set_use_real_value(self, use_real_value):
-        self.use_real_value = use_real_value
 
     def type(self):
         return "particle"

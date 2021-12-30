@@ -55,6 +55,12 @@ class mesh_importer:
         #  1. Update the number of vertices/ edges/ faces
         if len(mesh.vertices) == n_verts and len(mesh.polygons) == face_shape[0] and len(mesh.loops) == face_shape[0]*face_shape[1]:
             # the strucutre doesn't change, no need to add or remove vertices/ edges/  polygons, then directly go to next step
+            # In theory, it could have a bug here, because it doesn't check the number of edges, but it's too hard to do that,
+            # because edge data is not stored in files, it has to be calculated from mesh_face manually
+            # So the problem is, if existing mesh has more edges than the next mesh, then these extra edges won't be removed,
+            # It won't effect the rendered image, because edges won't be rendered
+            # but it will look ugly in viewport, especially go into edit mode
+            # this can happen only in a very rare case.
             pass
         else:
             # since the structure has been changed, so delete it first, then create a new one
@@ -63,7 +69,7 @@ class mesh_importer:
             mesh.vertices.add(n_verts)
             mesh.loops.add(npoly * n_primitives)
             mesh.polygons.add(n_primitives)
-            mesh.attributes.new(name="att", type="FLOAT_VECTOR", domain="CORNER")
+            mesh.attributes.new(name="att", type="FLOAT_VECTOR", domain="POINT")
 
         #  set position of vertices
         mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
@@ -93,14 +99,13 @@ class mesh_importer:
     def update_color_attributes(self, meshio_mesh):
         mesh = bpy.data.meshes[self.mesh_name]
         mesh_faces = self.create_face_data(meshio_mesh.cells)
+        v_col = mesh.attributes['att']
+        mesh_colors = np.zeros((len(meshio_mesh.points), 3))
 
-        if self.used_color_attribute:
-            v_col = mesh.attributes['att']
+        if self.used_color_attribute:     
             att_data = meshio_mesh.point_data[self.used_color_attribute]
-            mesh_colors = None
             if len(att_data.shape) >= 3:
-                show_message_box(
-                    "attribute error: this shouldn't happen", icon="ERROR")
+                show_message_box("attribute error: this shouldn't happen", icon="ERROR")
             else:
                 # if it's 1-d vector, extend it to a nx1 matrix
                 if len(att_data.shape) == 1:
@@ -109,33 +114,30 @@ class mesh_importer:
                 # a should be number of vertices, b should be dim of color attribute, e.g. velocity will have b=3
                 a, b = att_data.shape
                 if b > 3:
-                    show_message_box(
-                        "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
-
-                #  3-dim, xyz
-                mesh_colors = np.zeros((len(mesh_faces)*3, 3))
-                # copy the data from 0-b dims
-
-                # if not use real value, then use clamped value
-                if not self.use_real_value:
-                    mesh_colors[:, 0] = np.linalg.norm(att_data[mesh_faces.ravel()], axis=1)
-                    self.current_min = np.min(mesh_colors[:, 0])
-                    self.current_max = np.max(mesh_colors[:, 0])
-                    mesh_colors[:, 0] -= self.min_value
-                    mesh_colors[:, 0] /= (self.max_value-self.min_value)
-                    mesh_colors[:, 0] = np.clip(
-                        mesh_colors[:, 0], 0, 1)
+                    show_message_box("attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 else:
-                    mesh_colors[:, :b] = att_data[mesh_faces.ravel()]
+                    # if not use real value, then use clamped the (norm) value
+                    if not self.use_real_value:
+                        mesh_colors[:, 0] = np.linalg.norm(att_data, axis=1)
+                        self.current_min = np.min(mesh_colors[:, 0])
+                        self.current_max = np.max(mesh_colors[:, 0])
+                        mesh_colors[:, 0] -= self.min_value
+                        mesh_colors[:, 0] /= (self.max_value-self.min_value)
+                        mesh_colors[:, 0] = np.clip(mesh_colors[:, 0], 0, 1)
+                    else:
+                        mesh_colors[:, :b] = att_data
                 v_col.data.foreach_set('vector', mesh_colors.ravel())
+        else:
+            #  if not use any color attributes, then set it to zero    
+            v_col.data.foreach_set('vector', mesh_colors.ravel())
 
     def initilize(self):
 
         mesh = bpy.data.meshes.new(name="Mesh_" + self.name)
-        mesh.attributes.new(name="att", type="FLOAT_VECTOR", domain="CORNER")
+        mesh.attributes.new(name="att", type="FLOAT_VECTOR", domain="POINT")
         self.mesh_name = mesh.name
 
-        # init material
+        # init default material
         material = bpy.data.materials.new("Material_" + self.name)
         material.use_nodes = True
         nodes = material.node_tree.nodes
@@ -186,12 +188,12 @@ class mesh_importer:
 
         self.update_mesh(meshio_mesh)
 
-        # self.update_color_attributes(meshio_mesh)
-
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
+            # The object has been removed
             return
         if not self.fileseq:
+            # The sequence data file has been removed, but blender object still there
             if bpy.context.screen.is_animation_playing:
                 #  if playing animation, then stop it, otherwise it will keep showing message box
                 bpy.ops.screen.animation_cancel()
@@ -203,9 +205,7 @@ class mesh_importer:
         if self.script_name:
             try:
                 exec(bpy.data.texts[self.script_name].as_string(), globals())
-                # print(bpy.data.texts[self.script_name].as_string())
                 meshio_mesh = preprocess(self.fileseq, frame_number)
-                # print(frame_number)
             except Exception as e:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
@@ -232,8 +232,6 @@ class mesh_importer:
 
         self.update_color_attributes(meshio_mesh)
 
-    def get_color_attribute(self):
-        return self.color_attributes
 
     def set_color_attribute(self, attr_name):
         if attr_name and attr_name in self.color_attributes:
@@ -247,12 +245,6 @@ class mesh_importer:
         if obj_name and obj_name in bpy.data.objects:
             bpy.data.objects[obj_name].select_set(True)
             bpy.ops.object.delete()
-
-    def set_max_value(self, r):
-        self.max_value = r
-
-    def set_min_value(self, r):
-        self.min_value = r
 
     def get_obj(self):
         name = self.get_obj_name()
@@ -269,9 +261,6 @@ class mesh_importer:
             if obj.type == "MESH" and obj.data.name == self.mesh_name:
                 return obj.name
         return None
-
-    def set_use_real_value(self, use_real_value):
-        self.use_real_value = use_real_value
 
     def type(self):
         return "mesh"
