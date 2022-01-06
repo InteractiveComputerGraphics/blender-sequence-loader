@@ -1,5 +1,6 @@
 import bpy
 import fileseq
+import os
 
 
 class SEQUENCE_UL_list(bpy.types.UIList):
@@ -33,8 +34,7 @@ class sequence_list_panel(bpy.types.Panel):
         layout = self.layout
         mytool = context.scene.my_tool
         row = layout.row()
-        row.template_list("SEQUENCE_UL_list", "", context.scene.my_tool,
-                          'imported', context.scene.my_tool, "imported_num")
+        row.template_list("SEQUENCE_UL_list", "", context.scene.my_tool, 'imported', context.scene.my_tool, "imported_num")
 
         col = row.column(align=True)
         col.operator("sequence.remove", icon='REMOVE', text="")
@@ -84,8 +84,8 @@ class edit_sequence_panel(bpy.types.Panel):
             layout.prop(importer_prop, "fileseq")
             layout.operator("sequence.edit")
             item = mytool.imported[mytool.imported_num]
-            layout.label(text="use relative: "+str(item.relative))
-            layout.label(text="current path: "+item.pattern)
+            layout.label(text="use relative: " + str(item.relative))
+            layout.label(text="current path: " + item.pattern)
 
 
 class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
@@ -108,3 +108,28 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         layout.prop(importer_prop, "pattern")
         layout.prop(importer_prop, "fileseq")
         layout.operator("sequence.load")
+
+
+class TEXT_MT_templates_meshioimporter(bpy.types.Menu):
+    '''
+    # Here is the template panel
+    '''
+    bl_label = "MeshioImporter"
+    bl_idname = "OBJECT_MT_meshioimporter_template"
+
+    def draw(self, context):
+        current_folder = os.path.dirname(os.path.abspath(__file__))
+        self.path_menu(
+            # it goes to current folder -> parent folder -> template folder
+            [current_folder + '/../template'],
+            "text.open",
+            props_default={"internal": True},
+        )
+
+
+def draw_template(self, context):
+    '''
+    Here it function call to integrate template panel into blender template interface
+    '''
+    layout = self.layout
+    layout.menu(TEXT_MT_templates_meshioimporter.bl_idname)

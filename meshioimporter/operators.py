@@ -29,7 +29,7 @@ class particle_OT_clear(bpy.types.Operator):
         mytool.imported.remove(idx)
         #  don't need to delete, only remove the object, so it can be undone
         importer_list[importer_list_index].clear()
-        mytool.imported_num = max(mytool.imported_num-1, 0)
+        mytool.imported_num = max(mytool.imported_num - 1, 0)
         return {"FINISHED"}
 
 
@@ -58,7 +58,7 @@ class meshio_loader_OT_load(bpy.types.Operator):
             if not importer_prop.pattern:
                 show_message_box("Pattern is empty", icon="ERROR")
                 return {"CANCELLED"}
-            fs = importer_prop.path+'/'+importer_prop.pattern
+            fs = importer_prop.path + '/' + importer_prop.pattern
 
         pattern = fs
         if importer_prop.relative:
@@ -71,10 +71,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
         try:
             data_type, color_attributes = pre_check(fs[0])
         except Exception as e:
-            self.report({"ERROR_INVALID_INPUT"}, "loading: "+str(fs) +
-                        " failed, here is the error:,\n" + traceback.format_exc())
-            print("loading: "+str(fs) +
-                  " failed, here is the error:,\n" + traceback.format_exc())
+            self.report({"ERROR_INVALID_INPUT"}, "loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
+            print("loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
             return {"CANCELLED"}
 
         if data_type == 'particle':
@@ -147,7 +145,7 @@ class sequence_OT_edit(bpy.types.Operator):
             if not importer_prop.pattern:
                 show_message_box("Pattern is empty", icon="ERROR")
                 return {"CANCELLED"}
-            fs = importer_prop.path+'/'+importer_prop.pattern
+            fs = importer_prop.path + '/' + importer_prop.pattern
 
         pattern = fs
         if importer_prop.relative:

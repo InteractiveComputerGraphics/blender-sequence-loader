@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "MeshioImporterTool",
+    "name": "MeshioImporter",
     "description": "Importer for meshio supported mesh files.",
     "author": "Hantao Hui",
     "version": (1, 0),
-    "blender": (2, 90, 0),
+    "blender": (3, 0, 0),
     "warning": "",
     "support": "COMMUNITY",
     "category": "Import-Export",
@@ -31,13 +31,14 @@ classes = [
     tool_properties,
     edit_sequence_panel,
     sequence_OT_edit,
+    TEXT_MT_templates_meshioimporter,
 ]
 
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
+    bpy.types.TEXT_MT_templates.append(draw_template)
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
     bpy.app.handlers.load_post.append(load_post)
     subscribe_to_selected()

@@ -204,6 +204,9 @@ class mesh_importer:
         meshio_mesh = None
         if self.script_name:
             try:
+                def preprocess():
+                    # only keep it here to avoid vscode warning for unknown function preprocess
+                    pass
                 exec(bpy.data.texts[self.script_name].as_string(), globals())
                 meshio_mesh = preprocess(self.fileseq, frame_number)
             except Exception as e:

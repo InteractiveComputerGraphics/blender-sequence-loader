@@ -1,7 +1,7 @@
 import bpy
 import fileseq
-from .utils import *
-from .importer_manager import *
+from .utils import show_message_box
+from .importer_manager import importer_list
 
 #  Code here are mostly about the callback functions and update functions used in properties.py
 
@@ -10,7 +10,7 @@ def get_index(context):
     # Because in my implementation, when delete/remove the sequence, it only delete the bpy.data.object
     # But it doesn't do anything about particle_importer or mesh_importer
     # Inside the particle_importer, it will always skip the __call__ function, because check_valid returns false
-    # So here get_index, returns two indices, 
+    # So here get_index, returns two indices,
     # The first index is the index of selected sequences among all the existing sequences
     # The second index is the index of importer, among all the importers(some importer may be be not valid)
     # So, in general, the second one is larger than the first one
@@ -81,7 +81,7 @@ def callback_fileseq(self, context):
     else:
         file_seq.append(("None", "Please select the pattern", ""))
         for seq in f:
-            file_seq.append((str(seq), seq.basename()+"@"+seq.extension(), ""))
+            file_seq.append((str(seq), seq.basename() + "@" + seq.extension(), ""))
         file_seq.append(("Manual", "Manually set the pattern, use the pattern entered above", ""))
     return file_seq
 
@@ -169,7 +169,7 @@ def update_imported_num(self, context):
 
 
 def update_name(self, context):
-    # Here is the when update the name of sequence, then update the name of corresponding object 
+    # Here is the when update the name of sequence, then update the name of corresponding object
     idx, importer_list_index = get_index(context)
     importer = importer_list[importer_list_index]
     if not importer.check_valid():
