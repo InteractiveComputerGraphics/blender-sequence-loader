@@ -4,6 +4,7 @@ import numpy as np
 from .utils import *
 from mathutils import Matrix
 import traceback
+import fileseq  # this import is used if user has customed script
 
 
 class particle_importer:
@@ -169,7 +170,7 @@ class particle_importer:
 
         if depsgraph is None:
             #  wish this line will never be executed
-            show_message_box("depsgraph is none. This shouldn't happen","Potentially Significant Error","ERROR")
+            show_message_box("depsgraph is none. This shouldn't happen", "Potentially Significant Error", "ERROR")
             depsgraph = bpy.context.evaluated_depsgraph_get()
 
         emitter_object = self.get_obj()

@@ -59,6 +59,8 @@ def update_color_attribute(self, context):
 def update_path(self, context):
     # When the path has been changed, reset the selected sequence to None
     context.scene.my_tool.importer.fileseq = "None"
+    context.scene.my_tool.importer.use_pattern = False
+    context.scene.my_tool.importer.pattern = ""
 
 
 def callback_fileseq(self, context):
@@ -76,13 +78,11 @@ def callback_fileseq(self, context):
         return [("None", "No sequence detected", "")]
     file_seq = []
     if len(f) >= 20:
-        file_seq.append(("None", "Please select the pattern", ""))
-        file_seq.append(("Manual", "Manual, too much sequence detected, use pattern above", ""))
+        file_seq.append(("None", "Too much sequence detected, could be false detection, please use pattern below", ""))
     else:
         file_seq.append(("None", "Please select the pattern", ""))
         for seq in f:
             file_seq.append((str(seq), seq.basename() + "@" + seq.extension(), ""))
-        file_seq.append(("Manual", "Manually set the pattern, use the pattern entered above", ""))
     return file_seq
 
 

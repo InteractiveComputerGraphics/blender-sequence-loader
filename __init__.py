@@ -29,6 +29,7 @@ classes = [
     color_attribtue,
     imported_seq_properties,
     tool_properties,
+    SimLoader_Settings,
     edit_sequence_panel,
     sequence_OT_edit,
     TEXT_MT_templates_meshioimporter,
@@ -49,7 +50,7 @@ def unregister():
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.my_tool
     bpy.app.handlers.load_post.remove(load_post)
-    unsubscribe_to_selected()
+    unsubscribe_to_selected
 
 
 if __name__ == "__main__":

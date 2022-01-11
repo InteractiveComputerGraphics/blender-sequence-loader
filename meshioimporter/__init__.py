@@ -1,6 +1,6 @@
 from .operators import particle_OT_clear, meshio_loader_OT_load, sequence_OT_edit
 from .properties import importer_properties, color_attribtue, imported_seq_properties, tool_properties
-from .panels import SEQUENCE_UL_list, sequence_list_panel, edit_sequence_panel, MESHIO_IMPORT_PT_main_panel, TEXT_MT_templates_meshioimporter, draw_template
+from .panels import SEQUENCE_UL_list, sequence_list_panel, edit_sequence_panel,SimLoader_Settings, MESHIO_IMPORT_PT_main_panel, TEXT_MT_templates_meshioimporter, draw_template
 from .importer_manager import load_post, subscribe_to_selected, unsubscribe_to_selected
 
 __all__ = [
@@ -20,4 +20,5 @@ __all__ = [
     "TEXT_MT_templates_meshioimporter",
     "draw_template",
     "unsubscribe_to_selected",
+    "SimLoader_Settings",
 ]

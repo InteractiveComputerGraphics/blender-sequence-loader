@@ -17,15 +17,17 @@ class importer_properties(bpy.types.PropertyGroup):
                                    subtype="DIR_PATH",
                                    description="You need to go to the folder with the sequence, then click \"Accept\". ",
                                    update=update_path)
-    relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path")
+    relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path", default=False)
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
         description="Please choose the file sequences you want",
         items=callback_fileseq,
     )
+    use_pattern: bpy.props.BoolProperty(name='Use pattern',
+                                        description="whether or not to use manually typed pattern",
+                                        default=False)
     pattern: bpy.props.StringProperty(name="Pattern",
                                       description="You can specify the pattern here, in case the sequence can't be deteced.")
-
 
 
 class color_attribtue(bpy.types.PropertyGroup):
@@ -84,16 +86,15 @@ class imported_seq_properties(bpy.types.PropertyGroup):
                                               default=True,
                                               update=update_use_clamped_value)
 
-
     #  because now, importer list has different size with property imported.
     #  when using imported_num, this can directly lead to the index of property imported, but not index of importer list
     #  so I created this additional property importer_list_index
     importer_list_index: bpy.props.IntProperty(name='importer_list_index', default=0, min=0)
 
-
-
-
     #  to load the user self-defined function
+    use_advance: bpy.props.BoolProperty(name='Use Advance Features',
+                                        description="whether or not to use advance features",
+                                        default=False)
     script_name: bpy.props.StringProperty(name='Customized File', update=update_script_name)
 
     # mesh only

@@ -4,6 +4,7 @@ import numpy as np
 from mathutils import Matrix
 import traceback
 from .utils import show_message_box
+import fileseq  # this import is used if user has customed script
 
 
 class mesh_importer:

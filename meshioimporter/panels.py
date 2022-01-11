@@ -1,5 +1,4 @@
 import bpy
-import fileseq
 import os
 
 
@@ -9,14 +8,10 @@ class SEQUENCE_UL_list(bpy.types.UIList):
     '''
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        ob = data
-        slot = item
-        ma = item
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            if ma:
-                layout.prop(ma, "name", text='Name: ', emboss=False)
-            else:
-                layout.label(text="", translate=False, icon_value=icon)
+        if item:
+            layout.prop(item, "name", text='Name ', emboss=False)
+        else:
+            layout.label(text="", translate=False, icon_value=icon)
 
 
 class sequence_list_panel(bpy.types.Panel):
@@ -27,37 +22,88 @@ class sequence_list_panel(bpy.types.Panel):
     bl_idname = "SEQUENCES_PT_list"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
-    bl_category = "Meshio Importer"
-    bl_parent_id = "MESHIO_IMPORT_PT_panel"
+    bl_category = "Sim Loader"
+
+    # bl_parent_id = "MESHIO_IMPORT_PT_panel"
 
     def draw(self, context):
         layout = self.layout
         mytool = context.scene.my_tool
         row = layout.row()
-        row.template_list("SEQUENCE_UL_list", "", context.scene.my_tool, 'imported', context.scene.my_tool, "imported_num")
+        row.template_list("SEQUENCE_UL_list",
+                          "",
+                          context.scene.my_tool,
+                          'imported',
+                          context.scene.my_tool,
+                          "imported_num",
+                          rows=2)
 
         col = row.column(align=True)
         col.operator("sequence.remove", icon='REMOVE', text="")
 
+
+class SimLoader_Settings(bpy.types.Panel):
+    '''
+    This is the panel of settings of selected sequence
+    '''
+    bl_label = "Settings"
+    bl_idname = "SIMLOADER_PT_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = "UI"
+    bl_category = "Sim Loader"
+    bl_context = "objectmode"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        layout = self.layout
+        mytool = context.scene.my_tool
         if len(mytool.imported) > 0:
             item = mytool.imported[mytool.imported_num]
-            info_part = layout.column()
-            info_part.prop_search(item, 'script_name', bpy.data, 'texts')
-            small_part = info_part.row()
-            small_part.prop(item, 'use_real_value')
-            small_part.prop(item, 'use_clamped_value')
+
+            layout.label(text="Attributes Settings")
+            box = layout.box()
+
+            box.prop(item, 'all_attributes_enum')
+            split = box.split()
+            col1 = split.column()
+            col1.alignment = 'RIGHT'
+            col2 = split.column(align=False)
+
+            col1.prop(item, 'use_real_value', text="Use original value ")
+            col2.prop(item, 'use_clamped_value', text="Use clamped value")
+            col1.label(text="Min norm: " + "{:.3f}".format((item.ref_min_value)))
+            col2.label(text="Max norm: " + "{:.3f}".format(item.ref_max_value))
             if not item.use_real_value:
-                small_part = info_part.row()
-                small_part.prop(item, 'ref_min_value')
-                small_part.prop(item, 'ref_max_value')
-                small_part = info_part.row()
-                small_part.prop(item, 'min_value')
-                small_part.prop(item, 'max_value')
-            info_part.prop(item, 'all_attributes_enum')
+                col1.prop(item, 'min_value')
+                col2.prop(item, 'max_value')
 
             if item.type == 0:
-                info_part.prop(item, 'radius')
-                info_part.prop(item, 'display')
+                layout.label(text="Particles Settings")
+                box = layout.box()
+                split = box.split()
+                col1 = split.column()
+                col1.alignment = 'RIGHT'
+                col2 = split.column(align=False)
+                col1.label(text="Radius")
+                col2.prop(item, 'radius', text="")
+                col1.label(text="Display Method")
+                col2.prop(item, 'display', text="")
+            else:
+                layout.label(text="Mesh Settings")
+                box = layout.box()
+                box.label(text="currently nothing here")
+
+            layout.label(text="Advance")
+            box = layout.box()
+            split = box.split()
+            col1 = split.column()
+            col1.alignment = 'RIGHT'
+            col2 = split.column(align=False)
+            col1.label(text="Use Advance")
+            col2.prop(item, "use_advance", text="")
+            if item.use_advance:
+                col1.label(text="Customized Script")
+                col2.prop_search(item, 'script_name', bpy.data, 'texts', text="")
 
 
 class edit_sequence_panel(bpy.types.Panel):
@@ -68,8 +114,8 @@ class edit_sequence_panel(bpy.types.Panel):
     bl_idname = "EDIT_PT_sequence"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
-    bl_category = "Meshio Importer"
-    bl_parent_id = "SEQUENCES_PT_list"
+    bl_category = "Sim Loader"
+    # bl_parent_id = "SEQUENCES_PT_list"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
@@ -92,30 +138,57 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     '''
     This is the panel of main addon interface. see  images/1.jpg
     '''
-    bl_label = "Import Panel"
-    bl_idname = "MESHIO_IMPORT_PT_panel"
+    bl_label = "Sim Loader"
+    bl_idname = "SIMLOADER_PT_panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Meshio Importer"
+    bl_category = "Sim Loader"
+    bl_context = "objectmode"
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
         importer_prop = scene.my_tool.importer
 
-        layout.prop(importer_prop, "path")
-        layout.prop(importer_prop, "relative")
-        layout.prop(importer_prop, "pattern")
-        layout.prop(importer_prop, "fileseq")
+        layout.label(text="Basic Settings")
+        box = layout.box()
+        split = box.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+
+        col1.label(text="Directory")
+        col2.prop(importer_prop, "path", text="")
+
+        col1.label(text="File Sequqence")
+        col2.prop(importer_prop, "fileseq", text="")
+
+        col1.label(text="Use Relative Path")
+        col2.prop(importer_prop, "relative", text="")
+
+        layout.label(text="Pattern")
+        box = layout.box()
+        split = box.split()
+
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+
+        col1.label(text="Use Pattern")
+        col2.prop(importer_prop, "use_pattern", text="")
+        if importer_prop.use_pattern:
+            col1.label(text="Pattern")
+            col2.prop(importer_prop, "pattern", text="")
+
         layout.operator("sequence.load")
 
 
 class TEXT_MT_templates_meshioimporter(bpy.types.Menu):
     '''
-    # Here is the template panel
+    Here is the template panel, shown in the text editor -> templates
     '''
-    bl_label = "MeshioImporter"
-    bl_idname = "OBJECT_MT_meshioimporter_template"
+    bl_label = "Sim Loader"
+    bl_idname = "OBJECT_MT_simloader_template"
 
     def draw(self, context):
         current_folder = os.path.dirname(os.path.abspath(__file__))

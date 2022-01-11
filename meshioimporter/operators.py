@@ -51,9 +51,11 @@ class meshio_loader_OT_load(bpy.types.Operator):
             return {"CANCELLED"}
 
         fs = importer_prop.fileseq
-        if not fs or fs == "None":
+        use_pattern = importer_prop.use_pattern
+
+        if not use_pattern and (not fs or fs == "None"):
             return {'CANCELLED'}
-        if fs == "Manual":
+        if use_pattern:
             if not importer_prop.pattern:
                 show_message_box("Pattern is empty", icon="ERROR")
                 return {"CANCELLED"}
@@ -63,7 +65,11 @@ class meshio_loader_OT_load(bpy.types.Operator):
         if importer_prop.relative:
             pattern = os.path.relpath(fs, os.path.dirname(bpy.data.filepath))
 
-        fs = fileseq.findSequenceOnDisk(fs)
+        try:
+            fs = fileseq.findSequenceOnDisk(fs)
+        except Exception as e:
+            show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
+            return {"CANCELLED"}
 
         data_type = None
         color_attributes = None
