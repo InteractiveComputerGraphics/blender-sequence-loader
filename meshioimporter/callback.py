@@ -233,13 +233,3 @@ def update_script_name(self, context):
         return
     script_name = context.scene.my_tool.imported[idx].script_name
     importer.script_name = script_name
-
-
-def selected_callback():
-    if not bpy.context.view_layer.objects.active:
-        return
-    imported_obj_list = bpy.context.scene.my_tool.imported
-    if imported_obj_list:
-        for ind, im in enumerate(imported_obj_list):
-            if im.name == bpy.context.view_layer.objects.active.name:
-                bpy.context.scene.my_tool.imported_num = ind

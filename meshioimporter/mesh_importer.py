@@ -1,16 +1,19 @@
 import bpy
 import meshio
-import fileseq
 import numpy as np
 from mathutils import Matrix
 import traceback
-from .utils import *
+from .utils import show_message_box
 
 
 class mesh_importer:
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]), mesh_name=None):
+
+    def __init__(self,
+                 fileseq,
+                 transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
+                 mesh_name=None):
         if fileseq:
-            self.name = fileseq.basename()+"@"+fileseq.extension()
+            self.name = fileseq.basename() + "@" + fileseq.extension()
             self.fileseq = fileseq
         else:
             self.fileseq = None
@@ -42,7 +45,7 @@ class mesh_importer:
 
         mesh_faces = self.create_face_data(meshio_mesh.cells)
         face_shape = mesh_faces.shape
-        n_verts = len(meshio_mesh.points)
+        n_verts = len(mesh_vertices)
         npoly = mesh_faces.shape[1]
         n_primitives = mesh_faces.shape[0]
 
@@ -53,7 +56,8 @@ class mesh_importer:
             shade_scheme = mesh.polygons[0].use_smooth
 
         #  1. Update the number of vertices/ edges/ faces
-        if len(mesh.vertices) == n_verts and len(mesh.polygons) == face_shape[0] and len(mesh.loops) == face_shape[0]*face_shape[1]:
+        if len(mesh.vertices) == n_verts and len(mesh.polygons) == face_shape[0] and len(
+                mesh.loops) == face_shape[0] * face_shape[1]:
             # the strucutre doesn't change, no need to add or remove vertices/ edges/  polygons, then directly go to next step
             # In theory, it could have a bug here, because it doesn't check the number of edges, but it's too hard to do that,
             # because edge data is not stored in files, it has to be calculated from mesh_face manually
@@ -72,7 +76,7 @@ class mesh_importer:
             mesh.attributes.new(name="att", type="FLOAT_VECTOR", domain="POINT")
 
         #  set position of vertices
-        mesh.vertices.foreach_set("co", meshio_mesh.points.ravel())
+        mesh.vertices.foreach_set("co", mesh_vertices.ravel())
 
         #  2. Set the connectivity of mesh
         # Only tested for (non-empty) triangle meshes, should be work fine with other mesh strucutres, e.g. quad mesh
@@ -94,42 +98,41 @@ class mesh_importer:
         mesh.validate()
 
         # settings about if use shade_smooth or shade_flat
-        mesh.polygons.foreach_set("use_smooth", [shade_scheme]*len(faces_loop_total))
+        mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
 
     def update_color_attributes(self, meshio_mesh):
         mesh = bpy.data.meshes[self.mesh_name]
-        mesh_faces = self.create_face_data(meshio_mesh.cells)
-        v_col = mesh.attributes['att']
-        mesh_colors = np.zeros((len(meshio_mesh.points), 3))
+        attribute = mesh.attributes['att']
+        attribute_vector = np.zeros((len(meshio_mesh.points), 3))
 
-        if self.used_color_attribute:     
-            att_data = meshio_mesh.point_data[self.used_color_attribute]
-            if len(att_data.shape) >= 3:
-                show_message_box("attribute error: this shouldn't happen", icon="ERROR")
+        if self.used_color_attribute:
+            attribute_data = meshio_mesh.point_data[self.used_color_attribute]
+            if len(attribute_data.shape) >= 3:
+                show_message_box("this shouldn't happen", "Attribute Error", icon="ERROR")
             else:
                 # if it's 1-d vector, extend it to a nx1 matrix
-                if len(att_data.shape) == 1:
-                    att_data = np.expand_dims(att_data, axis=1)
+                if len(attribute_data.shape) == 1:
+                    attribute_data = np.expand_dims(attribute_data, axis=1)
 
                 # a should be number of vertices, b should be dim of color attribute, e.g. velocity will have b=3
-                a, b = att_data.shape
+                a, b = attribute_data.shape
                 if b > 3:
-                    show_message_box("attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                    show_message_box("higher than 3 dimenion of attribute is not supported", "Attribute Error", icon="ERROR")
                 else:
                     # if not use real value, then use clamped the (norm) value
                     if not self.use_real_value:
-                        mesh_colors[:, 0] = np.linalg.norm(att_data, axis=1)
-                        self.current_min = np.min(mesh_colors[:, 0])
-                        self.current_max = np.max(mesh_colors[:, 0])
-                        mesh_colors[:, 0] -= self.min_value
-                        mesh_colors[:, 0] /= (self.max_value-self.min_value)
-                        mesh_colors[:, 0] = np.clip(mesh_colors[:, 0], 0, 1)
+                        attribute_vector[:, 0] = np.linalg.norm(attribute_data, axis=1)
+                        self.current_min = np.min(attribute_vector[:, 0])
+                        self.current_max = np.max(attribute_vector[:, 0])
+                        attribute_vector[:, 0] -= self.min_value
+                        attribute_vector[:, 0] /= (self.max_value - self.min_value)
+                        attribute_vector[:, 0] = np.clip(attribute_vector[:, 0], 0, 1)
                     else:
-                        mesh_colors[:, :b] = att_data
-                v_col.data.foreach_set('vector', mesh_colors.ravel())
+                        attribute_vector[:, :b] = attribute_data
+                attribute.data.foreach_set('vector', attribute_vector.ravel())
         else:
-            #  if not use any color attributes, then set it to zero    
-            v_col.data.foreach_set('vector', mesh_colors.ravel())
+            #  if not use any color attributes, then set it to zero
+            attribute.data.foreach_set('vector', attribute_vector.ravel())
 
     def initilize(self):
 
@@ -157,7 +160,7 @@ class mesh_importer:
         output = nodes.new(type="ShaderNodeOutputMaterial")
 
         for i, n in enumerate(nodes):
-            n.location.x = i*300
+            n.location.x = i * 300
 
         link = links.new(attribute_node.outputs["Vector"], vecMath.inputs[0])
         link = links.new(attribute_node.outputs["Vector"], vecMath.inputs[1])
@@ -167,7 +170,7 @@ class mesh_importer:
         link = links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
 
         #  create object
-        new_object = bpy.data.objects.new("Obj_"+self.name, mesh)
+        new_object = bpy.data.objects.new("Obj_" + self.name, mesh)
         bpy.data.collections[0].objects.link(new_object)
         new_object.matrix_world = self.transform_matrix
         new_object.active_material = material
@@ -181,16 +184,16 @@ class mesh_importer:
             if bpy.context.screen.is_animation_playing:
                 #  if playing animation, then stop it, otherwise it will keep showing message box
                 bpy.ops.screen.animation_cancel()
-            show_message_box("meshio error when reading: "+total_path +
-                             ",\n please check console for more details", icon="ERROR")
-            traceback.print_exc()
+            show_message_box("Error when reading: " + total_path + ",\n" + traceback.format_exc(),
+                             "Meshio Loading Error" + str(e),
+                             icon="ERROR")
             return None
 
         self.update_mesh(meshio_mesh)
 
     def __call__(self, scene, depsgraph=None):
         if not self.check_valid():
-            # The object has been removed
+            # The object has been removed/deleted, no need to give warnings
             return
         if not self.fileseq:
             # The sequence data file has been removed, but blender object still there
@@ -204,20 +207,20 @@ class mesh_importer:
         meshio_mesh = None
         if self.script_name:
             try:
-                def preprocess():
-                    # only keep it here to avoid vscode warning for unknown function preprocess
-                    pass
-                exec(bpy.data.texts[self.script_name].as_string(), globals())
-                meshio_mesh = preprocess(self.fileseq, frame_number)
+                # alternate way to read user script, not sure which one is better
+                # exec(bpy.data.texts[self.script_name].as_string(), globals())
+                # I personally think using local would be better
+                exec(bpy.data.texts[self.script_name].as_string())
+                user_preprocess = locals()['preprocess']
+                meshio_mesh = user_preprocess(self.fileseq, frame_number)
             except Exception as e:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
                     bpy.ops.screen.animation_cancel()
-                show_message_box("running script"+self.script_name + "failed")
-                traceback.print_exc()
+                show_message_box(traceback.format_exc(), "running script: " + self.script_name + " failed: " + str(e), "ERROR")
                 return
-
         else:
+            # default version when no user script is provided
             try:
                 frame_number = frame_number % len(self.fileseq)
                 total_path = self.fileseq[frame_number]
@@ -226,15 +229,14 @@ class mesh_importer:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
                     bpy.ops.screen.animation_cancel()
-                show_message_box("meshio error when reading: "+total_path +
-                                 ",\n please check console for more details", icon="ERROR")
-                traceback.print_exc()
+                show_message_box("Error when reading: " + total_path + ",\n" + traceback.format_exc(),
+                                 "Meshio Loading Error: " + str(e),
+                                 icon="ERROR")
                 return None
 
         self.update_mesh(meshio_mesh)
 
         self.update_color_attributes(meshio_mesh)
-
 
     def set_color_attribute(self, attr_name):
         if attr_name and attr_name in self.color_attributes:

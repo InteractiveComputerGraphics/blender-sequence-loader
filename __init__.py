@@ -15,8 +15,8 @@ import sys
 
 current_folder = os.path.dirname(os.path.abspath(__file__))
 if current_folder not in sys.path:
-    print("current directory of addon is:" + current_folder)
     sys.path.append(current_folder)
+
 from meshioimporter import *
 
 classes = [
@@ -41,12 +41,12 @@ def register():
     bpy.types.TEXT_MT_templates.append(draw_template)
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
     bpy.app.handlers.load_post.append(load_post)
-    subscribe_to_selected()
 
 
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
+    bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.my_tool
     bpy.app.handlers.load_post.remove(load_post)
 

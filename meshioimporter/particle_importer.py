@@ -1,6 +1,5 @@
 import bpy
 import meshio
-import fileseq
 import numpy as np
 from .utils import *
 from mathutils import Matrix
@@ -8,12 +7,15 @@ import traceback
 
 
 class particle_importer:
-    def __init__(self, fileseq, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
-                 particle_settings_name=None, radius=0.01):
+
+    def __init__(self,
+                 fileseq,
+                 transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
+                 particle_settings_name=None):
 
         if fileseq:
             self.fileseq = fileseq
-            self.name = fileseq.basename()+"@"+fileseq.extension()
+            self.name = fileseq.basename() + "@" + fileseq.extension()
         else:
             self.fileseq = None
             self.name = ""
@@ -34,11 +36,10 @@ class particle_importer:
 
     def initilize(self):
         # create emitter object
-        bpy.ops.mesh.primitive_cube_add(
-            enter_editmode=False, location=(0, 0, 0))
+        bpy.ops.mesh.primitive_cube_add(enter_editmode=False, location=(0, 0, 0))
         emitter_object = bpy.context.active_object
 
-        emitter_object.name = "Emitter_"+self.name
+        emitter_object.name = "Emitter_" + self.name
         emitter_object.matrix_world = self.transform_matrix
         emitter_object.hide_viewport = False
         emitter_object.hide_render = False
@@ -63,20 +64,18 @@ class particle_importer:
 
         bpy.ops.object.select_all(action="DESELECT")
         # create instance object
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius=1, enter_editmode=False, location=(0, 0, 0)
-        )
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=1, enter_editmode=False, location=(0, 0, 0))
         bpy.ops.object.shade_smooth()
         sphere_obj = bpy.context.active_object
         # same as emitter_obj, blender will change name
-        sphere_obj.name = "Sphere_"+self.name
+        sphere_obj.name = "Sphere_" + self.name
         sphere_obj.hide_set(True)
         sphere_obj.hide_viewport = False
         sphere_obj.hide_render = True
         sphere_obj.hide_select = True
 
         #  create new material
-        material = bpy.data.materials.new("Material_"+self.name)
+        material = bpy.data.materials.new("Material_" + self.name)
         material.use_nodes = True
         # self.material_name = material.name
 
@@ -93,9 +92,7 @@ class particle_importer:
     def read_first_frame(self):
         particle_settings = bpy.data.particles[self.particle_settings_name]
         try:
-            mesh = meshio.read(
-                self.fileseq[0]
-            )
+            mesh = meshio.read(self.fileseq[0])
         except Exception as e:
             show_message_box("Can't read first frame file", icon="ERROR")
             traceback.print_exc()
@@ -120,7 +117,7 @@ class particle_importer:
         output = nodes.new(type="ShaderNodeOutputMaterial")
 
         for i, n in enumerate(nodes):
-            n.location.x = i*300
+            n.location.x = i * 300
 
         link = links.new(particleInfo.outputs["Velocity"], vecMath.inputs[0])
         link = links.new(particleInfo.outputs["Velocity"], vecMath.inputs[1])
@@ -139,20 +136,22 @@ class particle_importer:
                 bpy.ops.screen.animation_cancel()
             show_message_box("file sequence doesn't exist, please edit it or remove it")
             return
-            
+
         frame_number = scene.frame_current
         mesh = None
         if self.script_name:
             try:
                 exec(bpy.data.texts[self.script_name].as_string(), globals())
                 # print(bpy.data.texts[self.script_name].as_string())
-                mesh = preprocess(self.fileseq, frame_number)
+                exec(bpy.data.texts[self.script_name].as_string())
+                user_preprocess = locals()['preprocess']
+                mesh = user_preprocess(self.fileseq, frame_number)
                 # print(frame_number)
             except Exception as e:
                 if bpy.context.screen.is_animation_playing:
                     #  if playing animation, then stop it, otherwise it will keep showing message box
                     bpy.ops.screen.animation_cancel()
-                show_message_box("running script "+self.script_name + " failed")
+                show_message_box("running script " + self.script_name + " failed")
                 traceback.print_exc()
                 return
 
@@ -170,7 +169,7 @@ class particle_importer:
 
         if depsgraph is None:
             #  wish this line will never be executed
-            show_message_box("depsgraph is onen. This shouldn't happen")
+            show_message_box("depsgraph is none. This shouldn't happen","Potentially Significant Error","ERROR")
             depsgraph = bpy.context.evaluated_depsgraph_get()
 
         emitter_object = self.get_obj()
@@ -196,15 +195,13 @@ class particle_importer:
             att_data = mesh.point_data[att_str]
             if len(att_data.shape) >= 3:
                 #  normally, this one shouldn't happen
-                show_message_box(
-                    "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                show_message_box("attribute error: higher than 3 dimenion of attribute", icon="ERROR")
             else:
                 if len(att_data.shape) == 1:
                     att_data = np.expand_dims(att_data, axis=1)
                 a, b = att_data.shape
                 if b > 3:
-                    show_message_box(
-                        "attribute error: higher than 3 dimenion of attribute", icon="ERROR")
+                    show_message_box("attribute error: higher than 3 dimenion of attribute", icon="ERROR")
                 vel_att = np.zeros((particle_num, 3))
                 # if not use real value, then use clamped value
                 if not self.use_real_value:
@@ -212,17 +209,15 @@ class particle_importer:
                     self.current_min = np.min(vel_att[:, 0])
                     self.current_max = np.max(vel_att[:, 0])
                     vel_att[:, 0] -= self.min_value
-                    vel_att[:, 0] /= (self.max_value-self.min_value)
-                    vel_att[:, 0] = np.clip(
-                        vel_att[:, 0], 0, 1)
+                    vel_att[:, 0] /= (self.max_value - self.min_value)
+                    vel_att[:, 0] = np.clip(vel_att[:, 0], 0, 1)
                 else:
                     vel_att[:, :b] = att_data
                 particles.foreach_set("velocity", vel_att.ravel())
         else:
-            vel = [0] * 3*particle_num
+            vel = [0] * 3 * particle_num
             particles.foreach_set("velocity", vel)
-            
-    
+
     def set_color_attribute(self, attr_name):
         if attr_name and attr_name in self.color_attributes:
             self.used_color_attribute = attr_name
@@ -253,7 +248,6 @@ class particle_importer:
         particles_setting.particle_size = r
         particles_setting.display_size = r
 
-
     def update_display(self, method):
         particles_setting = bpy.data.particles[self.particle_settings_name]
         particles_setting.display_method = method
@@ -271,7 +265,8 @@ class particle_importer:
 
     def get_obj_name(self):
         for obj in bpy.data.objects:
-            if obj.type == "MESH" and len(obj.particle_systems) > 0 and obj.particle_systems[0].settings.name == self.particle_settings_name:
+            if obj.type == "MESH" and len(
+                    obj.particle_systems) > 0 and obj.particle_systems[0].settings.name == self.particle_settings_name:
                 return obj.name
         return None
 

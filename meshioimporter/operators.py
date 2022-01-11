@@ -18,7 +18,6 @@ class particle_OT_clear(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        global importer
         global importer_list
         if not importer_list:
             return {"CANCELLED"}
@@ -71,8 +70,10 @@ class meshio_loader_OT_load(bpy.types.Operator):
         try:
             data_type, color_attributes = pre_check(fs[0])
         except Exception as e:
-            self.report({"ERROR_INVALID_INPUT"}, "loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
-            print("loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
+            # self.report({"ERROR_INVALID_INPUT"},
+            #             "loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
+            # print("loading: " + str(fs) + " failed, here is the error:,\n" + traceback.format_exc())
+            show_message_box()
             return {"CANCELLED"}
 
         if data_type == 'particle':

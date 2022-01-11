@@ -12,6 +12,7 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
         lines = message.splitlines()
         for line in lines:
             self.layout.label(text=line)
+
     print("Information: ", title)
     print(message)
     print()
@@ -37,6 +38,6 @@ def find_next_name(old_name, list):
     Find the next name in the given list, e.g. bpy.data.objects, bpy.data.meshes and so on
     '''
     i = 1
-    while old_name+str(i) in list:
+    while old_name + str(i) in list:
         i += 1
-    return old_name+str(i)
+    return old_name + str(i)
