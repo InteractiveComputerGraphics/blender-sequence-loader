@@ -49,6 +49,7 @@ def unregister():
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.my_tool
     bpy.app.handlers.load_post.remove(load_post)
+    unsubscribe_to_selected()
 
 
 if __name__ == "__main__":

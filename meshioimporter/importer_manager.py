@@ -23,8 +23,6 @@ def subscribe_to_selected():
     # A known problem of this function,
     # This function will not be executed, when the first time this addon is installed.
     # It will start to work, e.g. restart the blender, then in `load_post` function, this function will be called and start to work
-    # Similarly, this function will still run when disable the addon,
-    # This function will be gone after restarting the blender
     import meshioimporter
     bpy.msgbus.subscribe_rna(
         key=(bpy.types.LayerObjects, 'active'),
@@ -34,6 +32,11 @@ def subscribe_to_selected():
         args=(()),
         notify=selected_callback,
     )
+
+
+def unsubscribe_to_selected():
+    import meshioimporter
+    bpy.msgbus.clear_by_owner(meshioimporter)
 
 
 @persistent
