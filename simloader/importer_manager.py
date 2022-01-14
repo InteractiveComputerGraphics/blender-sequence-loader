@@ -12,22 +12,22 @@ importer_list = []
 def selected_callback():
     if not bpy.context.view_layer.objects.active:
         return
-    imported_obj_list = bpy.context.scene.my_tool.imported
+    imported_obj_list = bpy.context.scene.sim_loader.imported
     if imported_obj_list:
         for ind, im in enumerate(imported_obj_list):
             if im.name == bpy.context.view_layer.objects.active.name:
-                bpy.context.scene.my_tool.imported_num = ind
+                bpy.context.scene.sim_loader.imported_num = ind
 
 
 def subscribe_to_selected():
     # A known problem of this function,
     # This function will not be executed, when the first time this addon is installed.
     # It will start to work, e.g. restart the blender, then in `load_post` function, this function will be called and start to work
-    import meshioimporter
+    import simloader
     bpy.msgbus.subscribe_rna(
         key=(bpy.types.LayerObjects, 'active'),
         #  don't know why it needs this owner, so I set owner to this module `meshioimporter`
-        owner=meshioimporter,
+        owner=simloader,
         #  no args
         args=(()),
         notify=selected_callback,
@@ -35,8 +35,8 @@ def subscribe_to_selected():
 
 
 def unsubscribe_to_selected():
-    import meshioimporter
-    bpy.msgbus.clear_by_owner(meshioimporter)
+    import simloader
+    bpy.msgbus.clear_by_owner(simloader)
 
 
 @persistent
@@ -44,7 +44,7 @@ def load_post(scene):
     '''
     When everytime saved .blender file starts, this function here will read the information from .blender file, and initialize all the importers.
     '''
-    imported_list = bpy.context.scene.my_tool.imported
+    imported_list = bpy.context.scene.sim_loader.imported
     for l in imported_list:
         # particle importer
         if l.type == 0:

@@ -40,11 +40,7 @@ class color_attribtue(bpy.types.PropertyGroup):
 
 
 class imported_seq_properties(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(
-        name='name',
-        description="name of the sequence, can be modified by user",
-        update=update_name,
-    )
+    name: bpy.props.StringProperty(name='name', description="name of the sequence, can be modified by user", update=update_name)
     pattern: bpy.props.StringProperty(name='pattern', description="the (absolutoe or relative) path of the sequence")
     relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path")
     type: bpy.props.IntProperty(name='type',

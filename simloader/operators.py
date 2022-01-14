@@ -21,14 +21,14 @@ class particle_OT_clear(bpy.types.Operator):
         global importer_list
         if not importer_list:
             return {"CANCELLED"}
-        mytool = context.scene.my_tool
-        idx = mytool.imported_num
-        importer_list_index = mytool.imported[idx].importer_list_index
+        sim_loader = context.scene.sim_loader
+        idx = sim_loader.imported_num
+        importer_list_index = sim_loader.imported[idx].importer_list_index
 
-        mytool.imported.remove(idx)
+        sim_loader.imported.remove(idx)
         #  don't need to delete, only remove the object, so it can be undone
         importer_list[importer_list_index].clear()
-        mytool.imported_num = max(mytool.imported_num - 1, 0)
+        sim_loader.imported_num = max(sim_loader.imported_num - 1, 0)
         return {"FINISHED"}
 
 
@@ -43,8 +43,8 @@ class meshio_loader_OT_load(bpy.types.Operator):
     def execute(self, context):
         global importer_list
         scene = context.scene
-        importer_prop = scene.my_tool.importer
-        imported_prop = scene.my_tool.imported
+        importer_prop = scene.sim_loader.importer
+        imported_prop = scene.sim_loader.imported
 
         if importer_prop.relative and not bpy.data.is_saved:
             show_message_box("When using relative path, please save file before using it", icon="ERROR")
@@ -138,8 +138,8 @@ class sequence_OT_edit(bpy.types.Operator):
     def execute(self, context):
         global importer_list
         scene = context.scene
-        importer_prop = scene.my_tool.importer
-        imported_prop = scene.my_tool.imported
+        importer_prop = scene.sim_loader.importer
+        imported_prop = scene.sim_loader.imported
 
         if importer_prop.relative and not bpy.data.is_saved:
             show_message_box("When using relative path, please save file before using it", icon="ERROR")

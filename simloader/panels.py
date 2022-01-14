@@ -2,7 +2,7 @@ import bpy
 import os
 
 
-class SEQUENCE_UL_list(bpy.types.UIList):
+class SIMLOADER_UL_List(bpy.types.UIList):
     '''
     This controls the list of imported sequneces.
     '''
@@ -14,35 +14,28 @@ class SEQUENCE_UL_list(bpy.types.UIList):
             layout.label(text="", translate=False, icon_value=icon)
 
 
-class sequence_list_panel(bpy.types.Panel):
+class SIMLOADER_List_Panel(bpy.types.Panel):
     '''
     This is the panel of imported sequences, bottom part of images/9.png
     '''
     bl_label = "Sequences Imported"
-    bl_idname = "SEQUENCES_PT_list"
+    bl_idname = "SIMLOADER_PT_list"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
     bl_category = "Sim Loader"
-
-    # bl_parent_id = "MESHIO_IMPORT_PT_panel"
+    bl_context = "objectmode"
 
     def draw(self, context):
         layout = self.layout
-        mytool = context.scene.my_tool
+        sim_loader = context.scene.sim_loader
         row = layout.row()
-        row.template_list("SEQUENCE_UL_list",
-                          "",
-                          context.scene.my_tool,
-                          'imported',
-                          context.scene.my_tool,
-                          "imported_num",
-                          rows=2)
+        row.template_list("SIMLOADER_UL_List", "", sim_loader, 'imported', sim_loader, "imported_num", rows=2)
 
         col = row.column(align=True)
         col.operator("sequence.remove", icon='REMOVE', text="")
 
 
-class SimLoader_Settings(bpy.types.Panel):
+class SIMLOADER_Settings(bpy.types.Panel):
     '''
     This is the panel of settings of selected sequence
     '''
@@ -56,9 +49,9 @@ class SimLoader_Settings(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        mytool = context.scene.my_tool
-        if len(mytool.imported) > 0:
-            item = mytool.imported[mytool.imported_num]
+        sim_loader = context.scene.sim_loader
+        if len(sim_loader.imported) > 0:
+            item = sim_loader.imported[sim_loader.imported_num]
 
             layout.label(text="Attributes Settings")
             box = layout.box()
@@ -106,35 +99,34 @@ class SimLoader_Settings(bpy.types.Panel):
                 col2.prop_search(item, 'script_name', bpy.data, 'texts', text="")
 
 
-class edit_sequence_panel(bpy.types.Panel):
+class SIMLOADER_Edit(bpy.types.Panel):
     '''
     This is the panel when trying to edit the path of existed sequence
     '''
     bl_label = "Edit Sequence Path"
-    bl_idname = "EDIT_PT_sequence"
+    bl_idname = "SIMLOADER_PT_edit"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
     bl_category = "Sim Loader"
-    # bl_parent_id = "SEQUENCES_PT_list"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
         layout = self.layout
-        mytool = context.scene.my_tool
-        if len(mytool.imported) > 0:
-            importer_prop = mytool.importer
+        sim_loader = context.scene.sim_loader
+        if len(sim_loader.imported) > 0:
+            importer_prop = sim_loader.importer
 
             layout.prop(importer_prop, "path")
             layout.prop(importer_prop, "relative")
             layout.prop(importer_prop, "pattern")
             layout.prop(importer_prop, "fileseq")
             layout.operator("sequence.edit")
-            item = mytool.imported[mytool.imported_num]
+            item = sim_loader.imported[sim_loader.imported_num]
             layout.label(text="use relative: " + str(item.relative))
             layout.label(text="current path: " + item.pattern)
 
 
-class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
+class SIMLOADER_Import(bpy.types.Panel):
     '''
     This is the panel of main addon interface. see  images/1.jpg
     '''
@@ -148,7 +140,7 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        importer_prop = scene.my_tool.importer
+        importer_prop = scene.sim_loader.importer
 
         layout.label(text="Basic Settings")
         box = layout.box()
@@ -183,12 +175,12 @@ class MESHIO_IMPORT_PT_main_panel(bpy.types.Panel):
         layout.operator("sequence.load")
 
 
-class TEXT_MT_templates_meshioimporter(bpy.types.Menu):
+class SIMLOADER_Templates(bpy.types.Menu):
     '''
     Here is the template panel, shown in the text editor -> templates
     '''
     bl_label = "Sim Loader"
-    bl_idname = "OBJECT_MT_simloader_template"
+    bl_idname = "SIMLOADER_MT_template"
 
     def draw(self, context):
         current_folder = os.path.dirname(os.path.abspath(__file__))
@@ -205,4 +197,4 @@ def draw_template(self, context):
     Here it function call to integrate template panel into blender template interface
     '''
     layout = self.layout
-    layout.menu(TEXT_MT_templates_meshioimporter.bl_idname)
+    layout.menu(SIMLOADER_Templates.bl_idname)

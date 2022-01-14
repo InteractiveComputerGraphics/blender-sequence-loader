@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "MeshioImporter",
-    "description": "Importer for meshio supported mesh files.",
+    "name": "Sim Loader",
+    "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Hantao Hui",
     "version": (1, 0),
     "blender": (3, 0, 0),
@@ -13,26 +13,30 @@ import bpy
 import os
 import sys
 
+
 current_folder = os.path.dirname(os.path.abspath(__file__))
 if current_folder not in sys.path:
     sys.path.append(current_folder)
 
-from meshioimporter import *
+if bpy.context.preferences.filepaths.use_relative_paths == True:
+    bpy.context.preferences.filepaths.use_relative_paths = False
+
+from simloader import *
 
 classes = [
     importer_properties,
-    MESHIO_IMPORT_PT_main_panel,
     meshio_loader_OT_load,
     particle_OT_clear,
-    sequence_list_panel,
-    SEQUENCE_UL_list,
+    SIMLOADER_Import,
+    SIMLOADER_List_Panel,
+    SIMLOADER_UL_List,
     color_attribtue,
     imported_seq_properties,
     tool_properties,
-    SimLoader_Settings,
-    edit_sequence_panel,
+    SIMLOADER_Settings,
+    # SIMLOADER_Edit,
     sequence_OT_edit,
-    TEXT_MT_templates_meshioimporter,
+    SIMLOADER_Templates,
 ]
 
 
@@ -40,7 +44,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.TEXT_MT_templates.append(draw_template)
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=tool_properties)
+    bpy.types.Scene.sim_loader = bpy.props.PointerProperty(type=tool_properties)
     bpy.app.handlers.load_post.append(load_post)
 
 
@@ -48,7 +52,7 @@ def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
     bpy.types.TEXT_MT_templates.remove(draw_template)
-    del bpy.types.Scene.my_tool
+    del bpy.types.Scene.sim_loader
     bpy.app.handlers.load_post.remove(load_post)
     unsubscribe_to_selected
 
