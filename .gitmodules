@@ -8,3 +8,6 @@
 [submodule "extern/fileseq"]
 	path = extern/fileseq
 	url = https://github.com/justinfx/fileseq
+[submodule "extern/rich"]
+	path = extern/rich
+	url = https://github.com/Textualize/rich
