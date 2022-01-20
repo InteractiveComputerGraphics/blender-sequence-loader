@@ -3,7 +3,7 @@ bl_info = {
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Hantao Hui",
     "version": (1, 0),
-    "blender": (3, 0, 0),
+    "blender": (3, 1, 0),
     "warning": "",
     "support": "COMMUNITY",
     "category": "Import-Export",
@@ -24,27 +24,26 @@ if bpy.context.preferences.filepaths.use_relative_paths == True:
 from simloader import *
 
 classes = [
+    SIMLOADER_obj_property,
     importer_properties,
-    meshio_loader_OT_load,
-    particle_OT_clear,
+    SIMLOADER_OT_load,
     SIMLOADER_Import,
     SIMLOADER_List_Panel,
     SIMLOADER_UL_List,
-    color_attribtue,
     imported_seq_properties,
     tool_properties,
     SIMLOADER_Settings,
-    # SIMLOADER_Edit,
-    sequence_OT_edit,
     SIMLOADER_Templates,
 ]
 
 
 def register():
+    bpy.app.handlers.load_post.append(SIMLOADER_initilize)
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.TEXT_MT_templates.append(draw_template)
     bpy.types.Scene.sim_loader = bpy.props.PointerProperty(type=tool_properties)
+    bpy.types.Object.SIMLOADER = bpy.props.PointerProperty(type=SIMLOADER_obj_property)
     bpy.app.handlers.load_post.append(load_post)
 
 
@@ -54,7 +53,7 @@ def unregister():
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.sim_loader
     bpy.app.handlers.load_post.remove(load_post)
-    unsubscribe_to_selected
+    unsubscribe_to_selected()
 
 
 if __name__ == "__main__":

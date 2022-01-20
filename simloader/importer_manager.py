@@ -12,11 +12,10 @@ importer_list = []
 def selected_callback():
     if not bpy.context.view_layer.objects.active:
         return
-    imported_obj_list = bpy.context.scene.sim_loader.imported
-    if imported_obj_list:
-        for ind, im in enumerate(imported_obj_list):
-            if im.name == bpy.context.view_layer.objects.active.name:
-                bpy.context.scene.sim_loader.imported_num = ind
+    name = bpy.context.active_object.name
+    idx = bpy.data.collections['SIMLOADER'].objects.find(name)
+    if idx >= 0:
+        bpy.context.scene.sim_loader.imported_num = idx
 
 
 def subscribe_to_selected():

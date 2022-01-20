@@ -11,7 +11,7 @@ class SIMLOADER_UL_List(bpy.types.UIList):
         if item:
             layout.prop(item, "name", text='Name ', emboss=False)
         else:
-            layout.label(text="", translate=False, icon_value=icon)
+            layout.label(text="???", translate=False, icon_value=icon)
 
 
 class SIMLOADER_List_Panel(bpy.types.Panel):
@@ -29,10 +29,13 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
         layout = self.layout
         sim_loader = context.scene.sim_loader
         row = layout.row()
-        row.template_list("SIMLOADER_UL_List", "", sim_loader, 'imported', sim_loader, "imported_num", rows=2)
-
-        col = row.column(align=True)
-        col.operator("sequence.remove", icon='REMOVE', text="")
+        row.template_list("SIMLOADER_UL_List",
+                          "",
+                          bpy.data.collections['SIMLOADER'],
+                          "objects",
+                          sim_loader,
+                          "imported_num",
+                          rows=2)
 
 
 class SIMLOADER_Settings(bpy.types.Panel):
@@ -50,80 +53,39 @@ class SIMLOADER_Settings(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.sim_loader
-        if len(sim_loader.imported) > 0:
-            item = sim_loader.imported[sim_loader.imported_num]
+        collection = bpy.data.collections['SIMLOADER'].objects
+        if len(collection) > 0 and sim_loader.imported_num < len(collection):
+            obj = collection[sim_loader.imported_num]
 
+            # attributes settings
             layout.label(text="Attributes Settings")
             box = layout.box()
+            row = box.row()
+            row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "imported_num2", rows=2)
 
-            box.prop(item, 'all_attributes_enum')
-            split = box.split()
-            col1 = split.column()
-            col1.alignment = 'RIGHT'
-            col2 = split.column(align=False)
-
-            col1.prop(item, 'use_real_value', text="Use original value ")
-            col2.prop(item, 'use_clamped_value', text="Use clamped value")
-            col1.label(text="Min norm: " + "{:.3f}".format((item.ref_min_value)))
-            col2.label(text="Max norm: " + "{:.3f}".format(item.ref_max_value))
-            if not item.use_real_value:
-                col1.prop(item, 'min_value')
-                col2.prop(item, 'max_value')
-
-            if item.type == 0:
-                layout.label(text="Particles Settings")
-                box = layout.box()
-                split = box.split()
-                col1 = split.column()
-                col1.alignment = 'RIGHT'
-                col2 = split.column(align=False)
-                col1.label(text="Radius")
-                col2.prop(item, 'radius', text="")
-                col1.label(text="Display Method")
-                col2.prop(item, 'display', text="")
-            else:
-                layout.label(text="Mesh Settings")
-                box = layout.box()
-                box.label(text="currently nothing here")
-
-            layout.label(text="Advance")
+            # point cloud settings
+            layout.label(text="PointCloud Settings")
             box = layout.box()
             split = box.split()
             col1 = split.column()
             col1.alignment = 'RIGHT'
             col2 = split.column(align=False)
-            col1.label(text="Use Advance")
-            col2.prop(item, "use_advance", text="")
-            if item.use_advance:
-                col1.label(text="Customized Script")
-                col2.prop_search(item, 'script_name', bpy.data, 'texts', text="")
 
+            col1.label(text='Radius')
+            col2.prop(obj.SIMLOADER, 'radius')
 
-class SIMLOADER_Edit(bpy.types.Panel):
-    '''
-    This is the panel when trying to edit the path of existed sequence
-    '''
-    bl_label = "Edit Sequence Path"
-    bl_idname = "SIMLOADER_PT_edit"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = "UI"
-    bl_category = "Sim Loader"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    def draw(self, context):
-        layout = self.layout
-        sim_loader = context.scene.sim_loader
-        if len(sim_loader.imported) > 0:
-            importer_prop = sim_loader.importer
-
-            layout.prop(importer_prop, "path")
-            layout.prop(importer_prop, "relative")
-            layout.prop(importer_prop, "pattern")
-            layout.prop(importer_prop, "fileseq")
-            layout.operator("sequence.edit")
-            item = sim_loader.imported[sim_loader.imported_num]
-            layout.label(text="use relative: " + str(item.relative))
-            layout.label(text="current path: " + item.pattern)
+            # advance settings
+            layout.label(text="Advance Settings")
+            box = layout.box()
+            split = box.split()
+            col1 = split.column()
+            col1.alignment = 'RIGHT'
+            col2 = split.column(align=False)
+            col1.label(text="Enable Advance")
+            col2.prop(obj.SIMLOADER, 'use_advance', text="")
+            if obj.SIMLOADER.use_advance:
+                col1.label(text='Script')
+                col2.prop_search(obj.SIMLOADER, 'script_name', bpy.data, 'texts', text="")
 
 
 class SIMLOADER_Import(bpy.types.Panel):

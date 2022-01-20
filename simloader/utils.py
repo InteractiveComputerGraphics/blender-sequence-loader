@@ -1,6 +1,4 @@
 import bpy
-import os
-import meshio
 
 
 def show_message_box(message="", title="Message Box", icon="INFO"):
@@ -16,28 +14,17 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
     print("Information: ", title)
     print(message)
     print()
+    stop_animation()
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 
-def pre_check(fs):
-    '''
-    Do some pre-checking of animation sequences, while clicking on the 'load sequence' button
-    '''
-    mesh = meshio.read(fs)
-    color_attributes = mesh.point_data.keys()
-    if mesh.cells[0].type == "vertex":
-        return "particle", color_attributes
-    elif mesh.cells[0].type == "triangle":
-        return "mesh", color_attributes
-    elif mesh.cells[0].type == "quad":
-        return "mesh", color_attributes
+def stop_animation():
+    if bpy.context.screen.is_animation_playing:
+        #  if playing animation, then stop it, otherwise it will keep showing message box
+        bpy.ops.screen.animation_cancel()
 
 
-def find_next_name(old_name, list):
-    '''
-    Find the next name in the given list, e.g. bpy.data.objects, bpy.data.meshes and so on
-    '''
-    i = 1
-    while old_name + str(i) in list:
-        i += 1
-    return old_name + str(i)
+def reserved_word_check(word):
+    if word in ['id', 'position', 'color']:
+        return word + '2'
+    return word

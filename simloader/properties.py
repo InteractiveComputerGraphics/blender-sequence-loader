@@ -30,86 +30,69 @@ class importer_properties(bpy.types.PropertyGroup):
                                       description="You can specify the pattern here, in case the sequence can't be deteced.")
 
 
-class color_attribtue(bpy.types.PropertyGroup):
-    '''
-    Because I can't create a CollectionProperty of StringProperty, 
-    so I have to create a CollectionProperty of PropertyGroup (color attribute), 
-    and the PropertyGroup(currently) has the only information, which is the name of color attribute.
-    '''
-    name: bpy.props.StringProperty(name='color attr')
 
 
 class imported_seq_properties(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(name='name', description="name of the sequence, can be modified by user", update=update_name)
-    pattern: bpy.props.StringProperty(name='pattern', description="the (absolutoe or relative) path of the sequence")
-    relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path")
-    type: bpy.props.IntProperty(name='type',
-                                description='type of this sequence, particle or mesh, or other',
-                                default=0,
-                                min=0,
-                                max=1)
-    used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)
-    all_attributes: bpy.props.CollectionProperty(type=color_attribtue)
-    all_attributes_enum: bpy.props.EnumProperty(
-        name="Color Field",
-        description="choose attributes used for coloring",
-        items=callback_color_attribute,
-        update=update_color_attribute,
-    )
+    # name: bpy.props.StringProperty(name='name', description="name of the sequence, can be modified by user", update=update_name)
+    # pattern: bpy.props.StringProperty(name='pattern', description="the (absolutoe or relative) path of the sequence")
+    # relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path")
+    # type: bpy.props.IntProperty(name='type',
+    #                             description='type of this sequence, particle or mesh, or other',
+    #                             default=0,
+    #                             min=0,
+    #                             max=1)
+    # used_color_attribute: bpy.props.PointerProperty(type=color_attribtue)
+    # all_attributes: bpy.props.CollectionProperty(type=color_attribtue)
+    # all_attributes_enum: bpy.props.EnumProperty(
+    #     name="Color Field",
+    #     description="choose attributes used for coloring",
+    #     items=callback_color_attribute,
+    #     update=update_color_attribute,
+    # )
 
-    # general
-    max_value: bpy.props.FloatProperty(name='Clamped by max value',
-                                       description='max value to clamp the field',
-                                       update=update_max_value)
-    min_value: bpy.props.FloatProperty(name='Clamped by min value',
-                                       description='min value to clamp the field',
-                                       default=0,
-                                       update=update_min_value)
-    use_real_value: bpy.props.BoolProperty(name='Use original attribute value',
-                                           description="Wheter to use real attribute value or not",
-                                           default=False,
-                                           update=update_use_real_value)
+    # # general
+    # max_value: bpy.props.FloatProperty(name='Clamped by max value',
+    #                                    description='max value to clamp the field',
+    #                                    update=update_max_value)
+    # min_value: bpy.props.FloatProperty(name='Clamped by min value',
+    #                                    description='min value to clamp the field',
+    #                                    default=0,
+    #                                    update=update_min_value)
+    # use_real_value: bpy.props.BoolProperty(name='Use original attribute value',
+    #                                        description="Wheter to use real attribute value or not",
+    #                                        default=False,
+    #                                        update=update_use_real_value)
 
-    ref_max_value: bpy.props.FloatProperty(name='Max (norm) value in current frame',
-                                           description='max value in current frame',
-                                           get=get_ref_max_value)
-    ref_min_value: bpy.props.FloatProperty(name='Min (norm) value in current frame',
-                                           description='min value in current frame',
-                                           get=get_ref_min_value)
+    # ref_max_value: bpy.props.FloatProperty(name='Max (norm) value in current frame',
+    #                                        description='max value in current frame',
+    #                                        get=get_ref_max_value)
+    # ref_min_value: bpy.props.FloatProperty(name='Min (norm) value in current frame',
+    #                                        description='min value in current frame',
+    #                                        get=get_ref_min_value)
 
-    use_clamped_value: bpy.props.BoolProperty(name='Use clamped attribute value',
-                                              description="Wheter to use clamped attribute value or not",
-                                              default=True,
-                                              update=update_use_clamped_value)
+    # use_clamped_value: bpy.props.BoolProperty(name='Use clamped attribute value',
+    #                                           description="Wheter to use clamped attribute value or not",
+    #                                           default=True,
+    #                                           update=update_use_clamped_value)
 
-    #  because now, importer list has different size with property imported.
-    #  when using imported_num, this can directly lead to the index of property imported, but not index of importer list
-    #  so I created this additional property importer_list_index
-    importer_list_index: bpy.props.IntProperty(name='importer_list_index', default=0, min=0)
+    # #  because now, importer list has different size with property imported.
+    # #  when using imported_num, this can directly lead to the index of property imported, but not index of importer list
+    # #  so I created this additional property importer_list_index
+    # importer_list_index: bpy.props.IntProperty(name='importer_list_index', default=0, min=0)
 
-    #  to load the user self-defined function
-    use_advance: bpy.props.BoolProperty(name='Use Advance Features',
-                                        description="whether or not to use advance features",
-                                        default=False)
-    script_name: bpy.props.StringProperty(name='Customized File', update=update_script_name)
 
-    # mesh only
-    mesh_name: bpy.props.StringProperty()
+    # # mesh only
+    # mesh_name: bpy.props.StringProperty()
 
-    # particles only
-    particle_settings_name: bpy.props.StringProperty()
-    radius: bpy.props.FloatProperty(name='radius',
-                                    description='raidus of the particles',
-                                    default=0.01,
-                                    update=update_particle_radius,
-                                    min=0,
-                                    precision=6)
-    display: bpy.props.EnumProperty(
-        name="display method",
-        description="the way to display particles in viewport, rendered or point",
-        items=[('DOT', 'Point', ''), ("RENDER", "Rendered", "")],
-        update=update_display,
-    )
+    # # particles only
+    # particle_settings_name: bpy.props.StringProperty()
+    # display: bpy.props.EnumProperty(
+    #     name="display method",
+    #     description="the way to display particles in viewport, rendered or point",
+    #     items=[('DOT', 'Point', ''), ("RENDER", "Rendered", "")],
+    #     update=update_display,
+    # )
+    pass
 
 
 class tool_properties(bpy.types.PropertyGroup):
@@ -119,3 +102,16 @@ class tool_properties(bpy.types.PropertyGroup):
                                         description='the number of imported sequence, when selecting from ui list',
                                         default=0,
                                         update=update_imported_num)
+    imported_num2: bpy.props.IntProperty(name='imported count',
+                                        description='the number of imported sequence, when selecting from ui list',
+                                        default=0,
+                                        update=update_imported_num)
+
+
+class SIMLOADER_obj_property(bpy.types.PropertyGroup):
+    # stopped: bpy.props.BoolProperty(default= False,description="When true, the object will stop animation")
+    radius: bpy.props.FloatProperty(default=0.05,update = update_radius, min=0,precision=6)
+    use_advance: bpy.props.BoolProperty(default=False)
+    script_name: bpy.props.StringProperty()
+    use_relative: bpy.props.BoolProperty(default=False)
+    pattern: bpy.props.StringProperty()
