@@ -11,7 +11,8 @@ class SIMLOADER_UL_List(bpy.types.UIList):
         if item:
             layout.prop(item, "name", text='Name ', emboss=False)
         else:
-            layout.label(text="???", translate=False, icon_value=icon)
+            # actually, I guess this line of code won't be executed?
+            layout.label(text="", translate=False, icon_value=icon)
 
 
 class SIMLOADER_List_Panel(bpy.types.Panel):
@@ -27,14 +28,14 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sim_loader = context.scene.sim_loader
+        sim_loader = context.scene.SIMLOADER
         row = layout.row()
         row.template_list("SIMLOADER_UL_List",
                           "",
                           bpy.data.collections['SIMLOADER'],
                           "objects",
                           sim_loader,
-                          "imported_num",
+                          "selected_obj_num",
                           rows=2)
 
 
@@ -52,16 +53,16 @@ class SIMLOADER_Settings(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sim_loader = context.scene.sim_loader
+        sim_loader = context.scene.SIMLOADER
         collection = bpy.data.collections['SIMLOADER'].objects
-        if len(collection) > 0 and sim_loader.imported_num < len(collection):
-            obj = collection[sim_loader.imported_num]
+        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
+            obj = collection[sim_loader.selected_obj_num]
 
             # attributes settings
             layout.label(text="Attributes Settings")
             box = layout.box()
             row = box.row()
-            row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "imported_num2", rows=2)
+            row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
 
             # point cloud settings
             layout.label(text="PointCloud Settings")
@@ -70,7 +71,6 @@ class SIMLOADER_Settings(bpy.types.Panel):
             col1 = split.column()
             col1.alignment = 'RIGHT'
             col2 = split.column(align=False)
-
             col1.label(text='Radius')
             col2.prop(obj.SIMLOADER, 'radius')
 
@@ -102,7 +102,7 @@ class SIMLOADER_Import(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        importer_prop = scene.sim_loader.importer
+        importer_prop = scene.SIMLOADER
 
         layout.label(text="Basic Settings")
         box = layout.box()

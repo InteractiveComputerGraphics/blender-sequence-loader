@@ -8,7 +8,7 @@ from mathutils import Matrix
 
 
 def create_face_data(cells):
-    #  TODO, return type as well,
+    #  TODO, extend this 
     if len(cells) > 1:
         show_message_box("Multi Structure mesh unsupported yet, use first cell only")
 

@@ -2,8 +2,9 @@ import bpy
 import fileseq
 import os
 from .importer_manager import *
-from .particle_importer import *
-from .mesh_importer import *
+import traceback
+from .importer import create_obj
+
 
 #  Here are load and delete operations
 class SIMLOADER_OT_load(bpy.types.Operator):
@@ -16,7 +17,7 @@ class SIMLOADER_OT_load(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        importer_prop = scene.sim_loader.importer
+        importer_prop = scene.SIMLOADER
 
         if importer_prop.relative and not bpy.data.is_saved:
             #  use relative but file not saved
@@ -48,7 +49,5 @@ class SIMLOADER_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        from .importer import create_obj
-        create_obj(fs,pattern,importer_prop.relative)
+        create_obj(fs, pattern, importer_prop.relative)
         return {"FINISHED"}
-
