@@ -36,17 +36,6 @@ def callback_fileseq(self, context):
     return file_seq
 
 
-def update_radius(self, context):
-    '''
-    This function here updates the radius of selected particle sequence.
-    '''
-    idx = context.scene.SIMLOADER.selected_obj_num
-    collection = bpy.data.collections['SIMLOADER'].objects
-    obj = collection[idx]
-    node = obj.modifiers[0].node_group.nodes[2]
-    node.inputs[3].default_value = obj.SIMLOADER.radius
-
-
 def update_selected_obj_num(self, context):
     # Here is when select sequences, then change the corresponding object to active object
     collection = bpy.data.collections['SIMLOADER']

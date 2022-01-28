@@ -1,4 +1,4 @@
-from .operators import SIMLOADER_OT_load
+from .operators import SIMLOADER_OT_load,SIMLOADER_OT_edit
 from .properties import SIMLOADER_scene_property, SIMLOADER_obj_property
 from .panels import SIMLOADER_UL_List, SIMLOADER_List_Panel, SIMLOADER_Settings, SIMLOADER_Import, SIMLOADER_Templates, draw_template
 from .importer_manager import subscribe_to_selected, unsubscribe_to_selected
@@ -20,6 +20,7 @@ def SIMLOADER_initilize(scene):
 
 
 __all__ = [
+    "SIMLOADER_OT_edit",
     "SIMLOADER_OT_load",
     "SIMLOADER_obj_property",
     "SIMLOADER_initilize",

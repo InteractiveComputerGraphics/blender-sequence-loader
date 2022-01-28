@@ -26,6 +26,7 @@ classes = [
     SIMLOADER_obj_property,
     SIMLOADER_scene_property,
     SIMLOADER_OT_load,
+    SIMLOADER_OT_edit,
     SIMLOADER_Import,
     SIMLOADER_List_Panel,
     SIMLOADER_UL_List,

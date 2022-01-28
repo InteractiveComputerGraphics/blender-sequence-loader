@@ -22,15 +22,13 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
                                             description='the number of imported sequence, when selecting from ui list',
                                             default=0,
                                             update=update_selected_obj_num)
-    selected_attribute_num: bpy.props.IntProperty(
-        default=0,
-        #   update=update_imported_num
-    )
+    selected_attribute_num: bpy.props.IntProperty(default=0,
+                                                  #   update=update_imported_num
+                                                  )
 
 
 class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     # stopped: bpy.props.BoolProperty(default= False,description="When true, the object will stop animation")
-    radius: bpy.props.FloatProperty(default=0.05, update=update_radius, min=0, precision=6)
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty()
     use_relative: bpy.props.BoolProperty(default=False)

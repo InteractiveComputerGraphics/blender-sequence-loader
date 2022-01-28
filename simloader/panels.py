@@ -9,6 +9,9 @@ class SIMLOADER_UL_List(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
+            if isinstance(item, bpy.types.Attribute):
+                # make attribute name read-only
+                layout.enabled = False
             layout.prop(item, "name", text='Name ', emboss=False)
         else:
             # actually, I guess this line of code won't be executed?
@@ -37,6 +40,7 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
                           sim_loader,
                           "selected_obj_num",
                           rows=2)
+        layout.operator("sequence.edit")
 
 
 class SIMLOADER_Settings(bpy.types.Panel):
@@ -58,21 +62,26 @@ class SIMLOADER_Settings(bpy.types.Panel):
         if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
             obj = collection[sim_loader.selected_obj_num]
 
+            # path settings
+            layout.label(text="Path Information")
+            box = layout.box()
+
+            split = box.split()
+            col1 = split.column()
+            col1.alignment = 'RIGHT'
+            col2 = split.column(align=False)
+
+            col2.enabled = False
+            col1.label(text='Relative')
+            col2.prop(obj.SIMLOADER, 'use_relative', text="")
+            col1.label(text='Pattern')
+            col2.prop(obj.SIMLOADER, 'pattern', text="")
+
             # attributes settings
             layout.label(text="Attributes Settings")
             box = layout.box()
             row = box.row()
             row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
-
-            # point cloud settings
-            layout.label(text="PointCloud Settings")
-            box = layout.box()
-            split = box.split()
-            col1 = split.column()
-            col1.alignment = 'RIGHT'
-            col2 = split.column(align=False)
-            col1.label(text='Radius')
-            col2.prop(obj.SIMLOADER, 'radius')
 
             # advance settings
             layout.label(text="Advance Settings")
