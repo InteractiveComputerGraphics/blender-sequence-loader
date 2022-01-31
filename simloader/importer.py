@@ -21,29 +21,15 @@ def update_mesh(meshio_mesh, object):
     mesh_vertices = meshio_mesh.points
     type, mesh_faces = create_face_data(meshio_mesh.cells)
 
-    # assume the geometry node is the first modifier
-    geometrynode = object.modifiers[0].node_group
-
     #  if is_pointcloud, can speed up a little bit, for later operations
     is_pointcloud = None
 
     if type == "triangle" or type == "quad":
-        # connect directly to end node
-        node1 = geometrynode.nodes[0]
-        node2 = geometrynode.nodes[1]
-        geometrynode.links.new(node1.outputs[0], node2.inputs[0])
         is_pointcloud = False
     elif type == "vertex":
-        # connect via mesh on points node
-        node1 = geometrynode.nodes[2]
-        node2 = geometrynode.nodes[1]
-        geometrynode.links.new(node1.outputs[0], node2.inputs[0])
         is_pointcloud = True
     else:
         #  if unknown, then show as point cloud only
-        node1 = geometrynode.nodes[2]
-        node2 = geometrynode.nodes[1]
-        geometrynode.links.new(node1.outputs[0], node2.inputs[0])
         is_pointcloud = True
         show_message_box("unsupported mesh yet , will use point cloud to show vertices only")
 

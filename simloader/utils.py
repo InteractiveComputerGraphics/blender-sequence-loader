@@ -25,6 +25,6 @@ def stop_animation():
 
 
 def reserved_word_check(word):
-    if word in ['id', 'position', 'color']:
-        return word + '2'
-    return word
+    # if word in ['id', 'position', 'color']:
+    return word + '2'
+    # return word

@@ -1,4 +1,4 @@
-from .operators import SIMLOADER_OT_load,SIMLOADER_OT_edit
+from .operators import SIMLOADER_OT_load,SIMLOADER_OT_edit,SIMLOADER_OT_resetpt,SIMLOADER_OT_resetmesh,SIMLOADER_OT_resetins
 from .properties import SIMLOADER_scene_property, SIMLOADER_obj_property
 from .panels import SIMLOADER_UL_List, SIMLOADER_List_Panel, SIMLOADER_Settings, SIMLOADER_Import, SIMLOADER_Templates, draw_template
 from .importer_manager import subscribe_to_selected, unsubscribe_to_selected
@@ -31,6 +31,9 @@ __all__ = [
     "SIMLOADER_Templates",
     "SIMLOADER_Settings",
     "subscribe_to_selected",
+    "SIMLOADER_OT_resetpt",
+    "SIMLOADER_OT_resetmesh",
+    "SIMLOADER_OT_resetins",
     "draw_template",
     "unsubscribe_to_selected",
 ]

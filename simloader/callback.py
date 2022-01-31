@@ -1,7 +1,5 @@
 import bpy
 import fileseq
-from .utils import show_message_box
-from .importer_manager import importer_list
 
 #  Code here are mostly about the callback functions and update functions used in properties.py
 

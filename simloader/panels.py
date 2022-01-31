@@ -62,6 +62,10 @@ class SIMLOADER_Settings(bpy.types.Panel):
         if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
             obj = collection[sim_loader.selected_obj_num]
 
+            layout.operator('SIMLOADER.resetpt')
+            layout.operator('SIMLOADER.resetmesh')
+            layout.operator('SIMLOADER.resetins')
+
             # path settings
             layout.label(text="Path Information")
             box = layout.box()

@@ -1,10 +1,4 @@
 import bpy
-from bpy.app.handlers import persistent
-from .utils import show_message_box
-import os
-
-importer_list = []
-
 
 def selected_callback():
     if not bpy.context.view_layer.objects.active:
