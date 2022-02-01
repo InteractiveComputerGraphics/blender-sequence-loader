@@ -7,11 +7,22 @@ class SIMLOADER_UL_List(bpy.types.UIList):
     This controls the list of imported sequneces.
     '''
 
+    def filter_items(self,context, data, property):
+        objs = getattr(data, property)
+        flt_flags = []
+        #  not sure if I understand correctly about this
+        #  see reference from https://docs.blender.org/api/current/bpy.types.UIList.html#advanced-uilist-example-filtering-and-reordering
+        for o in objs:
+            if o.SIMLOADER.init:
+                flt_flags.append(self.bitflag_filter_item)
+            else:
+                flt_flags.append(0)
+        flt_neworder = []
+        return flt_flags, flt_neworder
+ 
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            if isinstance(item, bpy.types.Attribute):
-                # make attribute name read-only
-                layout.enabled = False
             layout.prop(item, "name", text='Name ', emboss=False)
         else:
             # actually, I guess this line of code won't be executed?
@@ -28,15 +39,17 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Sim Loader"
     bl_context = "objectmode"
-
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.SIMLOADER
         row = layout.row()
         row.template_list("SIMLOADER_UL_List",
                           "",
-                          bpy.data.collections['SIMLOADER'],
+                          bpy.data,
+                        #   .collections['SIMLOADER'],
                           "objects",
+                        # sim_loader,
+                        # "objects",
                           sim_loader,
                           "selected_obj_num",
                           rows=2)
@@ -58,47 +71,62 @@ class SIMLOADER_Settings(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.SIMLOADER
-        collection = bpy.data.collections['SIMLOADER'].objects
-        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            obj = collection[sim_loader.selected_obj_num]
+        # collection = bpy.data.collections['SIMLOADER'].objects
+        # if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
+            # obj = collection[sim_loader.selected_obj_num]
+        
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        layout.label(text="Path Information")
+        box = layout.box()
+        split = box.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+        col1.label(text="Material")
+        col2.prop_search(sim_loader, 'material', bpy.data, 'materials', text="")
+        box.label(text='Reset Geometry Nodes as')
 
-            layout.operator('SIMLOADER.resetpt')
-            layout.operator('SIMLOADER.resetmesh')
-            layout.operator('SIMLOADER.resetins')
+        split = box.split()
+        col1 = split.column()
+        col2 = split.column()
+        col3 = split.column()
+        col1.operator('SIMLOADER.resetpt',text="Point Cloud")
+        col2.operator('SIMLOADER.resetmesh',text="Mesh")
+        col3.operator('SIMLOADER.resetins',text="Instances")
 
-            # path settings
-            layout.label(text="Path Information")
-            box = layout.box()
+        # path settings
+        layout.label(text="Path Information")
+        box = layout.box()
 
-            split = box.split()
-            col1 = split.column()
-            col1.alignment = 'RIGHT'
-            col2 = split.column(align=False)
+        split = box.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
 
-            col2.enabled = False
-            col1.label(text='Relative')
-            col2.prop(obj.SIMLOADER, 'use_relative', text="")
-            col1.label(text='Pattern')
-            col2.prop(obj.SIMLOADER, 'pattern', text="")
+        col2.enabled = False
+        col1.label(text='Relative')
+        col2.prop(obj.SIMLOADER, 'use_relative', text="")
+        col1.label(text='Pattern')
+        col2.prop(obj.SIMLOADER, 'pattern', text="")
 
-            # attributes settings
-            layout.label(text="Attributes Settings")
-            box = layout.box()
-            row = box.row()
-            row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
+        # attributes settings
+        layout.label(text="Attributes Settings")
+        box = layout.box()
+        row = box.row()
+        # row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
 
-            # advance settings
-            layout.label(text="Advance Settings")
-            box = layout.box()
-            split = box.split()
-            col1 = split.column()
-            col1.alignment = 'RIGHT'
-            col2 = split.column(align=False)
-            col1.label(text="Enable Advance")
-            col2.prop(obj.SIMLOADER, 'use_advance', text="")
-            if obj.SIMLOADER.use_advance:
-                col1.label(text='Script')
-                col2.prop_search(obj.SIMLOADER, 'script_name', bpy.data, 'texts', text="")
+        # advance settings
+        layout.label(text="Advance Settings")
+        box = layout.box()
+        split = box.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+        col1.label(text="Enable Advance")
+        col2.prop(obj.SIMLOADER, 'use_advance', text="")
+        if obj.SIMLOADER.use_advance:
+            col1.label(text='Script')
+            col2.prop_search(obj.SIMLOADER, 'script_name', bpy.data, 'texts', text="")
 
 
 class SIMLOADER_Import(bpy.types.Panel):

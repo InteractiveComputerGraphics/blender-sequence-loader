@@ -148,6 +148,7 @@ def create_obj(fileseq, pattern, use_relaitve, transform_matrix=Matrix([[1, 0, 0
     object = bpy.data.objects.new(name, mesh)
     object.SIMLOADER.use_relative = use_relaitve
     object.SIMLOADER.pattern = pattern
+    object.SIMLOADER.init = True
     object.matrix_world = transform_matrix
     gn = object.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
     create_geometry_nodes(gn.node_group)

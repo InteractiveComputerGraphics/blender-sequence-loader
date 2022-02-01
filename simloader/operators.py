@@ -114,22 +114,19 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
 
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
-        collection = bpy.data.collections['SIMLOADER'].objects
-        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            obj = collection[sim_loader.selected_obj_num]
-            for modifier in obj.modifiers:
-                if modifier.type == "NODES":
-                    obj.modifiers.remove(modifier)
-            gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
-            gn.node_group.nodes.new('GeometryNodeMeshToPoints')
-            node0 = gn.node_group.nodes[0]
-            node1 = gn.node_group.nodes[1]
-            node2 = gn.node_group.nodes[2]
-            gn.node_group.links.new(node0.outputs[0], node2.inputs[0])
-            gn.node_group.links.new(node2.outputs[0], node1.inputs[0])
-            bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
-            return {"FINISHED"}
-        return {"CANCELLED"}
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        for modifier in obj.modifiers:
+            if modifier.type == "NODES":
+                obj.modifiers.remove(modifier)
+        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        gn.node_group.nodes.new('GeometryNodeMeshToPoints')
+        node0 = gn.node_group.nodes[0]
+        node1 = gn.node_group.nodes[1]
+        node2 = gn.node_group.nodes[2]
+        gn.node_group.links.new(node0.outputs[0], node2.inputs[0])
+        gn.node_group.links.new(node2.outputs[0], node1.inputs[0])
+        bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
+        return {"FINISHED"}
 
 
 class SIMLOADER_OT_resetmesh(bpy.types.Operator):
@@ -142,16 +139,13 @@ class SIMLOADER_OT_resetmesh(bpy.types.Operator):
 
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
-        collection = bpy.data.collections['SIMLOADER'].objects
-        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            obj = collection[sim_loader.selected_obj_num]
-            for modifier in obj.modifiers:
-                if modifier.type == "NODES":
-                    obj.modifiers.remove(modifier)
-            gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
-            bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
-            return {"FINISHED"}
-        return {"CANCELLED"}
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        for modifier in obj.modifiers:
+            if modifier.type == "NODES":
+                obj.modifiers.remove(modifier)
+        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
+        return {"FINISHED"}
 
 
 class SIMLOADER_OT_resetins(bpy.types.Operator):
@@ -164,27 +158,30 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
 
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
-        collection = bpy.data.collections['SIMLOADER'].objects
-        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            obj = collection[sim_loader.selected_obj_num]
-            for modifier in obj.modifiers:
-                if modifier.type == "NODES":
-                    obj.modifiers.remove(modifier)
-            gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
-            nodes = gn.node_group.nodes
-            links = gn.node_group.links
-            input_node  = nodes[0]
-            output_node  = nodes[1]
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        for modifier in obj.modifiers:
+            if modifier.type == "NODES":
+                obj.modifiers.remove(modifier)
+        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        nodes = gn.node_group.nodes
+        links = gn.node_group.links
+        input_node  = nodes[0]
+        output_node  = nodes[1]
 
-            instance_on_points = nodes.new('GeometryNodeInstanceOnPoints')
-            cube = nodes.new('GeometryNodeMeshCube')
-            realize_instance = nodes.new('GeometryNodeRealizeInstances')
+        instance_on_points = nodes.new('GeometryNodeInstanceOnPoints')
+        cube = nodes.new('GeometryNodeMeshCube')
+        realize_instance = nodes.new('GeometryNodeRealizeInstances')
+        set_material = nodes.new('GeometryNodeSetMaterial')
 
-            links.new(input_node.outputs[0],instance_on_points.inputs['Points'])
-            links.new(cube.outputs[0],instance_on_points.inputs['Instance'])
-            links.new(instance_on_points.outputs[0],realize_instance.inputs[0])
-            links.new(realize_instance.outputs[0],output_node.inputs[0])
+        instance_on_points.inputs['Scale'].default_value = [0.05,0.05,0.05,]
+        # set_material.inputs['2'].default_value = 
 
-            bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
-            return {"FINISHED"}
-        return {"CANCELLED"}
+
+        links.new(input_node.outputs[0],instance_on_points.inputs['Points'])
+        links.new(cube.outputs[0],instance_on_points.inputs['Instance'])
+        links.new(instance_on_points.outputs[0],realize_instance.inputs[0])
+        links.new(realize_instance.outputs[0],set_material.inputs[0])
+        links.new(set_material.outputs[0],output_node.inputs[0])
+
+        bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
+        return {"FINISHED"}

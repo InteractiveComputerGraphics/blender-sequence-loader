@@ -4,7 +4,7 @@ def selected_callback():
     if not bpy.context.view_layer.objects.active:
         return
     name = bpy.context.active_object.name
-    idx = bpy.data.collections['SIMLOADER'].objects.find(name)
+    idx = bpy.data.objects.find(name)
     if idx >= 0:
         bpy.context.scene.SIMLOADER.selected_obj_num = idx
 
