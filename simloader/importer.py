@@ -120,13 +120,6 @@ def update_mesh(meshio_mesh, object):
         attribute.data.foreach_set(name_string, v.ravel())
 
 
-def create_geometry_nodes(gn):
-    #  currently only add an mesh to points node
-    gn.nodes.new('GeometryNodeMeshToPoints')
-
-    gn.links.new(gn.nodes[0].outputs[0], gn.nodes[2].inputs[0])
-
-
 def create_obj(fileseq, pattern, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
                                                                                                                     1]])):
 
@@ -150,10 +143,8 @@ def create_obj(fileseq, pattern, use_relaitve, transform_matrix=Matrix([[1, 0, 0
     object.SIMLOADER.pattern = pattern
     object.SIMLOADER.init = True
     object.matrix_world = transform_matrix
-    gn = object.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
-    create_geometry_nodes(gn.node_group)
     update_mesh(meshio_mesh, object)
-    bpy.data.collections['SIMLOADER'].objects.link(object)
+    bpy.context.collection.objects.link(object)
 
 
 def update_obj(scene, depsgraph=None):
@@ -161,7 +152,9 @@ def update_obj(scene, depsgraph=None):
 
     current_frame = bpy.context.scene.frame_current
 
-    for obj in bpy.data.collections['SIMLOADER'].objects:
+    for obj in bpy.data.objects:
+        if obj.SIMLOADER.init == False:
+            continue
 
         meshio_mesh = None
         pattern = obj.SIMLOADER.pattern

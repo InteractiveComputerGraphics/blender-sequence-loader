@@ -93,15 +93,15 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        collection = bpy.data.collections['SIMLOADER'].objects
         sim_loader = context.scene.SIMLOADER
         #  it seems quite simple task, no need to create a function(for now)
-        if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            obj = collection[sim_loader.selected_obj_num]
-            obj.SIMLOADER.pattern = pattern
-            obj.SIMLOADER.use_relative = importer_prop.relative
-            return {"FINISHED"}
-        return {"CANCELLED"}
+        if sim_loader.selected_obj_num >= len(bpy.data.objects):
+            return {"CANCELLED"}
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        obj.SIMLOADER.pattern = pattern
+        obj.SIMLOADER.use_relative = importer_prop.relative
+        return {"FINISHED"}
+
 
 
 class SIMLOADER_OT_resetpt(bpy.types.Operator):
@@ -120,11 +120,15 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
                 obj.modifiers.remove(modifier)
         gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
         gn.node_group.nodes.new('GeometryNodeMeshToPoints')
+        set_material = gn.node_group.nodes.new('GeometryNodeSetMaterial')
+        set_material.inputs[2].default_value = context.scene.SIMLOADER.material
+
         node0 = gn.node_group.nodes[0]
         node1 = gn.node_group.nodes[1]
         node2 = gn.node_group.nodes[2]
         gn.node_group.links.new(node0.outputs[0], node2.inputs[0])
-        gn.node_group.links.new(node2.outputs[0], node1.inputs[0])
+        gn.node_group.links.new(node2.outputs[0], set_material.inputs[0])
+        gn.node_group.links.new(set_material.outputs[0], node1.inputs[0])
         bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
         return {"FINISHED"}
 
@@ -174,7 +178,7 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
         set_material = nodes.new('GeometryNodeSetMaterial')
 
         instance_on_points.inputs['Scale'].default_value = [0.05,0.05,0.05,]
-        # set_material.inputs['2'].default_value = 
+        set_material.inputs[2].default_value = context.scene.SIMLOADER.material
 
 
         links.new(input_node.outputs[0],instance_on_points.inputs['Points'])

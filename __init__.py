@@ -32,9 +32,10 @@ classes = [
     SIMLOADER_OT_resetmesh,
     SIMLOADER_Import,
     SIMLOADER_List_Panel,
-    SIMLOADER_UL_List,
+    SIMLOADER_UL_Obj_List,
     SIMLOADER_Settings,
     SIMLOADER_Templates,
+    SIMLOADER_UL_Att_List,
 ]
 
 

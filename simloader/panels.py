@@ -2,12 +2,12 @@ import bpy
 import os
 
 
-class SIMLOADER_UL_List(bpy.types.UIList):
+class SIMLOADER_UL_Obj_List(bpy.types.UIList):
     '''
     This controls the list of imported sequneces.
     '''
 
-    def filter_items(self,context, data, property):
+    def filter_items(self, context, data, property):
         objs = getattr(data, property)
         flt_flags = []
         #  not sure if I understand correctly about this
@@ -19,10 +19,23 @@ class SIMLOADER_UL_List(bpy.types.UIList):
                 flt_flags.append(0)
         flt_neworder = []
         return flt_flags, flt_neworder
- 
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
+            layout.prop(item, "name", text='Name ', emboss=False)
+        else:
+            # actually, I guess this line of code won't be executed?
+            layout.label(text="", translate=False, icon_value=icon)
+
+
+
+class SIMLOADER_UL_Att_List(bpy.types.UIList):
+    '''
+    This controls the list of imported sequneces.
+    '''
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+        if item:
+            layout.enabled = False
             layout.prop(item, "name", text='Name ', emboss=False)
         else:
             # actually, I guess this line of code won't be executed?
@@ -39,20 +52,12 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Sim Loader"
     bl_context = "objectmode"
+
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.SIMLOADER
         row = layout.row()
-        row.template_list("SIMLOADER_UL_List",
-                          "",
-                          bpy.data,
-                        #   .collections['SIMLOADER'],
-                          "objects",
-                        # sim_loader,
-                        # "objects",
-                          sim_loader,
-                          "selected_obj_num",
-                          rows=2)
+        row.template_list("SIMLOADER_UL_Obj_List", "", bpy.data, "objects", sim_loader, "selected_obj_num", rows=2)
         layout.operator("sequence.edit")
 
 
@@ -71,11 +76,11 @@ class SIMLOADER_Settings(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.SIMLOADER
-        # collection = bpy.data.collections['SIMLOADER'].objects
-        # if len(collection) > 0 and sim_loader.selected_obj_num < len(collection):
-            # obj = collection[sim_loader.selected_obj_num]
-        
+        if sim_loader.selected_obj_num>=len(bpy.data.objects):
+            return
         obj = bpy.data.objects[sim_loader.selected_obj_num]
+        if not obj.SIMLOADER.init:
+            return
         layout.label(text="Path Information")
         box = layout.box()
         split = box.split()
@@ -90,9 +95,9 @@ class SIMLOADER_Settings(bpy.types.Panel):
         col1 = split.column()
         col2 = split.column()
         col3 = split.column()
-        col1.operator('SIMLOADER.resetpt',text="Point Cloud")
-        col2.operator('SIMLOADER.resetmesh',text="Mesh")
-        col3.operator('SIMLOADER.resetins',text="Instances")
+        col1.operator('SIMLOADER.resetpt', text="Point Cloud")
+        col2.operator('SIMLOADER.resetmesh', text="Mesh")
+        col3.operator('SIMLOADER.resetins', text="Instances")
 
         # path settings
         layout.label(text="Path Information")
@@ -113,7 +118,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
         layout.label(text="Attributes Settings")
         box = layout.box()
         row = box.row()
-        # row.template_list("SIMLOADER_UL_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
+        row.template_list("SIMLOADER_UL_Att_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
 
         # advance settings
         layout.label(text="Advance Settings")

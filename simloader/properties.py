@@ -35,7 +35,6 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
 
 class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
-    # enabled: bpy.props.BoolProperty(default=False)
     # stopped: bpy.props.BoolProperty(default= False,description="When true, the object will stop animation")
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty()
