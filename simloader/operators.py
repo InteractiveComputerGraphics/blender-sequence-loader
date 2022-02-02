@@ -36,19 +36,13 @@ class SIMLOADER_OT_load(bpy.types.Operator):
                 return {"CANCELLED"}
             fs = importer_prop.path + '/' + importer_prop.pattern
 
-        #  pattern means the name of directory
-        #  fs means fileseq object
-        pattern = fs
-        if importer_prop.relative:
-            pattern = bpy.path.relpath(fs)
-
         try:
             fs = fileseq.findSequenceOnDisk(fs)
         except Exception as e:
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        create_obj(fs, pattern, importer_prop.relative)
+        create_obj(fs, importer_prop.relative)
         return {"FINISHED"}
 
 
@@ -81,11 +75,6 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
                 return {"CANCELLED"}
             fs = importer_prop.path + '/' + importer_prop.pattern
 
-        #  pattern means the name of directory
-        #  fs means fileseq object
-        pattern = fs
-        if importer_prop.relative:
-            pattern = bpy.path.relpath(fs)
 
         try:
             fs = fileseq.findSequenceOnDisk(fs)
@@ -98,7 +87,10 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
         if sim_loader.selected_obj_num >= len(bpy.data.objects):
             return {"CANCELLED"}
         obj = bpy.data.objects[sim_loader.selected_obj_num]
-        obj.SIMLOADER.pattern = pattern
+        if importer_prop.relative:
+            obj.SIMLOADER.pattern = bpy.path.relpath(str(fs))
+        else:
+            obj.SIMLOADER.pattern = str(fs)
         obj.SIMLOADER.use_relative = importer_prop.relative
         return {"FINISHED"}
 

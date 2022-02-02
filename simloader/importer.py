@@ -120,7 +120,7 @@ def update_mesh(meshio_mesh, object):
         attribute.data.foreach_set(name_string, v.ravel())
 
 
-def create_obj(fileseq, pattern, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
+def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
                                                                                                                     1]])):
 
     current_frame = bpy.context.scene.frame_current
@@ -140,7 +140,10 @@ def create_obj(fileseq, pattern, use_relaitve, transform_matrix=Matrix([[1, 0, 0
     mesh = bpy.data.meshes.new(name)
     object = bpy.data.objects.new(name, mesh)
     object.SIMLOADER.use_relative = use_relaitve
-    object.SIMLOADER.pattern = pattern
+    if use_relaitve:
+        object.SIMLOADER.pattern = bpy.path.relpath(str(fileseq))
+    else:
+        object.SIMLOADER.pattern = str(fileseq)
     object.SIMLOADER.init = True
     object.matrix_world = transform_matrix
     update_mesh(meshio_mesh, object)
