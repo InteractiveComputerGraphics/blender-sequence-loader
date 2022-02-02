@@ -18,7 +18,7 @@ dirs = {addondirectory:addondirectory,
 }
 
 with ZipFile('simloader_addon.zip','w') as addonzip:
-    #  write simloader directory
+    #  write all directories
     for k,v in dirs.items():
         for subdir, dirs, files in os.walk(k):
             for file in files:
@@ -27,10 +27,10 @@ with ZipFile('simloader_addon.zip','w') as addonzip:
                 filepath = os.path.join(subdir, file)
                 relative_path = os.path.relpath(filepath,k)
                 endpath = os.path.join(v, relative_path)
-                print(endpath)
+                endpath = os.path.join('simloaderaddon/', endpath)
                 addonzip.write(filepath,endpath)
 
     # write init.py
-    addonzip.write('__init__.py')
+    addonzip.write('__init__.py','simloaderaddon/__init__.py')
     
 
