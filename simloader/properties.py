@@ -1,4 +1,3 @@
-from cgitb import enable
 import bpy
 from .callback import *
 
@@ -30,12 +29,10 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
         type=bpy.types.Material,
         poll=poll_material,
     )
-    # objects:bpy.props.CollectionProperty(type=bpy.types.Object)
 
 
 class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
-    # stopped: bpy.props.BoolProperty(default= False,description="When true, the object will stop animation")
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty()
     use_relative: bpy.props.BoolProperty(default=False)
