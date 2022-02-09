@@ -5,6 +5,7 @@ import fileseq
 from .utils import show_message_box, reserved_word_check
 import numpy as np
 from mathutils import Matrix
+import mzd
 
 
 def create_face_data(cells):
@@ -23,7 +24,9 @@ def update_mesh(meshio_mesh, object):
 
     #  if is_pointcloud, can speed up a little bit, for later operations
     is_pointcloud = None
+    is_sinlgecell = len(meshio_mesh.cells) == 1
 
+    
     if type == "triangle" or type == "quad":
         is_pointcloud = False
     elif type == "vertex":
@@ -120,20 +123,21 @@ def update_mesh(meshio_mesh, object):
         attribute.data.foreach_set(name_string, v.ravel())
 
 
-def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
+def create_obj(fileseq, use_relaitve, enabled, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
                                                                                                                     1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
     meshio_mesh = None
-    try:
-        meshio_mesh = meshio.read(filepath)
-    except Exception as e:
-        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                         "Meshio Loading Error" + str(e),
-                         icon="ERROR")
-        return None
+    if enabled:
+        try:
+            meshio_mesh = meshio.read(filepath)
+        except Exception as e:
+            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                            "Meshio Loading Error" + str(e),
+                            icon="ERROR")
+            return None
 
     #  create the object
     name = fileseq.basename() + "@" + fileseq.extension()
@@ -145,8 +149,10 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     else:
         object.SIMLOADER.pattern = str(fileseq)
     object.SIMLOADER.init = True
+    object.SIMLOADER.enabled = enabled
     object.matrix_world = transform_matrix
-    update_mesh(meshio_mesh, object)
+    if enabled:
+        update_mesh(meshio_mesh, object)
     bpy.context.collection.objects.link(object)
 
 
@@ -157,6 +163,8 @@ def update_obj(scene, depsgraph=None):
 
     for obj in bpy.data.objects:
         if obj.SIMLOADER.init == False:
+            continue
+        if obj.SIMLOADER.enabled == False:
             continue
 
         meshio_mesh = None

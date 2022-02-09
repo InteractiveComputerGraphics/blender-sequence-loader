@@ -81,7 +81,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         if not obj.SIMLOADER.init:
             return
-        layout.label(text="Path Information")
+        layout.label(text="Reset Geometry Nodes")
         box = layout.box()
         split = box.split()
         col1 = split.column()
@@ -99,6 +99,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
         col2.operator('SIMLOADER.resetmesh', text="Mesh")
         col3.operator('SIMLOADER.resetins', text="Instances")
 
+
         # path settings
         layout.label(text="Path Information")
         box = layout.box()
@@ -113,6 +114,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
         col2.prop(obj.SIMLOADER, 'use_relative', text="")
         col1.label(text='Pattern')
         col2.prop(obj.SIMLOADER, 'pattern', text="")
+        
 
         # attributes settings
         layout.label(text="Attributes Settings")
@@ -132,6 +134,8 @@ class SIMLOADER_Settings(bpy.types.Panel):
         if obj.SIMLOADER.use_advance:
             col1.label(text='Script')
             col2.prop_search(obj.SIMLOADER, 'script_name', bpy.data, 'texts', text="")
+            col1.label(text='Enabled')
+            col2.prop(obj.SIMLOADER, 'enabled', text="")
 
 
 class SIMLOADER_Import(bpy.types.Panel):
@@ -165,6 +169,9 @@ class SIMLOADER_Import(bpy.types.Panel):
 
         col1.label(text="Use Relative Path")
         col2.prop(importer_prop, "relative", text="")
+
+        col1.label(text="Enable")
+        col2.prop(importer_prop, "enabled", text="")
 
         layout.label(text="Pattern")
         box = layout.box()

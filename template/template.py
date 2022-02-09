@@ -20,3 +20,9 @@ def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
     frame_number = frame_number % len(fileseq)
     mesh = meshio.read(fileseq[frame_number])
     return mesh
+
+#  An example to read mzd file
+# def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
+#     frame_number = frame_number % len(fileseq)
+#     mesh = mzd.readMZD(fileseq[frame_number])
+#     return mesh
