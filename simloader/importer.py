@@ -7,84 +7,55 @@ import numpy as np
 from mathutils import Matrix
 import mzd
 
-
-def create_face_data(cells):
-    #  TODO, extend this to 3d mesh
-    if len(cells) > 1:
-        show_message_box("Multi Structure mesh unsupported yet, use first cell only")
-
-    return cells[0].type, cells[0].data
-
+supported_mesh_format = [ 'triangle', 'quad']
 
 def update_mesh(meshio_mesh, object):
-    # extrace information from the meshio mesh
+    # extract information from the meshio mesh
     mesh = object.data
     mesh_vertices = meshio_mesh.points
-    type, mesh_faces = create_face_data(meshio_mesh.cells)
 
-    #  if is_pointcloud, can speed up a little bit, for later operations
-    is_pointcloud = None
-    is_sinlgecell = len(meshio_mesh.cells) == 1
-
-    
-    if type == "triangle" or type == "quad":
-        is_pointcloud = False
-    elif type == "vertex":
-        is_pointcloud = True
-    else:
-        #  if unknown, then show as point cloud only
-        is_pointcloud = True
-        show_message_box("unsupported mesh yet , will use point cloud to show vertices only")
-
-    face_shape = mesh_faces.shape
+    n_poly = 0
+    n_loop = 0
     n_verts = len(mesh_vertices)
-    npoly = face_shape[1]
-    n_primitives = face_shape[0]
 
-    # extrace information from the blender mesh
+    faces_loop_start = np.array([], dtype=np.int32)
+    faces_loop_total = np.array([], dtype=np.int32)
+    loops_vert_idx = np.array([], dtype=np.int32)
     shade_scheme = False
     if mesh.polygons:
         shade_scheme = mesh.polygons[0].use_smooth
-
-    if not is_pointcloud and \
-        len(mesh.vertices) == n_verts and \
-        len(mesh.polygons) == n_primitives and \
-        len(mesh.loops) == npoly * n_primitives:
-        # the strucutre doesn't change, no need to add or remove vertices/ edges/  polygons, then directly go to next step
-        # In theory, it could have a bug here, because it doesn't check the number of edges, but it's too hard to do that,
-        # because edge data is not stored in files, it has to be calculated from mesh_face manually
-        # So the problem is, if existing mesh has more edges than the next mesh, then these extra edges won't be removed,
-        # It won't effect the rendered image, because edges won't be rendered
-        # but it will look ugly in viewport, especially go into edit mode
-        # this can happen only in a very rare case.
-        pass
-    elif is_pointcloud and len(mesh.vertices) == n_verts and len(mesh.polygons) ==0:
-        # len(mesh.polygons)==0, to make sure it was pointcloud as well in the previous frame
-        pass
-    else:
-        # since the structure has been changed, so delete it first, then create a new one
-        # and reconstruct some other attributes here(if there are), e.g. uv maps, etc.
-        mesh.clear_geometry()
-        mesh.vertices.add(n_verts)
-        mesh.loops.add(npoly * n_primitives)
-        mesh.polygons.add(n_primitives)
-
-    mesh.vertices.foreach_set("co", mesh_vertices.ravel())
-
-    if not is_pointcloud:
-        loops_vert_idx = mesh_faces.ravel()
-
-        faces_loop_total = np.ones((len(mesh_faces)), dtype=np.int32) * npoly
-
+    for cell in meshio_mesh.cells:
+        if cell.type not in supported_mesh_format:
+            if cell.type!="vertex":
+                show_message_box(cell.type + " is unsupported mesh format yet")
+            continue
+        data = cell.data
+        n_poly += len(data)
+        n_loop += data.shape[0] * data.shape[1]
+        loops_vert_idx = np.append(loops_vert_idx, data.ravel())
+        faces_loop_total = np.append(faces_loop_total, np.ones((len(data)), dtype=np.int32) * data.shape[1])
+    if faces_loop_total.size>0:
         faces_loop_start = np.cumsum(faces_loop_total)
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
 
-        mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-        mesh.polygons.foreach_set("loop_start", faces_loop_start)
-        mesh.polygons.foreach_set("loop_total", faces_loop_total)
-        mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
+
+    if  len(mesh.vertices) == n_verts and \
+        len(mesh.polygons) == n_poly and \
+        len(mesh.loops) == n_loop:
+        pass
+    else:
+        mesh.clear_geometry()
+        mesh.vertices.add(n_verts)
+        mesh.loops.add(n_loop)
+        mesh.polygons.add(n_poly)
+
+    mesh.vertices.foreach_set("co", mesh_vertices.ravel())
+    mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+    mesh.polygons.foreach_set("loop_start", faces_loop_start)
+    mesh.polygons.foreach_set("loop_total", faces_loop_total)
+    mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
 
     mesh.update()
     mesh.validate()
@@ -123,8 +94,7 @@ def update_mesh(meshio_mesh, object):
         attribute.data.foreach_set(name_string, v.ravel())
 
 
-def create_obj(fileseq, use_relaitve,  transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
-                                                                                                                    1]])):
+def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -136,8 +106,8 @@ def create_obj(fileseq, use_relaitve,  transform_matrix=Matrix([[1, 0, 0, 0], [0
         meshio_mesh = meshio.read(filepath)
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                        "Meshio Loading Error" + str(e),
-                        icon="ERROR")
+                         "Meshio Loading Error" + str(e),
+                         icon="ERROR")
         enabled = False
 
     #  create the object
