@@ -42,7 +42,7 @@ class SIMLOADER_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        create_obj(fs, importer_prop.relative,importer_prop.enabled)
+        create_obj(fs, importer_prop.relative)
         return {"FINISHED"}
 
 

@@ -170,9 +170,6 @@ class SIMLOADER_Import(bpy.types.Panel):
         col1.label(text="Use Relative Path")
         col2.prop(importer_prop, "relative", text="")
 
-        col1.label(text="Enable")
-        col2.prop(importer_prop, "enabled", text="")
-
         layout.label(text="Pattern")
         box = layout.box()
         split = box.split()

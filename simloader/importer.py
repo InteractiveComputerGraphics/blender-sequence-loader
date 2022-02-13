@@ -123,21 +123,22 @@ def update_mesh(meshio_mesh, object):
         attribute.data.foreach_set(name_string, v.ravel())
 
 
-def create_obj(fileseq, use_relaitve, enabled, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
+def create_obj(fileseq, use_relaitve,  transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0,
                                                                                                                     1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
     meshio_mesh = None
-    if enabled:
-        try:
-            meshio_mesh = meshio.read(filepath)
-        except Exception as e:
-            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                            "Meshio Loading Error" + str(e),
-                            icon="ERROR")
-            return None
+    enabled = True
+
+    try:
+        meshio_mesh = meshio.read(filepath)
+    except Exception as e:
+        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                        "Meshio Loading Error" + str(e),
+                        icon="ERROR")
+        enabled = False
 
     #  create the object
     name = fileseq.basename() + "@" + fileseq.extension()

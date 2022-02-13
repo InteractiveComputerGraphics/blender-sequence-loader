@@ -13,7 +13,6 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
         description="Please choose the file sequences you want",
         items=callback_fileseq,
     )
-    enabled: bpy.props.BoolProperty(default=True)
     use_pattern: bpy.props.BoolProperty(name='Use pattern',
                                         description="whether or not to use manually typed pattern",
                                         default=False)
