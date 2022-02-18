@@ -5,24 +5,42 @@
 # 1. preprocess
 # This function reads the file sequence, and frame number in blender
 # It returns a meshio object, which will be imported into blender at current frame
-# Here is the examples that you can do
-# 1. rewrite the mapping between frame number and the mesh you are going to load
-# 2. do some mesh processing, e.g. convert a tetrahedra mesh, which is not supported yet, to a triangle mesh
-# 3. actually, you can do everything here, as long as you return a mesh object
 #
-# Here is an example, and this is the default version inside meshioimporter
+# 2. process
+# This funciton reads the file sequence, and frame number in blender, and also pass the bpy.types.mesh object
+# So you can directly edit the mesh.
+# 
 #
-# No need to write import here, only write here to make it clear
-# import meshio
-# import fileseq
-# import bpy
-def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
-    frame_number = frame_number % len(fileseq)
-    mesh = meshio.read(fileseq[frame_number])
-    return mesh
+#
+# Note: process has higher priority, which means, when process exists, preprocess will be ignored.
+# When preprocess and process bot not exist, addon will call the default version.
+# 
+# In general, we suggest to use preprocess alone, since meshio has a relatively clear and simple data structure, 
+# while directly manipulate bpy.types.mesh could be complicated
 
-#  An example to read mzd file
-# def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
-#     frame_number = frame_number % len(fileseq)
-#     mesh = mzd.readMZD(fileseq[frame_number])
-#     return mesh
+# Here is an example, and this is the default version inside simloader
+
+
+import meshio
+import fileseq
+import bpy
+
+# import your extra packages here
+
+
+def process(fileseq: fileseq.FileSequence, frame_number: int, mesh: bpy.types.Mesh):
+    # currently, you can not call preprocess inside process fucntion
+    frame_number = frame_number % len(fileseq)
+    meshio_mesh = meshio.read(fileseq[frame_number])
+    update_mesh(meshio_mesh, mesh)
+
+# because process exists, preprocess here will be ignored
+def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
+    # This is the default version inside simloader
+    # frame_number = frame_number % len(fileseq)
+    # mesh = meshio.read(fileseq[frame_number])
+    # return mesh
+    pass
+
+
+

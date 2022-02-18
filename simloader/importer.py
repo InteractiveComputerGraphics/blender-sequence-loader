@@ -7,11 +7,11 @@ import numpy as np
 from mathutils import Matrix
 import mzd
 
-supported_mesh_format = [ 'triangle', 'quad']
+supported_mesh_format = ['triangle', 'quad']
 
-def update_mesh(meshio_mesh, object):
+
+def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
-    mesh = object.data
     mesh_vertices = meshio_mesh.points
 
     n_poly = 0
@@ -26,7 +26,8 @@ def update_mesh(meshio_mesh, object):
         shade_scheme = mesh.polygons[0].use_smooth
     for cell in meshio_mesh.cells:
         if cell.type not in supported_mesh_format:
-            if cell.type!="vertex":
+            # vertex is not mesh type, but supported
+            if cell.type != "vertex":
                 show_message_box(cell.type + " is unsupported mesh format yet")
             continue
         data = cell.data
@@ -34,7 +35,7 @@ def update_mesh(meshio_mesh, object):
         n_loop += data.shape[0] * data.shape[1]
         loops_vert_idx = np.append(loops_vert_idx, data.ravel())
         faces_loop_total = np.append(faces_loop_total, np.ones((len(data)), dtype=np.int32) * data.shape[1])
-    if faces_loop_total.size>0:
+    if faces_loop_total.size > 0:
         faces_loop_start = np.cumsum(faces_loop_total)
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
@@ -123,7 +124,7 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     object.SIMLOADER.enabled = enabled
     object.matrix_world = transform_matrix
     if enabled:
-        update_mesh(meshio_mesh, object)
+        update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
 
 
@@ -152,21 +153,27 @@ def update_obj(scene, depsgraph=None):
                 show_message_box(traceback.format_exc(), "running script: " + obj.SIMLOADER.script_name + " failed: " + str(e),
                                  "ERROR")
                 continue
-            if 'preprocess' not in locals():
-                show_message_box('function preprocess not found', "ERROR")
-                continue
+        
+        if 'process' in locals():
+            user_process = locals()['process']
+            user_process(fs, current_frame, obj.data)
+            continue
+
+        elif 'preprocess' in locals():
             user_preprocess = locals()['preprocess']
             meshio_mesh = user_preprocess(fs, current_frame)
-            if not isinstance(meshio_mesh, meshio.Mesh):
-                show_message_box('function preprocess does not return meshio object', "ERROR")
-                continue
         else:
             filepath = fs[current_frame % len(fs)]
             try:
                 meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                 "Meshio Loading Error" + str(e),
-                                 icon="ERROR")
+                                "Meshio Loading Error" + str(e),
+                                icon="ERROR")
                 continue
-        update_mesh(meshio_mesh, obj)
+
+
+        if not isinstance(meshio_mesh, meshio.Mesh):
+            show_message_box('function preprocess does not return meshio object', "ERROR")
+            continue
+        update_mesh(meshio_mesh, obj.data)
