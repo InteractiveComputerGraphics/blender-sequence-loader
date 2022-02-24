@@ -153,25 +153,31 @@ def update_obj(scene, depsgraph=None):
                 show_message_box(traceback.format_exc(), "running script: " + obj.SIMLOADER.script_name + " failed: " + str(e),
                                  "ERROR")
                 continue
-        
+
         if 'process' in locals():
             user_process = locals()['process']
-            user_process(fs, current_frame, obj.data)
+            try:
+                user_process(fs, current_frame, obj.data)
+            except Exception as e:
+                show_message_box("Error when calling user process: " + traceback.format_exc(), icon="ERROR")
             continue
 
         elif 'preprocess' in locals():
             user_preprocess = locals()['preprocess']
-            meshio_mesh = user_preprocess(fs, current_frame)
+            try:
+                meshio_mesh = user_preprocess(fs, current_frame)
+            except Exception as e:
+                show_message_box("Error when calling user preprocess: " + traceback.format_exc(), icon="ERROR")
+                continue
         else:
             filepath = fs[current_frame % len(fs)]
             try:
                 meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                "Meshio Loading Error" + str(e),
-                                icon="ERROR")
+                                 "Meshio Loading Error" + str(e),
+                                 icon="ERROR")
                 continue
-
 
         if not isinstance(meshio_mesh, meshio.Mesh):
             show_message_box('function preprocess does not return meshio object', "ERROR")
