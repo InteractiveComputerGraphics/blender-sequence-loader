@@ -1,5 +1,6 @@
 from zipfile import ZipFile
 import os
+from datetime import date
 
 
 addondirectory = 'simloader'
@@ -20,7 +21,8 @@ dirs = {
     mzddirectory: mzddirectory,
 }
 
-with ZipFile('simloader_addon.zip', 'w') as addonzip:
+today = str(date.today())
+with ZipFile(f'simloader_addon_{today}.zip', 'w') as addonzip:
     #  write all directories
     for k, v in dirs.items():
         for subdir, dirs, files in os.walk(k):
