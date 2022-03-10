@@ -1,3 +1,8 @@
+# This is the template specifically show how to load mzd files.
+# For more information about mzd, you can find at https://github.com/wdas/partio and https://github.com/digitalillusions/BlenderPartioTools/tree/master/extern/partio
+# and python bind at https://github.com/digitalillusions/BlenderPartioTools/tree/master/partio_extension_pybind
+# For general information about how to write template, please look at the template.py
+
 import meshio
 import fileseq
 import bpy
@@ -40,6 +45,7 @@ def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
 
     return meshio.Mesh(
         points,
-        # the cells is not important here
-        cells=[('vertex', [[x] for x in range(n_particles)])],
+        # the cells is not important here, 
+        # Inside simloader, cells with vertex type will be ignored 
+        cells=[('vertex',[])],
         point_data=point_data)

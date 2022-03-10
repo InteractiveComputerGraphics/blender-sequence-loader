@@ -13,7 +13,7 @@
 #
 #
 # Note: process has higher priority, which means, when process exists, preprocess will be ignored.
-# When preprocess and process bot not exist, addon will call the default version.
+# When preprocess and process both not exist, addon will call the default version.
 # 
 # In general, we suggest to use preprocess alone, since meshio has a relatively clear and simple data structure, 
 # while directly manipulate bpy.types.mesh could be complicated
@@ -29,7 +29,7 @@ import bpy
 
 
 def process(fileseq: fileseq.FileSequence, frame_number: int, mesh: bpy.types.Mesh):
-    # currently, you can not call preprocess inside process fucntion
+    # However, you can not call preprocess inside process fucntion
     frame_number = frame_number % len(fileseq)
     meshio_mesh = meshio.read(fileseq[frame_number])
     update_mesh(meshio_mesh, mesh)
