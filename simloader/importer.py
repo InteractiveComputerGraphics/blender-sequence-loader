@@ -143,6 +143,8 @@ def update_obj(scene, depsgraph=None):
         pattern = obj.SIMLOADER.pattern
         if obj.SIMLOADER.use_relative:
             pattern = bpy.path.abspath(pattern)
+        # in case the blender file was created on windows system, but opened in linux system
+        pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
         if obj.SIMLOADER.use_advance and obj.SIMLOADER.script_name:
