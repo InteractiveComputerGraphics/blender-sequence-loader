@@ -104,7 +104,10 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     enabled = True
 
     try:
-        meshio_mesh = meshio.read(filepath)
+        if filepath.endswith('.bgeo'):
+            meshio_mesh = mzd.readbgeo_to_meshio(filepath)
+        else:
+            meshio_mesh = meshio.read(filepath)
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
@@ -174,7 +177,10 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                meshio_mesh = meshio.read(filepath)
+                if filepath.endswith('.bgeo'):
+                    meshio_mesh = mzd.readbgeo_to_meshio(filepath)
+                else:
+                    meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),
