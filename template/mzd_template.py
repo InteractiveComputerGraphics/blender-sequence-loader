@@ -19,7 +19,7 @@ def process(fileseq: fileseq.FileSequence, frame_number: int, mesh:bpy.types.Mes
 
 # this will be ignored
 def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:    
-    # this is current implementation, will be slightly as `process`
+    # this is current implementation, will be slightly different from `process`
    frame_number = frame_number % len(fileseq)
    mesh = additional_file_formats.readMZD_to_meshio(fileseq[frame_number])
    return mesh
