@@ -5,7 +5,7 @@ from datetime import date
 
 addondirectory = 'simloader'
 templatedirectory = 'template'
-mzddirectory = 'mzd'
+additionaldirectory = 'additional_file_formats'
 meshiodirectory = 'extern/meshio/src/meshio'
 fileseqdirectory = 'extern/fileseq/src/fileseq'
 futuredirectory = 'extern/python-future/src/future'
@@ -18,7 +18,7 @@ dirs = {
     fileseqdirectory: 'fileseq',
     futuredirectory: 'future',
     richdirectory: 'rich',
-    mzddirectory: mzddirectory,
+    additionaldirectory: additionaldirectory,
 }
 
 today = str(date.today())
