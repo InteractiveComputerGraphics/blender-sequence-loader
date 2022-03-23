@@ -16,7 +16,7 @@ def subscribe_to_selected():
     import simloader
     bpy.msgbus.subscribe_rna(
         key=(bpy.types.LayerObjects, 'active'),
-        #  don't know why it needs this owner, so I set owner to this module `meshioimporter`
+        #  don't know why it needs this owner, so I set owner to this module `simloader`
         owner=simloader,
         #  no args
         args=(()),
@@ -27,3 +27,4 @@ def subscribe_to_selected():
 def unsubscribe_to_selected():
     import simloader
     bpy.msgbus.clear_by_owner(simloader)
+

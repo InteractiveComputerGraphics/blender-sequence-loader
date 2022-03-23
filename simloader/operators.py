@@ -1,6 +1,6 @@
 import bpy
 import fileseq
-from .importer_manager import *
+from .messanger import *
 import traceback
 from .utils import show_message_box
 from .importer import create_obj

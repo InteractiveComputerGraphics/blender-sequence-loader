@@ -5,7 +5,7 @@ import fileseq
 from .utils import show_message_box, reserved_word_check
 import numpy as np
 from mathutils import Matrix
-import mzd
+import additional_file_formats
 
 supported_mesh_format = ['triangle', 'quad']
 
@@ -102,10 +102,9 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
 
     meshio_mesh = None
     enabled = True
-
     try:
-        if filepath.endswith('.bgeo'):
-            meshio_mesh = mzd.readbgeo_to_meshio(filepath)
+        if fileseq.extension() in additional_file_formats.additional_format_loader:
+            meshio_mesh = additional_file_formats.additional_format_loader[fileseq.extension()](filepath)
         else:
             meshio_mesh = meshio.read(filepath)
     except Exception as e:
@@ -177,8 +176,8 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                if filepath.endswith('.bgeo'):
-                    meshio_mesh = mzd.readbgeo_to_meshio(filepath)
+                if fs.extension() in additional_file_formats.additional_format_loader:
+                    meshio_mesh = additional_file_formats.additional_format_loader[fs.extension()](filepath)
                 else:
                     meshio_mesh = meshio.read(filepath)
             except Exception as e:

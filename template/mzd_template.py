@@ -6,7 +6,7 @@
 import meshio
 import fileseq
 import bpy
-import mzd
+import additional_file_formats
 
 
 # In general we suggest to directly use process for performance and compatibility reason, 
@@ -15,10 +15,11 @@ import mzd
 
 def process(fileseq: fileseq.FileSequence, frame_number: int, mesh:bpy.types.Mesh):
     frame_number = frame_number % len(fileseq)
-    mzd.readMZD_to_bpymesh(fileseq[frame_number],mesh)
+    additional_file_formats.readMZD_to_bpymesh(fileseq[frame_number],mesh)
 
 # this will be ignored
-def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:
+def preprocess(fileseq: fileseq.FileSequence, frame_number: int) -> meshio.Mesh:    
+    # this is current implementation, will be slightly as `process`
    frame_number = frame_number % len(fileseq)
-   mesh = mzd.readMZD_to_meshio(fileseq[frame_number])
+   mesh = additional_file_formats.readMZD_to_meshio(fileseq[frame_number])
    return mesh

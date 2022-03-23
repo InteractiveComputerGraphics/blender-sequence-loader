@@ -30,6 +30,10 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
         poll=poll_material,
     )
 
+    print:bpy.props.BoolProperty(name='print',
+                                        description="whether or not to print additional information when rendering",
+                                        default=True)
+
 
 class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)

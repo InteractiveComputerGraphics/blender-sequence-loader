@@ -154,7 +154,7 @@ class SIMLOADER_Import(bpy.types.Panel):
         scene = context.scene
         importer_prop = scene.SIMLOADER
 
-        layout.label(text="Basic Settings")
+        layout.label(text="Basic Import Settings")
         box = layout.box()
         split = box.split()
         col1 = split.column()
@@ -185,6 +185,16 @@ class SIMLOADER_Import(bpy.types.Panel):
             col2.prop(importer_prop, "pattern", text="")
 
         layout.operator("sequence.load")
+
+        layout.label(text="Extra Settings")
+        box = layout.box()
+        split = box.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+
+        col1.label(text="Print Information when render")
+        col2.prop(importer_prop, "print", text="")
 
 
 class SIMLOADER_Templates(bpy.types.Menu):
