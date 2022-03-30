@@ -13,6 +13,7 @@ def print_information(scene):
         return
     now = datetime.now()
     path = bpy.context.scene.render.filepath
+    path = bpy.path.abspath(path)
     filepath = path + '/simloader_' + now.strftime("%Y_%m_%d %H:%M")
     with open(filepath, 'w') as file:
         file.write("Render Time: {}\n".format(now.strftime("%Y_%m_%d %H:%M")))
