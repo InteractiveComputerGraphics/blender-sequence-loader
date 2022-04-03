@@ -7,7 +7,48 @@ import numpy as np
 from mathutils import Matrix
 import additional_file_formats
 
-supported_mesh_format = ['triangle', 'quad']
+
+def extract_faces(cell: meshio.CellBlock):
+    if cell.type == "triangle":
+        return cell.data.astype(np.uint64)
+    elif cell.type == "triangle6":
+        pass
+    elif cell.type == "triangle7":
+        pass
+    elif cell.type == "quad":
+        return cell.data.astype(np.uint64)
+    elif cell.type == "quad8":
+        pass
+    elif cell.type == "quad9":
+        pass
+    elif cell.type == "tetra":
+        data = cell.data.astype(np.uint64)
+        faces = data[:, :3]
+        faces = np.append(faces, data[:, [0, 2, 3]], axis=0)
+        faces = np.append(faces, data[:, [0, 1, 3]], axis=0)
+        faces = np.append(faces, data[:, [1, 2, 3]], axis=0)
+        faces.sort(axis=1)
+        _, indxs, count = np.unique(faces, axis=0, return_index=True, return_counts=True)
+        faces = faces[indxs[count == 1]]
+        return faces
+    elif cell.type == "hexahedron":
+        data = cell.data.astype(np.uint64)
+        faces = data[:, :4]
+        faces = np.append(faces, data[:, [0, 1, 5, 4]], axis=0)
+        faces = np.append(faces, data[:, [1, 2, 6, 5]], axis=0)
+        faces = np.append(faces, data[:, [2, 3, 7, 6]], axis=0)
+        faces = np.append(faces, data[:, [5, 6, 7, 4]], axis=0)
+        faces = np.append(faces, data[:, [0, 3, 7, 4]], axis=0)
+        # to sort or not to sort?
+        # Or convert it to triangles?
+        # faces.sort(axis=1)
+        _, indxs, count = np.unique(faces, axis=0, return_index=True, return_counts=True)
+        faces = faces[indxs[count == 1]]
+        return faces
+    elif cell.type == "vertex":
+        return np.array([])
+    show_message_box(cell.type + " is unsupported mesh format yet")
+    return np.array([])
 
 
 def update_mesh(meshio_mesh, mesh):
@@ -18,33 +59,28 @@ def update_mesh(meshio_mesh, mesh):
     n_loop = 0
     n_verts = len(mesh_vertices)
 
-    faces_loop_start = np.array([], dtype=np.int32)
-    faces_loop_total = np.array([], dtype=np.int32)
-    loops_vert_idx = np.array([], dtype=np.int32)
+    faces_loop_start = np.array([], dtype=np.uint64)
+    faces_loop_total = np.array([], dtype=np.uint64)
+    loops_vert_idx = np.array([], dtype=np.uint64)
     shade_scheme = False
     if mesh.polygons:
         shade_scheme = mesh.polygons[0].use_smooth
     for cell in meshio_mesh.cells:
-        if cell.type not in supported_mesh_format:
-            # vertex is not mesh type, but supported
-            if cell.type != "vertex":
-                show_message_box(cell.type + " is unsupported mesh format yet")
+        data = extract_faces(cell)
+        # np array can't be simply written as `if not data:`,
+        if not data.any():
             continue
-        data = cell.data
         n_poly += len(data)
         n_loop += data.shape[0] * data.shape[1]
         loops_vert_idx = np.append(loops_vert_idx, data.ravel())
-        faces_loop_total = np.append(faces_loop_total, np.ones((len(data)), dtype=np.int32) * data.shape[1])
+        faces_loop_total = np.append(faces_loop_total, np.ones((len(data)), dtype=np.uint64) * data.shape[1])
     if faces_loop_total.size > 0:
         faces_loop_start = np.cumsum(faces_loop_total)
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
 
-
-    if  len(mesh.vertices) == n_verts and \
-        len(mesh.polygons) == n_poly and \
-        len(mesh.loops) == n_loop:
+    if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
         mesh.clear_geometry()
