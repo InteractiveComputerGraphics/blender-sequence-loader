@@ -23,26 +23,26 @@ def extract_faces(cell: meshio.CellBlock):
         pass
     elif cell.type == "tetra":
         data = cell.data.astype(np.uint64)
-        faces = data[:, :3]
-        faces = np.append(faces, data[:, [0, 2, 3]], axis=0)
+        faces = data[:, [0, 2, 1]]
+        faces = np.append(faces, data[:, [0, 3, 2]], axis=0)
         faces = np.append(faces, data[:, [0, 1, 3]], axis=0)
         faces = np.append(faces, data[:, [1, 2, 3]], axis=0)
-        faces.sort(axis=1)
-        _, indxs, count = np.unique(faces, axis=0, return_index=True, return_counts=True)
+        faces_copy = np.copy(faces)
+        faces_copy.sort(axis=1)
+        _, indxs, count = np.unique(faces_copy, axis=0, return_index=True, return_counts=True)
         faces = faces[indxs[count == 1]]
         return faces
     elif cell.type == "hexahedron":
         data = cell.data.astype(np.uint64)
-        faces = data[:, :4]
-        faces = np.append(faces, data[:, [0, 1, 5, 4]], axis=0)
+        faces = data[:, [0, 3, 2, 1]]
+        faces = np.append(faces, data[:, [1, 5, 4, 0]], axis=0)
+        faces = np.append(faces, data[:, [4, 5, 6, 7]], axis=0)
+        faces = np.append(faces, data[:, [3, 7, 6, 2]], axis=0)
         faces = np.append(faces, data[:, [1, 2, 6, 5]], axis=0)
-        faces = np.append(faces, data[:, [2, 3, 7, 6]], axis=0)
-        faces = np.append(faces, data[:, [5, 6, 7, 4]], axis=0)
-        faces = np.append(faces, data[:, [0, 3, 7, 4]], axis=0)
-        # to sort or not to sort?
-        # Or convert it to triangles?
-        # faces.sort(axis=1)
-        _, indxs, count = np.unique(faces, axis=0, return_index=True, return_counts=True)
+        faces = np.append(faces, data[:, [0, 4, 7, 3]], axis=0)
+        faces_copy = np.copy(faces)
+        faces_copy.sort(axis=1)
+        _, indxs, count = np.unique(faces_copy, axis=0, return_index=True, return_counts=True)
         faces = faces[indxs[count == 1]]
         return faces
     elif cell.type == "vertex":
