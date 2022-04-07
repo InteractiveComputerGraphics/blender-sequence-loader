@@ -14,9 +14,9 @@ def print_information(scene):
     now = datetime.now()
     path = bpy.context.scene.render.filepath
     path = bpy.path.abspath(path)
-    filepath = path + '/simloader_' + now.strftime("%Y_%m_%d %H:%M")
+    filepath = path + '/simloader_' + now.strftime("%Y-%m-%d_%H-%M")
     with open(filepath, 'w') as file:
-        file.write("Render Time: {}\n".format(now.strftime("%Y_%m_%d %H:%M")))
+        file.write("Render Time: {}\n".format(now.strftime("%Y-%m-%d_%H-%M")))
         file.write("Simloader Objects in the scene:\n\n")
         for obj in bpy.data.objects:
             simloader_prop = obj.SIMLOADER
