@@ -81,7 +81,7 @@ def readMZD_to_meshio(filepath):
                 breaks = np.where(out_polyVIndicesNum[:-1] != out_polyVIndicesNum[1:])[0] + 1
                 breaks = np.append(breaks, len(out_polyVIndicesNum))
                 for b in breaks:
-                    poly_nodes_num = out_polyVIndicesNum[start_polyVIndices]  # 3(triangle) or 4 (quad)
+                    poly_nodes_num = out_polyVIndicesNum[start_polyVIndicesNum]  # 3(triangle) or 4 (quad)
                     end_polyVIndices = start_polyVIndices + poly_nodes_num * (b - start_polyVIndicesNum)
                     cells[num_nodes_to_name[poly_nodes_num]] = out_polyVIndices[start_polyVIndices:end_polyVIndices].reshape(
                         ((b - start_polyVIndicesNum), poly_nodes_num))
@@ -231,7 +231,7 @@ def readMZD_to_meshio_with_split_norm(filepath):
                 breaks = np.where(out_polyVIndicesNum[:-1] != out_polyVIndicesNum[1:])[0] + 1
                 breaks = np.append(breaks, len(out_polyVIndicesNum))
                 for b in breaks:
-                    poly_nodes_num = out_polyVIndicesNum[start_polyVIndices]  # 3(triangle) or 4 (quad)
+                    poly_nodes_num = out_polyVIndicesNum[start_polyVIndicesNum]  # 3(triangle) or 4 (quad)
                     end_polyVIndices = start_polyVIndices + poly_nodes_num * (b - start_polyVIndicesNum)
                     cells[num_nodes_to_name[poly_nodes_num]] = out_polyVIndices[start_polyVIndices:end_polyVIndices].reshape(
                         ((b - start_polyVIndicesNum), poly_nodes_num))
