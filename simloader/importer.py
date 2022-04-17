@@ -200,6 +200,8 @@ def update_obj(scene, depsgraph=None):
                 user_process(fs, current_frame, obj.data)
             except Exception as e:
                 show_message_box("Error when calling user process: " + traceback.format_exc(), icon="ERROR")
+            del locals()['process']
+            # this continue means if process exist, all the remaining code will be ignored, whethere or not error occurs
             continue
 
         elif 'preprocess' in locals():
@@ -208,7 +210,10 @@ def update_obj(scene, depsgraph=None):
                 meshio_mesh = user_preprocess(fs, current_frame)
             except Exception as e:
                 show_message_box("Error when calling user preprocess: " + traceback.format_exc(), icon="ERROR")
+                # this continue means only if error occures, then goes to next bpy.object
                 continue
+            finally:
+                del locals()['preprocess']
         else:
             filepath = fs[current_frame % len(fs)]
             try:
