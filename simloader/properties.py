@@ -42,3 +42,8 @@ class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     script_name: bpy.props.StringProperty()
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
+
+
+# set this property for mesh, not object (maybe change later?)
+class SIMLOADER_mesh_property(bpy.types.PropertyGroup):
+    split_norm_att_name : bpy.props.StringProperty(default="")

@@ -31,12 +31,17 @@ class SIMLOADER_UL_Obj_List(bpy.types.UIList):
 
 class SIMLOADER_UL_Att_List(bpy.types.UIList):
     '''
-    This controls the list of imported sequneces.
+    This controls the list of attributes available for this sequence
     '''
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
             layout.enabled = False
             layout.prop(item, "name", text='Name ', emboss=False)
+            obj = bpy.data.objects[context.scene.SIMLOADER.selected_obj_num]
+            mesh = obj.data
+            if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name ==item.name:
+                layout.label(text="using as split norm")
+
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
@@ -121,6 +126,8 @@ class SIMLOADER_Settings(bpy.types.Panel):
         box = layout.box()
         row = box.row()
         row.template_list("SIMLOADER_UL_Att_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
+        box.operator("SIMLOADER.setsplitnorm")
+        box.operator("SIMLOADER.removesplitnorm",text="remove split norm")
 
         # advance settings
         layout.label(text="Advance Settings")

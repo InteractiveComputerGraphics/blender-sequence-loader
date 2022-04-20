@@ -25,6 +25,7 @@ from simloader import *
 classes = [
     SIMLOADER_obj_property,
     SIMLOADER_scene_property,
+    SIMLOADER_mesh_property,
     SIMLOADER_OT_load,
     SIMLOADER_OT_edit,
     SIMLOADER_OT_resetpt,
@@ -36,6 +37,8 @@ classes = [
     SIMLOADER_Settings,
     SIMLOADER_Templates,
     SIMLOADER_UL_Att_List,
+    SIMLOADER_OT_set_as_split_norm,
+    SIMLOADER_OT_remove_split_norm,
 ]
 
 
@@ -46,6 +49,7 @@ def register():
     bpy.types.TEXT_MT_templates.append(draw_template)
     bpy.types.Scene.SIMLOADER = bpy.props.PointerProperty(type=SIMLOADER_scene_property)
     bpy.types.Object.SIMLOADER = bpy.props.PointerProperty(type=SIMLOADER_obj_property)
+    bpy.types.Mesh.SIMLOADER = bpy.props.PointerProperty(type=SIMLOADER_mesh_property)
 
 
 def unregister():

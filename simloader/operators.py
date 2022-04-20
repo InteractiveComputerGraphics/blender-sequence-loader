@@ -4,6 +4,7 @@ from .messanger import *
 import traceback
 from .utils import show_message_box
 from .importer import create_obj
+import numpy as np
 
 
 #  Here are load and delete operations
@@ -180,4 +181,39 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
         links.new(set_material.outputs[0],output_node.inputs[0])
 
         bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
+        return {"FINISHED"}
+
+class SIMLOADER_OT_set_as_split_norm(bpy.types.Operator):
+    '''
+    This operator set the vertex attribute as vertex split normals
+    '''
+    bl_label = "Set as Split Norm per Vertex"
+    bl_idname = "simloader.setsplitnorm"
+    bl_options = {"UNDO"}
+    def execute(self, context):
+        sim_loader = context.scene.SIMLOADER
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        mesh = obj.data
+        attr_index = sim_loader.selected_attribute_num
+        if attr_index>=len(mesh.attributes):
+            show_message_box("Please select the attribute")
+            return {"CANCELLED"}
+        mesh.SIMLOADER.split_norm_att_name = mesh.attributes[attr_index].name
+
+        return {"FINISHED"}
+
+class SIMLOADER_OT_remove_split_norm(bpy.types.Operator):
+    '''
+    This operator remove the vertex attribute as vertex split normals
+    '''
+    bl_label = "Remove Split Norm per Vertex"
+    bl_idname = "simloader.removesplitnorm"
+    bl_options = {"UNDO"}
+    def execute(self, context):
+        sim_loader = context.scene.SIMLOADER
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        mesh = obj.data
+        if mesh.SIMLOADER.split_norm_att_name:
+            mesh.SIMLOADER.split_norm_att_name = ""
+
         return {"FINISHED"}
