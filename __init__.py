@@ -39,6 +39,8 @@ classes = [
     SIMLOADER_UL_Att_List,
     SIMLOADER_OT_set_as_split_norm,
     SIMLOADER_OT_remove_split_norm,
+    SIMLOADER_OT_disable_selected,
+    SIMLOADER_OT_enable_selected,
 ]
 
 
