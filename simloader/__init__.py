@@ -1,4 +1,4 @@
-from .operators import SIMLOADER_OT_load, SIMLOADER_OT_edit, SIMLOADER_OT_resetpt, SIMLOADER_OT_resetmesh, SIMLOADER_OT_resetins,SIMLOADER_OT_set_as_split_norm,SIMLOADER_OT_remove_split_norm
+from .operators import SIMLOADER_OT_load, SIMLOADER_OT_edit, SIMLOADER_OT_resetpt, SIMLOADER_OT_resetmesh, SIMLOADER_OT_resetins,SIMLOADER_OT_set_as_split_norm,SIMLOADER_OT_remove_split_norm,SIMLOADER_OT_disable_selected,SIMLOADER_OT_enable_selected
 from .properties import SIMLOADER_scene_property, SIMLOADER_obj_property,SIMLOADER_mesh_property
 from .panels import SIMLOADER_UL_Obj_List, SIMLOADER_List_Panel, SIMLOADER_Settings, SIMLOADER_Import, SIMLOADER_Templates, SIMLOADER_UL_Att_List, draw_template
 from .messanger import subscribe_to_selected, unsubscribe_to_selected
@@ -58,4 +58,6 @@ __all__ = [
     "SIMLOADER_OT_set_as_split_norm",
     "SIMLOADER_mesh_property",
     "SIMLOADER_OT_remove_split_norm",
+    "SIMLOADER_OT_disable_selected",
+    "SIMLOADER_OT_enable_selected",
 ]

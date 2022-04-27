@@ -217,3 +217,31 @@ class SIMLOADER_OT_remove_split_norm(bpy.types.Operator):
             mesh.SIMLOADER.split_norm_att_name = ""
 
         return {"FINISHED"}
+
+
+class SIMLOADER_OT_disable_selected(bpy.types.Operator):
+    '''
+    This operator disable all selected sequence
+    '''
+    bl_label = "Disable Selected Sequence"
+    bl_idname = "simloader.disableselected"
+    bl_options = {"UNDO"}
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            if obj.SIMLOADER.init and obj.SIMLOADER.enabled:
+                obj.SIMLOADER.enabled = False
+        return {"FINISHED"}
+
+
+class SIMLOADER_OT_enable_selected(bpy.types.Operator):
+    '''
+    This operator enable all selected sequence
+    '''
+    bl_label = "Enable Selected Sequence"
+    bl_idname = "simloader.enableselected"
+    bl_options = {"UNDO"}
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            if obj.SIMLOADER.init and not obj.SIMLOADER.enabled:
+                obj.SIMLOADER.enabled = True
+        return {"FINISHED"}

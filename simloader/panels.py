@@ -23,23 +23,25 @@ class SIMLOADER_UL_Obj_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
             layout.prop(item, "name", text='Name ', emboss=False)
+            if item in bpy.context.selected_objects:
+                layout.label(text="selected")
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
-
 
 
 class SIMLOADER_UL_Att_List(bpy.types.UIList):
     '''
     This controls the list of attributes available for this sequence
     '''
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
             layout.enabled = False
             layout.prop(item, "name", text='Name ', emboss=False)
             obj = bpy.data.objects[context.scene.SIMLOADER.selected_obj_num]
             mesh = obj.data
-            if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name ==item.name:
+            if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name == item.name:
                 layout.label(text="using as split norm")
 
         else:
@@ -63,6 +65,8 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
         sim_loader = context.scene.SIMLOADER
         row = layout.row()
         row.template_list("SIMLOADER_UL_Obj_List", "", bpy.data, "objects", sim_loader, "selected_obj_num", rows=2)
+        layout.operator("simloader.enableselected")
+        layout.operator("simloader.disableselected")
         layout.operator("sequence.edit")
 
 
@@ -81,7 +85,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.SIMLOADER
-        if sim_loader.selected_obj_num>=len(bpy.data.objects):
+        if sim_loader.selected_obj_num >= len(bpy.data.objects):
             return
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         if not obj.SIMLOADER.init:
@@ -104,7 +108,6 @@ class SIMLOADER_Settings(bpy.types.Panel):
         col2.operator('SIMLOADER.resetmesh', text="Mesh")
         col3.operator('SIMLOADER.resetins', text="Instances")
 
-
         # path settings
         layout.label(text="Path Information")
         box = layout.box()
@@ -119,7 +122,6 @@ class SIMLOADER_Settings(bpy.types.Panel):
         col2.prop(obj.SIMLOADER, 'use_relative', text="")
         col1.label(text='Pattern')
         col2.prop(obj.SIMLOADER, 'pattern', text="")
-        
 
         # attributes settings
         layout.label(text="Attributes Settings")
@@ -127,7 +129,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
         row = box.row()
         row.template_list("SIMLOADER_UL_Att_List", "", obj.data, "attributes", sim_loader, "selected_attribute_num", rows=2)
         box.operator("SIMLOADER.setsplitnorm")
-        box.operator("SIMLOADER.removesplitnorm",text="remove split norm")
+        box.operator("SIMLOADER.removesplitnorm", text="remove split norm")
 
         # advance settings
         layout.label(text="Advance Settings")

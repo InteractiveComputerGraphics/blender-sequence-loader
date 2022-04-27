@@ -8,7 +8,6 @@ def selected_callback():
     if idx >= 0:
         bpy.context.scene.SIMLOADER.selected_obj_num = idx
 
-
 def subscribe_to_selected():
     # A known problem of this function,
     # This function will not be executed, when the first time this addon is installed.

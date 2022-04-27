@@ -35,10 +35,13 @@ def callback_fileseq(self, context):
 
 
 def update_selected_obj_num(self, context):
+    
     # Here is when select sequences, then change the corresponding object to active object
     index = context.scene.SIMLOADER.selected_obj_num
     obj = bpy.data.objects[index]
-    bpy.ops.object.select_all(action="DESELECT")
+
+    # TODO: maybe better way to deal with this?
+    # bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
     context.view_layer.objects.active = obj
 
