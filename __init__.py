@@ -41,6 +41,7 @@ classes = [
     SIMLOADER_OT_remove_split_norm,
     SIMLOADER_OT_disable_selected,
     SIMLOADER_OT_enable_selected,
+    SIMLOADER_OT_refresh_seq,
 ]
 
 

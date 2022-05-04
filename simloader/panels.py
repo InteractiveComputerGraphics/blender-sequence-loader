@@ -65,9 +65,12 @@ class SIMLOADER_List_Panel(bpy.types.Panel):
         sim_loader = context.scene.SIMLOADER
         row = layout.row()
         row.template_list("SIMLOADER_UL_Obj_List", "", bpy.data, "objects", sim_loader, "selected_obj_num", rows=2)
-        layout.operator("simloader.enableselected")
-        layout.operator("simloader.disableselected")
-        layout.operator("sequence.edit")
+        row = layout.row()
+        row.operator("simloader.enableselected")
+        row.operator("simloader.disableselected")
+        row = layout.row()
+        row.operator("sequence.edit")
+        row.operator("simloader.refresh")
 
 
 class SIMLOADER_Settings(bpy.types.Panel):

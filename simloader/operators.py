@@ -245,3 +245,29 @@ class SIMLOADER_OT_enable_selected(bpy.types.Operator):
             if obj.SIMLOADER.init and not obj.SIMLOADER.enabled:
                 obj.SIMLOADER.enabled = True
         return {"FINISHED"}
+
+
+
+class SIMLOADER_OT_refresh_seq(bpy.types.Operator):
+    '''
+    This operator refresh the sequence
+    '''
+    bl_label = "Refresh Sequence"
+    bl_idname = "simloader.refresh"
+    def execute(self, context):
+        scene = context.scene
+        obj = bpy.data.objects[scene.SIMLOADER.selected_obj_num]
+
+
+        fs = obj.SIMLOADER.pattern
+        if obj.SIMLOADER.use_relative:
+            fs = bpy.path.abspath(fs)
+        fs = fileseq.findSequenceOnDisk(fs)
+        fs = fileseq.findSequenceOnDisk(fs.dirname()+ fs.basename() + "@" + fs.extension())
+        fs = str(fs)
+        if obj.SIMLOADER.use_relative:
+            fs = bpy.path.relpath(fs)
+        obj.SIMLOADER.pattern = fs
+        
+
+        return {"FINISHED"}
