@@ -146,8 +146,9 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     meshio_mesh = None
     enabled = True
     try:
-        if fileseq.extension() in additional_file_formats.additional_format_loader:
-            meshio_mesh = additional_file_formats.additional_format_loader[fileseq.extension()](filepath)
+        ext = fileseq.extension().split('.')[-1]
+        if ext in additional_file_formats.additional_format_loader:
+            meshio_mesh = additional_file_formats.additional_format_loader[ext](filepath)
         else:
             meshio_mesh = meshio.read(filepath)
     except Exception as e:
@@ -224,8 +225,9 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                if fs.extension() in additional_file_formats.additional_format_loader:
-                    meshio_mesh = additional_file_formats.additional_format_loader[fs.extension()](filepath)
+                ext = fs.extension().split('.')[-1]
+                if ext in additional_file_formats.additional_format_loader:
+                    meshio_mesh = additional_file_formats.additional_format_loader[ext](filepath)
                 else:
                     meshio_mesh = meshio.read(filepath)
             except Exception as e:

@@ -22,9 +22,16 @@ class SIMLOADER_UL_Obj_List(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            layout.prop(item, "name", text='Name ', emboss=False)
+            row = layout.row()
+            row.prop(item, "name", text='Name ', emboss=False)
             if item in bpy.context.selected_objects:
-                layout.label(text="selected")
+                layout.label(text="Selected",icon = "CHECKMARK")
+            else:
+                layout.label(text="Not-Selected",icon = "X")
+            if item.SIMLOADER.enabled:
+                row.prop(item.SIMLOADER, "enabled", text = "ENABLED", icon="PLAY")
+            else:
+                row.prop(item.SIMLOADER, "enabled", text = "DISABLED", icon="PAUSE")
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
@@ -146,8 +153,6 @@ class SIMLOADER_Settings(bpy.types.Panel):
         if obj.SIMLOADER.use_advance:
             col1.label(text='Script')
             col2.prop_search(obj.SIMLOADER, 'script_name', bpy.data, 'texts', text="")
-            col1.label(text='Enabled')
-            col2.prop(obj.SIMLOADER, 'enabled', text="")
 
 
 class SIMLOADER_Import(bpy.types.Panel):
