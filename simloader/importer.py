@@ -172,6 +172,8 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     if enabled:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.context.view_layer.objects.active = object
 
 
 def update_obj(scene, depsgraph=None):
