@@ -1,37 +1,36 @@
-# Blender Tool
+# SimLoader
 Loading animation sequences with meshio and fileseq
 
 
 ## 1. Clone the project
-`git clone https://www.graphics.rwth-aachen.de:9000/hhui/blendertool  --recurse-submodules` to download both project and dependency
+`git clone https://www.graphics.rwth-aachen.de:9000/hhui/blendertool  --recurse-submodules` to download both project and dependencies
 
 
 ## 2. Build & Install
 
 1. Build manually
 
-    Clone the project as mentioned above, then run `python build_addon.py`, no additional dependency required, only python3 standard library.
+    Clone the project as mentioned above, then run `python3 build_addon.py`, no additional dependency required, only python3 standard library.
 
 2. Or download directly the addon from [release](https://graphics.rwth-aachen.de:9000/hhui/blendertool/-/releases) page. 
 
 
-After have the .zip file, install it using blender addon system.
+After getting the .zip file, install and enable it using blender addon system. See [here](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons) for more details.
 
 
-Note: don't forget to remove old addon, before add new version addon to blender. (Actually, I not very sure if it's necessary, but I think this would be better)
+Note: 
+1. You need to restart blender after enabling, otherwise some functionality may not work well.
+2. don't forget to remove the old version of this addon (if present), before adding new version of this addon to blender. (Actually, I not very sure if it's necessary, but I think this would be better)
 
 
 ### 2.1 Complicated way
 
-// TODO
-
-If you want to keep developing on this addon, then you should look at this part, otherwise, you can simply ignore this part.
-
+If you want to keep developing on this addon, it would be easier to create a soft link(or Symlinks on windows) at the root directory to the dependencies.
 
 
 ## 3. How to use
 
-After installing addon, you can find it here.
+After installing addon, you can find it here. (Or simply press `n` key)
 
 ![start](images/0.png)
 
@@ -42,127 +41,76 @@ Then you can find it here.
 ### 3. Load the animation sequence you want.
 
 #### 3.1
-You can either type the file directory you want manually in this box.
+you can select the directory through GUI, by clicking the rightmost icon. It will pop up the default blender file explorer. Then you can go to the directory you want, for example, like image showed below. **You only need to go to the directory, then select nothing, just click "Accept"**.
 
-![type_directory](images/2.png)
-    
-Or you can select the directory through GUI, by clicking the rightmost icon.
+![selecticon](images/2.png)
 
-![selecticon](images/3.png)
-    
-It will pop up the default blender file explorer, For example
+Then the addon will automatically detect the sequencens it finds in this directory, then you simply select the sequence you want.
 
-![file_explore](images/4.png)
-    
-Then you can go to the directory you want, for example, like image showed above. **You only need to go to the directory, then select nothing, just click "Accept"**.
-
-Then you will see this in the addon panel.
-
-![after_selecting](images/5.png)
-    
-Similarly, you can just type this directory in the input box. **Only to the directory, not the specific file(s)**
+![after_selecting](images/3.png)
 
 ##### 3.1.1
-There is a small checkbox about where using `relative path` or not.
+There is a small checkbox about whether using `relative path` or not.
 
 when toggling on, then you must save the blender file first, before load the sequence. Then this sequence will be loaded using relative path, from the .blend file. Also if you move the .blend file and data altogether to another directory, it still works.
 
 If not toggling on, it will use abosulte path to load the sequence. And you don't need to save the .blend file.
 
-![relative_path](images/2.5.png)
+![relative_path](images/4.png)
 
 
 #### 3.2
 
-After selecting the directory, it will automatically detect all the sequences in this directory.
+After the sequence being imported, it will be available in the `Sequences Imported` panel, and more details will be available in `Settings` panel.
 
-##### 3.2.1
-In the `File Sequences` box, you can either see `No sequence detected`, in most cases, it means the directory is empty.
+![settings](images/5.png)
 
-![no_seqeunce](images/6.png)
+Now, you can play/render the animation as usual.
 
-##### 3.2.2
-Or `Manual, too much sequence detected, use pattern above`, it either means, it does have too many sequences in this directory, or the sequence can't be deteced because the file name does not follow some pattern.
+Note: when render the animation, please turn on the `Lock Interface`. 
 
-So you can type the sequence in the `Pattern` input box. For example, in this case, the files inside are `1_target.vtu`, `2_target.vtu`, and so on, it doesn't follow the desired pattern, so you have to type it manually.
+![lock interface](images/6.png)
 
-![type_sequence](images/7.png)
+##### 3.2.1 Enable/ Disable
 
-For more details about the desired pattern, please check it [here](https://github.com/justinfx/fileseq). In gerneral, you only need to replace the numbers to `@`, e.g. `1_target.vtu` -> `@_target.vtu`.
+By `enable` means, that the sequence will be updated for each frame, and `disable` means that the sequence won't be updated for each frame, so it can save some computational resources if needed.
 
-##### 3.2.3
+##### 3.2.1 Refresh Sequence
 
-If the file name followes the desired pattern, and only a few (smaller than 20) sequences in this directory, it should detect them without any problems.
+`Refresh Sequence` can be usefull, when you import the sequence, while the data is still being generated, and not finished yet. Refresh can detect the frames added after being imported.
 
-![detect](images/8.png)
+#### 3.3 Settings
 
-And you can just click the sequence you want. Also you can manually type the sequence, and click `Manual, use pattern above`.
+#### 3.3.1 Geometry Nodes
 
+We provide some basic templates for the geometry nodes, especially for the particeles/vertices-only data. 
 
-Note: if you manually type the sequence, please click the `Manual` as file sequence after finish typing, so it will do some pre-check.
+Applying `Point Cloud` geometry nodes, can convert the the vertices of the mesh to point clouds, which can be rendered only by [cycles](https://docs.blender.org/manual/en/latest/render/cycles/introduction.html).
 
-
-
-#### 3.3
+Applying `Instances` geometry nodes, can convert the the vertices of the mesh to cubes, or others by adjusting the geometry nodes, which can be rendered by both [eevee](https://docs.blender.org/manual/en/latest/render/eevee/index.html) and [cycles](https://docs.blender.org/manual/en/latest/render/cycles/introduction.html).
 
 
-You can play or render the animation as usually used in blender.
+Applying `Mesh` geometry nodes, will use the default geoemtry ndoes.
 
-![loaded](images/9.png)
+Note: 
+1. `Instances` is super memory hungry compared with `Point Cloud`.
+2. After applying `Point Cloud` or `Instances` geoemtry nodes, you need to assign the material inside the geometry nodes. So to save your work, you can simply assign the material here, then apply the `Point Cloud` or `Instances` geoemtry nodes.
 
-Here it showes all the sequences loaded. And you can click on each of them, it showes the relative information.
-
-+ start: The frame this sequence will start to animate. (Default 0 )
-
-+ end: The frame this sequence will stop to animate.(Default 500).
-
-    For example, if start set to 50, and stop set to 100, then sequence will animate between frame 50 and 100. Before frame 50, it will always show the frame 50, and after frame 100, it will always show the frame 100. And if the sequence length is shorter than 50 frames, then the sequence will loop again and again between frame 50 and 100.
-
-+ min value: value used when coloring the object, the object attribute value smaller than min value will be clamped as min value here. Editable, and has effect.
-
-+ max value: Similiar to min value, but means the max value when clamping.
-
-+ Color Field: attribute used to color the object. Default `None`
-
-+ radius: **particles only**, set the radius of particles.
-
-+ display method: **particles only**, how the particles are shown in viewport, either `Point`, which is a simple point, or `Rendered`, which is almost the same as rendered result. 
-
-#### 3.4
-
-You can also remove the sequence you want, by selecting the sequence, then click "Minus" button.
-
-![remove](images/10.png)
-
-### 3.5  Rendering
-
-Same as the way to render other objects, you can find it on the top right corner of blender.
-
-![render](images/11.png).
-
-When rendering animation, **please toggle on `Lock Interface`**
-
-You can adjust the start frame and end frame at the bottom of blender. 
-
-**Note: By default, blender set the start from frame 1, but this addon will start to render object from frame 0.**
-
-![adjust](images/12.png)
-
-**Important**
-
-If rendering particles, **it only works with `Cycles` render engine**. For mesh sequences, it works with both `Cycles` and `Eevee`.
-
-You can change to `Cycles` engine, at the `Render Properties` tab of blender.
-
-![change](images/13.png)
-
-After choosing `Cycles`, which usually renders much slower than `Eevee`, you can speed up by turn down the `Render` and `Viewport`, of course, it will sacrifice image quality.
-
-![faster](images/14.png)
+![material](images/7.png)
 
 
+#### 3.3.2 Path Information
 
-## 5. Limitations
-1. **Never** use undo, or blender default delete operation(you can use the minus button to delete a sequence), with sequence objects. It will change some blender object structure, and this addon can't function any more.
+Here shows the path of this sequence, however it's not editable.
 
-2. Sometimes, it could have very strange look in viewport, but it can be rendered correctly.
+#### 3.3.3 Attributes Settings
+
+Here shows the available **Vertex Attributes**, it's not editable.
+
+Note: in order to avoid the conflication with blender built-in attributes, so all the attributes names are renamed by adding a `2` at the end. For example, `id` -> `id2`. 
+
+#### 3.3.4 Split Norm per Vertex
+
+For more details, you can find it [here](https://docs.blender.org/manual/en/latest/modeling/meshes/structure.html#modeling-meshes-normals-custom). This is an easy way to set the selected vertex attribute as this split normal.
+
+Note: the addon does not check if the selected attribute is suitable for normals or not. E.g. if the data type of the attribute is int, then it will give a runtime error.
