@@ -18,13 +18,15 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
                                         default=False)
     pattern: bpy.props.StringProperty(name="Pattern",
                                       description="You can specify the pattern here, in case the sequence can't be deteced.")
+
+    selected_obj_deselectall_flag: bpy.props.BoolProperty(default=True,
+                                                          description="the flag to determine whether call deselect all or not ")
     selected_obj_num: bpy.props.IntProperty(name='imported count',
                                             description='the number of imported sequence, when selecting from ui list',
                                             default=0,
                                             update=update_selected_obj_num)
-    selected_attribute_num: bpy.props.IntProperty(default=0,
-                                                  #   update=update_imported_num
-                                                  )
+    selected_attribute_num: bpy.props.IntProperty(default=0)
+
     material: bpy.props.PointerProperty(
         type=bpy.types.Material,
         poll=poll_material,

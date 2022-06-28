@@ -24,10 +24,6 @@ class SIMLOADER_UL_Obj_List(bpy.types.UIList):
         if item:
             row = layout.row()
             row.prop(item, "name", text='Name ', emboss=False)
-            if item in bpy.context.selected_objects:
-                layout.label(text="Selected",icon = "CHECKMARK")
-            else:
-                layout.label(text="Not-Selected",icon = "X")
             if item.SIMLOADER.enabled:
                 row.prop(item.SIMLOADER, "enabled", text = "ENABLED", icon="PLAY")
             else:

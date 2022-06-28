@@ -1,12 +1,16 @@
 import bpy
 
+
 def selected_callback():
     if not bpy.context.view_layer.objects.active:
         return
     name = bpy.context.active_object.name
     idx = bpy.data.objects.find(name)
     if idx >= 0:
+        bpy.context.scene.SIMLOADER.selected_obj_deselectall_flag = False
         bpy.context.scene.SIMLOADER.selected_obj_num = idx
+        bpy.context.scene.SIMLOADER.selected_obj_deselectall_flag = True
+
 
 def subscribe_to_selected():
     # A known problem of this function,
@@ -26,4 +30,3 @@ def subscribe_to_selected():
 def unsubscribe_to_selected():
     import simloader
     bpy.msgbus.clear_by_owner(simloader)
-
