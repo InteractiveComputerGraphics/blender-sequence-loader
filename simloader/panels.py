@@ -84,7 +84,7 @@ class SIMLOADER_Settings(bpy.types.Panel):
     '''
     This is the panel of settings of selected sequence
     '''
-    bl_label = "Settings"
+    bl_label = "Sequence Settings"
     bl_idname = "SIMLOADER_PT_settings"
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
