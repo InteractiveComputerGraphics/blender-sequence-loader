@@ -1,7 +1,7 @@
 import bpy
 import fileseq
 
-#  Code here are mostly about the callback functions and update functions used in properties.py
+#  Code here are mostly about the callback/update/items functions used in properties.py
 
 
 def update_path(self, context):
@@ -11,7 +11,7 @@ def update_path(self, context):
     context.scene.SIMLOADER.pattern = ""
 
 
-def callback_fileseq(self, context):
+def item_fileseq(self, context):
     '''
     Detects all the file sequences in the directory
     '''

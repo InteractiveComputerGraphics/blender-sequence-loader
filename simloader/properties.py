@@ -11,7 +11,7 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
         description="Please choose the file sequences you want",
-        items=callback_fileseq,
+        items=item_fileseq,
     )
     use_pattern: bpy.props.BoolProperty(name='Use pattern',
                                         description="whether or not to use manually typed pattern",
@@ -30,14 +30,15 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
         poll=poll_material,
     )
 
-    print:bpy.props.BoolProperty(name='print',
-                                        description="whether or not to print additional information when rendering",
-                                        default=True)
+    print: bpy.props.BoolProperty(name='print',
+                                  description="whether or not to print additional information when rendering",
+                                  default=True)
 
 
 class SIMLOADER_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
-    enabled: bpy.props.BoolProperty(default=True)
+    enabled: bpy.props.BoolProperty(default=True,
+                                    description="When disbaled, the sequence won't be updated at each frame. Enabled by default")
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty()
     use_relative: bpy.props.BoolProperty(default=False)
@@ -46,4 +47,4 @@ class SIMLOADER_obj_property(bpy.types.PropertyGroup):
 
 # set this property for mesh, not object (maybe change later?)
 class SIMLOADER_mesh_property(bpy.types.PropertyGroup):
-    split_norm_att_name : bpy.props.StringProperty(default="")
+    split_norm_att_name: bpy.props.StringProperty(default="")
