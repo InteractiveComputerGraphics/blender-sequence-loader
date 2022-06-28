@@ -2,7 +2,7 @@ import bpy
 import meshio
 import traceback
 import fileseq
-from .utils import show_message_box, reserved_word_check
+from .utils import show_message_box
 import numpy as np
 from mathutils import Matrix
 import additional_file_formats
@@ -100,7 +100,7 @@ def update_mesh(meshio_mesh, mesh):
     #  copy attributes
     attributes = mesh.attributes
     for k, v in meshio_mesh.point_data.items():
-        k = reserved_word_check(k)
+        k = "simloader_" + k
         attribute = None
         if k not in attributes:
             if len(v.shape) == 1:
@@ -129,13 +129,11 @@ def update_mesh(meshio_mesh, mesh):
             name_string = 'vector'
 
         attribute.data.foreach_set(name_string, v.ravel())
-        
 
         # set as split norm
-        if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name ==k:
+        if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name == k:
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
-
 
 
 def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):

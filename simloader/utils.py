@@ -24,8 +24,3 @@ def stop_animation():
         #  if playing animation, then stop it, otherwise it will keep showing message box
         bpy.ops.screen.animation_cancel()
 
-
-def reserved_word_check(word):
-    # if word in ['id', 'position', 'color']:
-    return word + '2'
-    # return word
