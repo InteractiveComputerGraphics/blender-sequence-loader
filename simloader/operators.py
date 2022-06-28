@@ -9,10 +9,8 @@ import numpy as np
 
 #  Here are load and delete operations
 class SIMLOADER_OT_load(bpy.types.Operator):
-    '''
-    This operator loads a sequnce
-    '''
-    bl_label = "Load Sequences"
+    '''This operator loads a sequnce'''
+    bl_label = "Load Sequence"
     bl_idname = "sequence.load"
     bl_options = {"UNDO"}
 
@@ -48,9 +46,7 @@ class SIMLOADER_OT_load(bpy.types.Operator):
 
 
 class SIMLOADER_OT_edit(bpy.types.Operator):
-    '''
-    This operator changes a sequnce
-    '''
+    '''This operator changes a sequnce'''
     bl_label = "Edit Sequences Path"
     bl_idname = "sequence.edit"
     bl_options = {"UNDO"}
@@ -76,7 +72,6 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
                 return {"CANCELLED"}
             fs = importer_prop.path + '/' + importer_prop.pattern
 
-
         try:
             fs = fileseq.findSequenceOnDisk(fs)
         except Exception as e:
@@ -96,11 +91,8 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
         return {"FINISHED"}
 
 
-
 class SIMLOADER_OT_resetpt(bpy.types.Operator):
-    '''
-    This operator reset the geometry nodes of the sequence as a point cloud
-    '''
+    '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Point Cloud"
     bl_idname = "simloader.resetpt"
     bl_options = {"UNDO"}
@@ -108,10 +100,18 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
         obj = bpy.data.objects[sim_loader.selected_obj_num]
+        warn = False
         for modifier in obj.modifiers:
             if modifier.type == "NODES":
+                warn = True
                 obj.modifiers.remove(modifier)
+        if warn:
+            show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
         gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        # change starting from blender 3.2
+        # https://developer.blender.org/rB08b4b657b64f
+        if bpy.app.version >= (3,2,0):
+            bpy.ops.node.new_geometry_node_group_assign()
         gn.node_group.nodes.new('GeometryNodeMeshToPoints')
         set_material = gn.node_group.nodes.new('GeometryNodeSetMaterial')
         set_material.inputs[2].default_value = context.scene.SIMLOADER.material
@@ -127,9 +127,7 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
 
 
 class SIMLOADER_OT_resetmesh(bpy.types.Operator):
-    '''
-    This operator reset the geometry nodes of the sequence as a point cloud
-    '''
+    '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Mesh"
     bl_idname = "simloader.resetmesh"
     bl_options = {"UNDO"}
@@ -137,18 +135,24 @@ class SIMLOADER_OT_resetmesh(bpy.types.Operator):
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
         obj = bpy.data.objects[sim_loader.selected_obj_num]
+        warn = False
         for modifier in obj.modifiers:
             if modifier.type == "NODES":
+                warn = True
                 obj.modifiers.remove(modifier)
+        if warn:
+            show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
         gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        # change starting from blender 3.2
+        # https://developer.blender.org/rB08b4b657b64f
+        if bpy.app.version >= (3,2,0):
+            bpy.ops.node.new_geometry_node_group_assign()
         bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
         return {"FINISHED"}
 
 
 class SIMLOADER_OT_resetins(bpy.types.Operator):
-    '''
-    This operator reset the geometry nodes of the sequence as a point cloud
-    '''
+    '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Instances"
     bl_idname = "simloader.resetins"
     bl_options = {"UNDO"}
@@ -156,59 +160,70 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
         obj = bpy.data.objects[sim_loader.selected_obj_num]
+        warn = False
         for modifier in obj.modifiers:
             if modifier.type == "NODES":
+                warn = True
                 obj.modifiers.remove(modifier)
+        if warn:
+            show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
         gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        # change starting from blender 3.2
+        # https://developer.blender.org/rB08b4b657b64f
+        if bpy.app.version >= (3,2,0):
+            bpy.ops.node.new_geometry_node_group_assign()
         nodes = gn.node_group.nodes
         links = gn.node_group.links
-        input_node  = nodes[0]
-        output_node  = nodes[1]
+        input_node = nodes[0]
+        output_node = nodes[1]
 
         instance_on_points = nodes.new('GeometryNodeInstanceOnPoints')
         cube = nodes.new('GeometryNodeMeshCube')
         realize_instance = nodes.new('GeometryNodeRealizeInstances')
         set_material = nodes.new('GeometryNodeSetMaterial')
 
-        instance_on_points.inputs['Scale'].default_value = [0.05,0.05,0.05,]
+        instance_on_points.inputs['Scale'].default_value = [
+            0.05,
+            0.05,
+            0.05,
+        ]
         set_material.inputs[2].default_value = context.scene.SIMLOADER.material
 
-
-        links.new(input_node.outputs[0],instance_on_points.inputs['Points'])
-        links.new(cube.outputs[0],instance_on_points.inputs['Instance'])
-        links.new(instance_on_points.outputs[0],realize_instance.inputs[0])
-        links.new(realize_instance.outputs[0],set_material.inputs[0])
-        links.new(set_material.outputs[0],output_node.inputs[0])
+        links.new(input_node.outputs[0], instance_on_points.inputs['Points'])
+        links.new(cube.outputs[0], instance_on_points.inputs['Instance'])
+        links.new(instance_on_points.outputs[0], realize_instance.inputs[0])
+        links.new(realize_instance.outputs[0], set_material.inputs[0])
+        links.new(set_material.outputs[0], output_node.inputs[0])
 
         bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
         return {"FINISHED"}
 
+
 class SIMLOADER_OT_set_as_split_norm(bpy.types.Operator):
-    '''
-    This operator set the vertex attribute as vertex split normals
-    '''
-    bl_label = "Set as Split Norm per Vertex"
+    '''This operator set the vertex attribute as vertex split normals'''
+    bl_label = "Set as split normal per Vertex"
     bl_idname = "simloader.setsplitnorm"
     bl_options = {"UNDO"}
+
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         mesh = obj.data
         attr_index = sim_loader.selected_attribute_num
-        if attr_index>=len(mesh.attributes):
+        if attr_index >= len(mesh.attributes):
             show_message_box("Please select the attribute")
             return {"CANCELLED"}
         mesh.SIMLOADER.split_norm_att_name = mesh.attributes[attr_index].name
 
         return {"FINISHED"}
 
+
 class SIMLOADER_OT_remove_split_norm(bpy.types.Operator):
-    '''
-    This operator remove the vertex attribute as vertex split normals
-    '''
-    bl_label = "Remove Split Norm per Vertex"
+    '''This operator remove the vertex attribute as vertex split normals'''
+    bl_label = "Remove split normal per Vertex"
     bl_idname = "simloader.removesplitnorm"
     bl_options = {"UNDO"}
+
     def execute(self, context):
         sim_loader = context.scene.SIMLOADER
         obj = bpy.data.objects[sim_loader.selected_obj_num]
@@ -220,12 +235,11 @@ class SIMLOADER_OT_remove_split_norm(bpy.types.Operator):
 
 
 class SIMLOADER_OT_disable_selected(bpy.types.Operator):
-    '''
-    This operator disable all selected sequence
-    '''
+    '''This operator disable all selected sequence'''
     bl_label = "Disable Selected Sequence"
     bl_idname = "simloader.disableselected"
     bl_options = {"UNDO"}
+
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             if obj.SIMLOADER.init and obj.SIMLOADER.enabled:
@@ -234,12 +248,11 @@ class SIMLOADER_OT_disable_selected(bpy.types.Operator):
 
 
 class SIMLOADER_OT_enable_selected(bpy.types.Operator):
-    '''
-    This operator enable all selected sequence
-    '''
+    '''This operator enable all selected sequence'''
     bl_label = "Enable Selected Sequence"
     bl_idname = "simloader.enableselected"
     bl_options = {"UNDO"}
+
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             if obj.SIMLOADER.init and not obj.SIMLOADER.enabled:
@@ -247,27 +260,23 @@ class SIMLOADER_OT_enable_selected(bpy.types.Operator):
         return {"FINISHED"}
 
 
-
 class SIMLOADER_OT_refresh_seq(bpy.types.Operator):
-    '''
-    This operator refresh the sequence
-    '''
+    '''This operator refresh the sequence'''
     bl_label = "Refresh Sequence"
     bl_idname = "simloader.refresh"
+
     def execute(self, context):
         scene = context.scene
         obj = bpy.data.objects[scene.SIMLOADER.selected_obj_num]
-
 
         fs = obj.SIMLOADER.pattern
         if obj.SIMLOADER.use_relative:
             fs = bpy.path.abspath(fs)
         fs = fileseq.findSequenceOnDisk(fs)
-        fs = fileseq.findSequenceOnDisk(fs.dirname()+ fs.basename() + "@" + fs.extension())
+        fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
         fs = str(fs)
         if obj.SIMLOADER.use_relative:
             fs = bpy.path.relpath(fs)
         obj.SIMLOADER.pattern = fs
-        
 
         return {"FINISHED"}
