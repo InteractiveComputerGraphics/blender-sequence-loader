@@ -55,6 +55,11 @@ def register():
     bpy.types.Mesh.SIMLOADER = bpy.props.PointerProperty(type=SIMLOADER_mesh_property)
 
 
+    # manually call this function once
+    # so when addon being installed, it can run correctly
+    # because scene is not used, so pass None into it
+    SIMLOADER_initilize(None)
+
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)

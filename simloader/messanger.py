@@ -13,10 +13,12 @@ def selected_callback():
 
 
 def subscribe_to_selected():
-    # A known problem of this function,
-    # This function will not be executed, when the first time this addon is installed.
-    # It will start to work, e.g. restart the blender, then in `load_post` function, this function will be called and start to work
     import simloader
+    
+    # because current implementation may subscribe twice
+    # so clear once to avoid duplication
+    bpy.msgbus.clear_by_owner(simloader)
+
     bpy.msgbus.subscribe_rna(
         key=(bpy.types.LayerObjects, 'active'),
         #  don't know why it needs this owner, so I set owner to this module `simloader`
