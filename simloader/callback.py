@@ -6,7 +6,7 @@ import fileseq
 
 def update_path(self, context):
     # When the path has been changed, reset the selected sequence to None
-    context.scene.SIMLOADER.fileseq = "None"
+    context.scene.SIMLOADER['fileseq'] = 1
     context.scene.SIMLOADER.use_pattern = False
     context.scene.SIMLOADER.pattern = ""
 
@@ -20,17 +20,18 @@ def item_fileseq(self, context):
     try:
         f = fileseq.findSequencesOnDisk(p)
     except:
-        return [("None", "No sequence detected", "")]
+        return [("None", "No sequence detected", "", 1)]
 
     if not f:
-        return [("None", "No sequence detected", "")]
+        return [("None", "No sequence detected", "", 1)]
     file_seq = []
     if len(f) >= 20:
-        file_seq.append(("None", "Too much sequence detected, could be false detection, please use pattern below", ""))
+        file_seq.append(("None", "Too much sequence detected, could be false detection, please use pattern below", "", 1))
     else:
-        file_seq.append(("None", "Please select the pattern", ""))
+        count = 1
         for seq in f:
-            file_seq.append((str(seq), seq.basename() + "@" + seq.extension(), ""))
+            file_seq.append((str(seq), seq.basename() + "@" + seq.extension(), "", count))
+            count += 1
     return file_seq
 
 
