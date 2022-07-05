@@ -22,7 +22,7 @@ dirs = {
 }
 
 today = str(date.today())
-with ZipFile(f'simloader_addon_{today}.zip', 'w') as addonzip:
+with ZipFile(f'blender_sequence_loader_{today}.zip', 'w') as addonzip:
     #  write all directories
     for k, v in dirs.items():
         for subdir, dirs, files in os.walk(k):

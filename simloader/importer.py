@@ -100,7 +100,7 @@ def update_mesh(meshio_mesh, mesh):
     #  copy attributes
     attributes = mesh.attributes
     for k, v in meshio_mesh.point_data.items():
-        k = "simloader_" + k
+        k = "bseq_" + k
         attribute = None
         if k not in attributes:
             if len(v.shape) == 1:
