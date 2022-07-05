@@ -1,7 +1,7 @@
 bl_info = {
-    "name": "Sim Loader",
+    "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
-    "author": "Hantao Hui",
+    "author": "Interactive Computer Graphics",
     "version": (1, 0),
     "blender": (3, 1, 0),
     "warning": "",
@@ -46,7 +46,7 @@ classes = [
 
 
 def register():
-    bpy.app.handlers.load_post.append(SIMLOADER_initilize)
+    bpy.app.handlers.load_post.append(SIMLOADER_initialize)
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.TEXT_MT_templates.append(draw_template)
@@ -66,7 +66,7 @@ def unregister():
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.SIMLOADER
     del bpy.types.Object.SIMLOADER
-    bpy.app.handlers.load_post.remove(SIMLOADER_initilize)
+    bpy.app.handlers.load_post.remove(SIMLOADER_initialize)
     unsubscribe_to_selected()
 
 
