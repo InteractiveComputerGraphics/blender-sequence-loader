@@ -58,7 +58,7 @@ def register():
     # manually call this function once
     # so when addon being installed, it can run correctly
     # because scene is not used, so pass None into it
-    SIMLOADER_initilize(None)
+    SIMLOADER_initialize(None)
 
 def unregister():
     for cls in classes:
