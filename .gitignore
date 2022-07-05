@@ -1,0 +1,11 @@
+__pycache__/
+.DS_Store
+.vs_code/
+*.zip
+
+# the following ignores are used to ignore the local softlink files
+# the extern folder won't be affected by this
+rich
+meshio
+future
+fileseq
