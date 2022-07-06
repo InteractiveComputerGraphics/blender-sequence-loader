@@ -25,7 +25,7 @@ Loading animation sequences with meshio and fileseq
 1. Clone the project to download both project and dependencies
 
 ```shell
-git clone https://www.graphics.rwth-aachen.de:9000/hhui/blendertool  --recurse-submodules
+git clone https://github.com/InteractiveComputerGraphics/blender-sequence-loader.git  --recurse-submodules
 ```
 
 2. Build the installable `.zip` file by simply running the following command.  This should produce a file called `blender_sequence_loader_{date}.zip`, where `{date}` is replaced with todays date. No other dependency other than standard python3 libraries are needed to build the addon.
