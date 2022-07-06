@@ -1,6 +1,8 @@
 ![](images/logo.svg)
 
-Loading animation sequences with meshio and fileseq
+This is an addon for Blender 3.1+ (might work with 2.8+ but has not been tested) that enables loading of file sequences. The addon comes bundled together with [meshio](https://github.com/nschloe/meshio) which enables the loading of geometric data from a multitude of file formats. All data is loaded *just-in-time* when the Blender frame changes, in order to avoid excessive memory consumption. By default, the addon is able to load vertices, lines, triangles and quads. It is also able to automatically extract triangle and quad surface meshes from tetrahedral and hexahedral volume meshes. Scalar and vector attributes on vertices are also imported for visualization purposes. See the following documentation for a brief introduction.
+
+**DISCLAIMER: This project is still very much under development, so breaking changes may occur at any time!**
 
 - [1. Installation](#1-installation)
   - [1.1 Build from source (optional)](#11-build-from-source-optional)
@@ -17,6 +19,7 @@ Loading animation sequences with meshio and fileseq
     - [2.3.2 Path Information](#232-path-information)
     - [2.3.3 Attributes Settings](#233-attributes-settings)
     - [2.3.4 Split Norm per Vertex](#234-split-norm-per-vertex)
+    - [2.3.5 Advanced Settings](#235-advanced-settings)
 
 ## 1. Installation
 
@@ -133,3 +136,7 @@ We also provide the ability to use a per-vertex vector attribute as custom norma
 For more details check the official documentation [here](https://docs.blender.org/manual/en/latest/modeling/meshes/structure.html#modeling-meshes-normals-custom).
 
 Note: the addon does not check if the selected attribute is suitable for normals or not. E.g. if the data type of the attribute is int instead of float, then Blender will simply give a runtime error.
+
+#### 2.3.5 Advanced Settings
+
+TODO
