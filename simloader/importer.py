@@ -5,6 +5,7 @@ import fileseq
 from .utils import show_message_box
 import numpy as np
 from mathutils import Matrix
+# this import is not useless
 import additional_file_formats
 
 
@@ -144,11 +145,7 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     meshio_mesh = None
     enabled = True
     try:
-        ext = fileseq.extension().split('.')[-1]
-        if ext in additional_file_formats.additional_format_loader:
-            meshio_mesh = additional_file_formats.additional_format_loader[ext](filepath)
-        else:
-            meshio_mesh = meshio.read(filepath)
+        meshio_mesh = meshio.read(filepath)
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
@@ -225,11 +222,7 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                ext = fs.extension().split('.')[-1]
-                if ext in additional_file_formats.additional_format_loader:
-                    meshio_mesh = additional_file_formats.additional_format_loader[ext](filepath)
-                else:
-                    meshio_mesh = meshio.read(filepath)
+                meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),

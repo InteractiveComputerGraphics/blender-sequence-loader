@@ -105,3 +105,6 @@ def readbgeo_to_meshio(filepath):
             raise Exception("file didn't end")
         return meshio.Mesh(position, [('vertex', [])], point_data=point_attributes)
 
+
+# no need for write function
+meshio.register_format("bgeo", [".bgeo"], readbgeo_to_meshio, {".bgeo": None})
