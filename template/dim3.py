@@ -1,6 +1,8 @@
 # Here is an template to load 3-d mesh
 # By default, the addon only renders the surface faces
 # The template here will render all the faces, including the fase inside the mesh
+
+# NOTE: this might break the `shade smooth` in blender 
 import fileseq
 import meshio
 import numpy as np
