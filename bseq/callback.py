@@ -6,9 +6,9 @@ import fileseq
 
 def update_path(self, context):
     # When the path has been changed, reset the selected sequence to None
-    context.scene.SIMLOADER['fileseq'] = 1
-    context.scene.SIMLOADER.use_pattern = False
-    context.scene.SIMLOADER.pattern = ""
+    context.scene.BSEQ['fileseq'] = 1
+    context.scene.BSEQ.use_pattern = False
+    context.scene.BSEQ.pattern = ""
 
 
 def item_fileseq(self, context):
@@ -16,7 +16,7 @@ def item_fileseq(self, context):
     Detects all the file sequences in the directory
     '''
 
-    p = context.scene.SIMLOADER.path
+    p = context.scene.BSEQ.path
     try:
         f = fileseq.findSequencesOnDisk(p)
     except:
@@ -38,10 +38,10 @@ def item_fileseq(self, context):
 def update_selected_obj_num(self, context):
 
     # Here is when select sequences, then change the corresponding object to active object
-    index = context.scene.SIMLOADER.selected_obj_num
+    index = context.scene.BSEQ.selected_obj_num
     obj = bpy.data.objects[index]
 
-    if context.scene.SIMLOADER.selected_obj_deselectall_flag:
+    if context.scene.BSEQ.selected_obj_deselectall_flag:
         bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
     context.view_layer.objects.active = obj

@@ -132,7 +132,7 @@ def update_mesh(meshio_mesh, mesh):
         attribute.data.foreach_set(name_string, v.ravel())
 
         # set as split norm
-        if mesh.SIMLOADER.split_norm_att_name and mesh.SIMLOADER.split_norm_att_name == k:
+        if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
 
@@ -156,13 +156,13 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     name = fileseq.basename() + "@" + fileseq.extension()
     mesh = bpy.data.meshes.new(name)
     object = bpy.data.objects.new(name, mesh)
-    object.SIMLOADER.use_relative = use_relaitve
+    object.BSEQ.use_relative = use_relaitve
     if use_relaitve:
-        object.SIMLOADER.pattern = bpy.path.relpath(str(fileseq))
+        object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
     else:
-        object.SIMLOADER.pattern = str(fileseq)
-    object.SIMLOADER.init = True
-    object.SIMLOADER.enabled = enabled
+        object.BSEQ.pattern = str(fileseq)
+    object.BSEQ.init = True
+    object.BSEQ.enabled = enabled
     object.matrix_world = transform_matrix
     if enabled:
         update_mesh(meshio_mesh, object.data)
@@ -177,25 +177,25 @@ def update_obj(scene, depsgraph=None):
     current_frame = bpy.context.scene.frame_current
 
     for obj in bpy.data.objects:
-        if obj.SIMLOADER.init == False:
+        if obj.BSEQ.init == False:
             continue
-        if obj.SIMLOADER.enabled == False:
+        if obj.BSEQ.enabled == False:
             continue
 
         meshio_mesh = None
-        pattern = obj.SIMLOADER.pattern
-        if obj.SIMLOADER.use_relative:
+        pattern = obj.BSEQ.pattern
+        if obj.BSEQ.use_relative:
             pattern = bpy.path.abspath(pattern)
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
-        if obj.SIMLOADER.use_advance and obj.SIMLOADER.script_name:
-            script = bpy.data.texts[obj.SIMLOADER.script_name]
+        if obj.BSEQ.use_advance and obj.BSEQ.script_name:
+            script = bpy.data.texts[obj.BSEQ.script_name]
             try:
                 exec(script.as_string())
             except Exception as e:
-                show_message_box(traceback.format_exc(), "running script: " + obj.SIMLOADER.script_name + " failed: " + str(e),
+                show_message_box(traceback.format_exc(), "running script: " + obj.BSEQ.script_name + " failed: " + str(e),
                                  "ERROR")
                 continue
 

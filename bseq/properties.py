@@ -2,7 +2,7 @@ import bpy
 from .callback import *
 
 
-class SIMLOADER_scene_property(bpy.types.PropertyGroup):
+class BSEQ_scene_property(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(name="Directory",
                                    subtype="DIR_PATH",
                                    description="You need to go to the folder with the sequence, then click \"Accept\". ",
@@ -37,7 +37,7 @@ class SIMLOADER_scene_property(bpy.types.PropertyGroup):
                                   default=True)
 
 
-class SIMLOADER_obj_property(bpy.types.PropertyGroup):
+class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
     enabled: bpy.props.BoolProperty(default=True,
                                     description="When disbaled, the sequence won't be updated at each frame. Enabled by default")
@@ -48,5 +48,5 @@ class SIMLOADER_obj_property(bpy.types.PropertyGroup):
 
 
 # set this property for mesh, not object (maybe change later?)
-class SIMLOADER_mesh_property(bpy.types.PropertyGroup):
+class BSEQ_mesh_property(bpy.types.PropertyGroup):
     split_norm_att_name: bpy.props.StringProperty(default="")
