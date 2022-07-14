@@ -159,6 +159,7 @@ def readMZD_to_meshio(filepath):
                 pass
     return meshio.Mesh(out_vertPositions.reshape((out_numVertices, 3)), cells, point_data)
 
+
 def readMZD_to_bpymesh(filepath, mesh):
     shade_scheme = False
     if mesh.polygons:
@@ -309,3 +310,7 @@ def readMZD_to_bpymesh(filepath, mesh):
                 # print(name)
                 file.seek(size, 1)
                 pass
+
+
+# no need for write function
+meshio.register_format("mzd", [".mzd"], readMZD_to_meshio, {".mzd": None})

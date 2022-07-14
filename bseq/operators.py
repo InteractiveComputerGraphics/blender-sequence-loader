@@ -8,7 +8,7 @@ import numpy as np
 
 
 #  Here are load and delete operations
-class SIMLOADER_OT_load(bpy.types.Operator):
+class BSEQ_OT_load(bpy.types.Operator):
     '''This operator loads a sequnce'''
     bl_label = "Load Sequence"
     bl_idname = "sequence.load"
@@ -16,7 +16,7 @@ class SIMLOADER_OT_load(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        importer_prop = scene.SIMLOADER
+        importer_prop = scene.BSEQ
 
         if importer_prop.relative and not bpy.data.is_saved:
             #  use relative but file not saved
@@ -45,7 +45,7 @@ class SIMLOADER_OT_load(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_edit(bpy.types.Operator):
+class BSEQ_OT_edit(bpy.types.Operator):
     '''This operator changes a sequnce'''
     bl_label = "Edit Sequences Path"
     bl_idname = "sequence.edit"
@@ -53,7 +53,7 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        importer_prop = scene.SIMLOADER
+        importer_prop = scene.BSEQ
 
         if importer_prop.relative and not bpy.data.is_saved:
             #  use relative but file not saved
@@ -78,27 +78,27 @@ class SIMLOADER_OT_edit(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         #  it seems quite simple task, no need to create a function(for now)
         if sim_loader.selected_obj_num >= len(bpy.data.objects):
             return {"CANCELLED"}
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         if importer_prop.relative:
-            obj.SIMLOADER.pattern = bpy.path.relpath(str(fs))
+            obj.BSEQ.pattern = bpy.path.relpath(str(fs))
         else:
-            obj.SIMLOADER.pattern = str(fs)
-        obj.SIMLOADER.use_relative = importer_prop.relative
+            obj.BSEQ.pattern = str(fs)
+        obj.BSEQ.use_relative = importer_prop.relative
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_resetpt(bpy.types.Operator):
+class BSEQ_OT_resetpt(bpy.types.Operator):
     '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Point Cloud"
-    bl_idname = "simloader.resetpt"
+    bl_idname = "bseq.resetpt"
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         warn = False
         for modifier in obj.modifiers:
@@ -107,14 +107,14 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
                 obj.modifiers.remove(modifier)
         if warn:
             show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
-        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
         if bpy.app.version >= (3,2,0):
             bpy.ops.node.new_geometry_node_group_assign()
         gn.node_group.nodes.new('GeometryNodeMeshToPoints')
         set_material = gn.node_group.nodes.new('GeometryNodeSetMaterial')
-        set_material.inputs[2].default_value = context.scene.SIMLOADER.material
+        set_material.inputs[2].default_value = context.scene.BSEQ.material
 
         node0 = gn.node_group.nodes[0]
         node1 = gn.node_group.nodes[1]
@@ -126,14 +126,14 @@ class SIMLOADER_OT_resetpt(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_resetmesh(bpy.types.Operator):
+class BSEQ_OT_resetmesh(bpy.types.Operator):
     '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Mesh"
-    bl_idname = "simloader.resetmesh"
+    bl_idname = "bseq.resetmesh"
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         warn = False
         for modifier in obj.modifiers:
@@ -142,7 +142,7 @@ class SIMLOADER_OT_resetmesh(bpy.types.Operator):
                 obj.modifiers.remove(modifier)
         if warn:
             show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
-        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
         if bpy.app.version >= (3,2,0):
@@ -151,14 +151,14 @@ class SIMLOADER_OT_resetmesh(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_resetins(bpy.types.Operator):
+class BSEQ_OT_resetins(bpy.types.Operator):
     '''This operator reset the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Instances"
-    bl_idname = "simloader.resetins"
+    bl_idname = "bseq.resetins"
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         warn = False
         for modifier in obj.modifiers:
@@ -167,7 +167,7 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
                 obj.modifiers.remove(modifier)
         if warn:
             show_message_box("Exising geoemtry nodes of {} has been removed".format(obj.name), "Warning")
-        gn = obj.modifiers.new("SIMLOADER_GeometryNodse", "NODES")
+        gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
         if bpy.app.version >= (3,2,0):
@@ -187,7 +187,7 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
             0.05,
             0.05,
         ]
-        set_material.inputs[2].default_value = context.scene.SIMLOADER.material
+        set_material.inputs[2].default_value = context.scene.BSEQ.material
 
         links.new(input_node.outputs[0], instance_on_points.inputs['Points'])
         links.new(cube.outputs[0], instance_on_points.inputs['Instance'])
@@ -199,84 +199,84 @@ class SIMLOADER_OT_resetins(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_set_as_split_norm(bpy.types.Operator):
+class BSEQ_OT_set_as_split_norm(bpy.types.Operator):
     '''This operator set the vertex attribute as vertex split normals'''
     bl_label = "Set as split normal per Vertex"
-    bl_idname = "simloader.setsplitnorm"
+    bl_idname = "bseq.setsplitnorm"
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         mesh = obj.data
         attr_index = sim_loader.selected_attribute_num
         if attr_index >= len(mesh.attributes):
             show_message_box("Please select the attribute")
             return {"CANCELLED"}
-        mesh.SIMLOADER.split_norm_att_name = mesh.attributes[attr_index].name
+        mesh.BSEQ.split_norm_att_name = mesh.attributes[attr_index].name
 
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_remove_split_norm(bpy.types.Operator):
+class BSEQ_OT_remove_split_norm(bpy.types.Operator):
     '''This operator remove the vertex attribute as vertex split normals'''
     bl_label = "Remove split normal per Vertex"
-    bl_idname = "simloader.removesplitnorm"
+    bl_idname = "bseq.removesplitnorm"
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sim_loader = context.scene.SIMLOADER
+        sim_loader = context.scene.BSEQ
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         mesh = obj.data
-        if mesh.SIMLOADER.split_norm_att_name:
-            mesh.SIMLOADER.split_norm_att_name = ""
+        if mesh.BSEQ.split_norm_att_name:
+            mesh.BSEQ.split_norm_att_name = ""
 
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_disable_selected(bpy.types.Operator):
+class BSEQ_OT_disable_selected(bpy.types.Operator):
     '''This operator disable all selected sequence'''
     bl_label = "Disable Selected Sequence"
-    bl_idname = "simloader.disableselected"
+    bl_idname = "bseq.disableselected"
     bl_options = {"UNDO"}
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            if obj.SIMLOADER.init and obj.SIMLOADER.enabled:
-                obj.SIMLOADER.enabled = False
+            if obj.BSEQ.init and obj.BSEQ.enabled:
+                obj.BSEQ.enabled = False
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_enable_selected(bpy.types.Operator):
+class BSEQ_OT_enable_selected(bpy.types.Operator):
     '''This operator enable all selected sequence'''
     bl_label = "Enable Selected Sequence"
-    bl_idname = "simloader.enableselected"
+    bl_idname = "bseq.enableselected"
     bl_options = {"UNDO"}
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            if obj.SIMLOADER.init and not obj.SIMLOADER.enabled:
-                obj.SIMLOADER.enabled = True
+            if obj.BSEQ.init and not obj.BSEQ.enabled:
+                obj.BSEQ.enabled = True
         return {"FINISHED"}
 
 
-class SIMLOADER_OT_refresh_seq(bpy.types.Operator):
+class BSEQ_OT_refresh_seq(bpy.types.Operator):
     '''This operator refresh the sequence'''
     bl_label = "Refresh Sequence"
-    bl_idname = "simloader.refresh"
+    bl_idname = "bseq.refresh"
 
     def execute(self, context):
         scene = context.scene
-        obj = bpy.data.objects[scene.SIMLOADER.selected_obj_num]
+        obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
 
-        fs = obj.SIMLOADER.pattern
-        if obj.SIMLOADER.use_relative:
+        fs = obj.BSEQ.pattern
+        if obj.BSEQ.use_relative:
             fs = bpy.path.abspath(fs)
         fs = fileseq.findSequenceOnDisk(fs)
         fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
         fs = str(fs)
-        if obj.SIMLOADER.use_relative:
+        if obj.BSEQ.use_relative:
             fs = bpy.path.relpath(fs)
-        obj.SIMLOADER.pattern = fs
+        obj.BSEQ.pattern = fs
 
         return {"FINISHED"}

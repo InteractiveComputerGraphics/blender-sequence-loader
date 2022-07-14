@@ -13,7 +13,7 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
 
     print("Information: ", title)
     print(message)
-    print('End of simloader message box')
+    print('End of bseq message box')
     print()
     stop_animation()
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
