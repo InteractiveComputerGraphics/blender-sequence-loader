@@ -26,8 +26,10 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
             row.prop(item, "name", text='Name ', emboss=False)
             if item.BSEQ.enabled:
                 row.prop(item.BSEQ, "enabled", text = "ENABLED", icon="PLAY")
+                row.prop(item.BSEQ, "frame", text = "Current Frame:")
             else:
                 row.prop(item.BSEQ, "enabled", text = "DISABLED", icon="PAUSE")
+                row.label(text = "Animation Stopped")
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
