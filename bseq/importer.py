@@ -174,13 +174,13 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
 
 
 def update_obj(scene, depsgraph=None):
-    if bpy.context.active_object.mode != "OBJECT":
-        return
 
     for obj in bpy.data.objects:
         if obj.BSEQ.init == False:
             continue
         if obj.BSEQ.enabled == False:
+            continue
+        if obj.mode != "OBJECT":
             continue
 
         current_frame = obj.BSEQ.frame

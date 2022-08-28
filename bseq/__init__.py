@@ -1,11 +1,12 @@
-from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins,BSEQ_OT_set_as_split_norm,BSEQ_OT_remove_split_norm,BSEQ_OT_disable_selected,BSEQ_OT_enable_selected,BSEQ_OT_refresh_seq
-from .properties import BSEQ_scene_property, BSEQ_obj_property,BSEQ_mesh_property
+from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins, BSEQ_OT_set_as_split_norm, BSEQ_OT_remove_split_norm, BSEQ_OT_disable_selected, BSEQ_OT_enable_selected, BSEQ_OT_refresh_seq
+from .properties import BSEQ_scene_property, BSEQ_obj_property, BSEQ_mesh_property
 from .panels import BSEQ_UL_Obj_List, BSEQ_List_Panel, BSEQ_Settings, BSEQ_Import, BSEQ_Templates, BSEQ_UL_Att_List, draw_template
 from .messenger import subscribe_to_selected, unsubscribe_to_selected
 import bpy
 from bpy.app.handlers import persistent
 from .importer import update_obj
 from datetime import datetime
+import os
 
 
 def print_information(scene):
@@ -14,6 +15,9 @@ def print_information(scene):
     now = datetime.now()
     path = bpy.context.scene.render.filepath
     path = bpy.path.abspath(path)
+    if not os.path.isdir(path):
+        # by default, path is '/tmp', and it does not exist on windows system
+        return
     filepath = path + '/bseq_' + now.strftime("%Y-%m-%d_%H-%M")
     with open(filepath, 'w') as file:
         file.write("Render Time: {}\n".format(now.strftime("%Y-%m-%d_%H-%M")))
