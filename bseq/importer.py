@@ -174,7 +174,8 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
 
 
 def update_obj(scene, depsgraph=None):
-    # TODO if bpy in edit mode, then return
+    if bpy.context.active_object.mode != "OBJECT":
+        return
 
     for obj in bpy.data.objects:
         if obj.BSEQ.init == False:
