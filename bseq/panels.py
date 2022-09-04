@@ -73,8 +73,6 @@ class BSEQ_List_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("bseq.enableselected", text="Enable Selected")
         row.operator("bseq.disableselected", text="Disable Selected")
-        row = layout.row()
-        row.operator("sequence.edit", text="Edit Path")
         row.operator("bseq.refresh", text="Refresh")
 
 
@@ -195,6 +193,11 @@ class BSEQ_Import(bpy.types.Panel):
         col2.prop(importer_prop, "relative", text="")
 
         layout.operator("sequence.load")
+        split = layout.split()
+        col1 = split.column()
+        col2 = split.column()
+        col1.prop_search(importer_prop, 'edit_obj', bpy.data, 'objects', text="")
+        col2.operator("sequence.edit")
 
         layout.label(text="Global Settings")
         box = layout.box()

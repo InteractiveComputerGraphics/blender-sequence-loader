@@ -79,10 +79,12 @@ class BSEQ_OT_edit(bpy.types.Operator):
             return {"CANCELLED"}
 
         sim_loader = context.scene.BSEQ
+
+        # logic here
         #  it seems quite simple task, no need to create a function(for now)
-        if sim_loader.selected_obj_num >= len(bpy.data.objects):
+        obj = sim_loader.edit_obj
+        if not obj:
             return {"CANCELLED"}
-        obj = bpy.data.objects[sim_loader.selected_obj_num]
         if importer_prop.relative:
             obj.BSEQ.pattern = bpy.path.relpath(str(fs))
         else:

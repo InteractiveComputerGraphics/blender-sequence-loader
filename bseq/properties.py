@@ -32,6 +32,11 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
         poll=poll_material,
     )
 
+    edit_obj: bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        poll=poll_edit_obj,
+    )
+
     print: bpy.props.BoolProperty(name='print',
                                   description="whether or not to print additional information when rendering",
                                   default=True)

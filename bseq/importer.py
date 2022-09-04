@@ -165,7 +165,7 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     object.BSEQ.enabled = enabled
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
-    driver.driver.expression = 'fmod(frame, {})'.format(len(fileseq))
+    driver.driver.expression = 'frame'
     if enabled:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
