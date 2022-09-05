@@ -41,6 +41,10 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                   description="whether or not to print additional information when rendering",
                                   default=True)
 
+    auto_refresh: bpy.props.BoolProperty(name='auto refresh',
+                                         description="whether or not to auto refresh all the sequence every frame",
+                                         default=False)
+
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
@@ -51,6 +55,7 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
+
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):

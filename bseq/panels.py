@@ -208,6 +208,8 @@ class BSEQ_Import(bpy.types.Panel):
 
         col1.label(text="Print Sequence Information on Render")
         col2.prop(importer_prop, "print", text="")
+        col1.label(text="Auto refresh all the sequence every frame")
+        col2.prop(importer_prop, "auto_refresh", text="")
 
 
 class BSEQ_Templates(bpy.types.Menu):
