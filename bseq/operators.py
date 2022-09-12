@@ -2,7 +2,7 @@ import bpy
 import fileseq
 from .messenger import *
 import traceback
-from .utils import show_message_box
+from .utils import refresh_obj, show_message_box
 from .importer import create_obj
 import numpy as np
 
@@ -79,10 +79,12 @@ class BSEQ_OT_edit(bpy.types.Operator):
             return {"CANCELLED"}
 
         sim_loader = context.scene.BSEQ
+
+        # logic here
         #  it seems quite simple task, no need to create a function(for now)
-        if sim_loader.selected_obj_num >= len(bpy.data.objects):
+        obj = sim_loader.edit_obj
+        if not obj:
             return {"CANCELLED"}
-        obj = bpy.data.objects[sim_loader.selected_obj_num]
         if importer_prop.relative:
             obj.BSEQ.pattern = bpy.path.relpath(str(fs))
         else:
@@ -110,7 +112,7 @@ class BSEQ_OT_resetpt(bpy.types.Operator):
         gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
-        if bpy.app.version >= (3,2,0):
+        if bpy.app.version >= (3, 2, 0):
             bpy.ops.node.new_geometry_node_group_assign()
         gn.node_group.nodes.new('GeometryNodeMeshToPoints')
         set_material = gn.node_group.nodes.new('GeometryNodeSetMaterial')
@@ -145,7 +147,7 @@ class BSEQ_OT_resetmesh(bpy.types.Operator):
         gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
-        if bpy.app.version >= (3,2,0):
+        if bpy.app.version >= (3, 2, 0):
             bpy.ops.node.new_geometry_node_group_assign()
         bpy.ops.object.modifier_move_to_index(modifier=gn.name, index=0)
         return {"FINISHED"}
@@ -170,7 +172,7 @@ class BSEQ_OT_resetins(bpy.types.Operator):
         gn = obj.modifiers.new("BSEQ_GeometryNodse", "NODES")
         # change starting from blender 3.2
         # https://developer.blender.org/rB08b4b657b64f
-        if bpy.app.version >= (3,2,0):
+        if bpy.app.version >= (3, 2, 0):
             bpy.ops.node.new_geometry_node_group_assign()
         nodes = gn.node_group.nodes
         links = gn.node_group.links
@@ -268,15 +270,6 @@ class BSEQ_OT_refresh_seq(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
-
-        fs = obj.BSEQ.pattern
-        if obj.BSEQ.use_relative:
-            fs = bpy.path.abspath(fs)
-        fs = fileseq.findSequenceOnDisk(fs)
-        fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
-        fs = str(fs)
-        if obj.BSEQ.use_relative:
-            fs = bpy.path.relpath(fs)
-        obj.BSEQ.pattern = fs
+        refresh_obj(obj)
 
         return {"FINISHED"}

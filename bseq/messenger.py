@@ -10,7 +10,8 @@ def selected_callback():
         bpy.context.scene.BSEQ.selected_obj_deselectall_flag = False
         bpy.context.scene.BSEQ.selected_obj_num = idx
         bpy.context.scene.BSEQ.selected_obj_deselectall_flag = True
-
+    if bpy.context.active_object.BSEQ.init:
+        bpy.context.scene.BSEQ.edit_obj = bpy.context.active_object
 
 def subscribe_to_selected():
     import bseq

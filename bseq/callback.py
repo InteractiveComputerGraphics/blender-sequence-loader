@@ -49,3 +49,6 @@ def update_selected_obj_num(self, context):
 
 def poll_material(self, material):
     return not material.is_grease_pencil
+
+def poll_edit_obj(self, object):
+    return object.BSEQ.init

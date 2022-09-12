@@ -32,9 +32,18 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
         poll=poll_material,
     )
 
+    edit_obj: bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        poll=poll_edit_obj,
+    )
+
     print: bpy.props.BoolProperty(name='print',
                                   description="whether or not to print additional information when rendering",
                                   default=True)
+
+    auto_refresh: bpy.props.BoolProperty(name='auto refresh',
+                                         description="whether or not to auto refresh all the sequence every frame",
+                                         default=False)
 
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
@@ -45,6 +54,7 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     script_name: bpy.props.StringProperty()
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
+    frame: bpy.props.IntProperty()
 
 
 # set this property for mesh, not object (maybe change later?)

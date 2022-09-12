@@ -1,5 +1,5 @@
 import bpy
-
+import fileseq
 
 def show_message_box(message="", title="Message Box", icon="INFO"):
     '''
@@ -24,3 +24,15 @@ def stop_animation():
         #  if playing animation, then stop it, otherwise it will keep showing message box
         bpy.ops.screen.animation_cancel()
 
+
+
+def refresh_obj(obj):
+    fs = obj.BSEQ.pattern
+    if obj.BSEQ.use_relative:
+        fs = bpy.path.abspath(fs)
+    fs = fileseq.findSequenceOnDisk(fs)
+    fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
+    fs = str(fs)
+    if obj.BSEQ.use_relative:
+        fs = bpy.path.relpath(fs)
+    obj.BSEQ.pattern = fs

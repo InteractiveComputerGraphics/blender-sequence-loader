@@ -164,6 +164,8 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
     object.matrix_world = transform_matrix
+    driver = object.driver_add("BSEQ.frame")
+    driver.driver.expression = 'frame'
     if enabled:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
@@ -172,16 +174,16 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
 
 
 def update_obj(scene, depsgraph=None):
-    # TODO if bpy in edit mode, then return
-
-    current_frame = bpy.context.scene.frame_current
 
     for obj in bpy.data.objects:
         if obj.BSEQ.init == False:
             continue
         if obj.BSEQ.enabled == False:
             continue
+        if obj.mode != "OBJECT":
+            continue
 
+        current_frame = obj.BSEQ.frame
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
