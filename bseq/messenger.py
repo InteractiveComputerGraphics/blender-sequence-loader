@@ -2,8 +2,11 @@ import bpy
 
 
 def selected_callback():
-    if not bpy.context.view_layer.objects.active:
-        return
+
+    # seems like that this is not necessary
+    # if not bpy.context.view_layer.objects.active:
+    #     return
+
     name = bpy.context.active_object.name
     idx = bpy.data.objects.find(name)
     if idx >= 0:

@@ -196,6 +196,15 @@ class BSEQ_Import(bpy.types.Panel):
         split = layout.split()
         col1 = split.column()
         col2 = split.column()
+
+        # check if edit_obj exist
+        # if not exist any more, then delete the object manually
+        # see here https://blender.stackexchange.com/a/164835 for more details
+        # I personally think this implementation is not a good design,
+        # but can't think of any better ways now
+        if importer_prop.edit_obj and context.scene.objects.get(importer_prop.edit_obj.name) == None:
+            bpy.data.objects.remove(importer_prop.edit_obj)
+
         col1.prop_search(importer_prop, 'edit_obj', bpy.data, 'objects', text="")
         col2.operator("sequence.edit")
 
