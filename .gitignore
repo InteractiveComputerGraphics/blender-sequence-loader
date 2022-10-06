@@ -9,3 +9,5 @@ rich
 meshio
 future
 fileseq
+
+docs/_build/*
