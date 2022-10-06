@@ -14,6 +14,8 @@ Here is a gif to show the basic usage of this addon. In this gif, it shows how t
 
 This addon will change the value of `Preferences`->`Save & Load` ->`Default To` ->`Relative Paths` to `false`. Default value is `true`. For information can be found [here](https://docs.blender.org/manual/en/latest/editors/preferences/save_load.html#blend-files).
 
+This addon will modify the `sys.path` variable of Blender python environment. It will add the path of this addon into `sys.path`.
+
 
 ## Dependencies
 
