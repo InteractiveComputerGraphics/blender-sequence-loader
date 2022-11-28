@@ -11,8 +11,9 @@ from .globals import *
 
 @persistent
 def BSEQ_initialize(scene):
-    if update_obj not in bpy.app.handlers.frame_change_post:
+    if auto_refresh not in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.append(auto_refresh)
+    if update_obj not in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.append(update_obj)
     subscribe_to_selected()
     if print_information not in bpy.app.handlers.render_init:
