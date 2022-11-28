@@ -175,6 +175,8 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
 
 def update_obj(scene, depsgraph=None):
 
+    current_frame = bpy.context.scene.frame_current
+    
     for obj in bpy.data.objects:
         if obj.BSEQ.init == False:
             continue
@@ -183,7 +185,9 @@ def update_obj(scene, depsgraph=None):
         if obj.mode != "OBJECT":
             continue
 
-        current_frame = obj.BSEQ.frame
+        # currently there is an issue with the driver system
+        # see https://developer.blender.org/T102807
+        # current_frame = obj.BSEQ.frame
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
