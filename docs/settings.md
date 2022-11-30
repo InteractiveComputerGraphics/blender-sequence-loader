@@ -27,8 +27,6 @@ Notes:
 2. After applying `Point Cloud` or `Instances` geometry nodes, you need to assign the material inside the geometry nodes. So to save your work, you can simply assign the material here, then apply the `Point Cloud` or `Instances` geometry nodes.
 3. To access the attributes for shading, use the [`Attribute`](https://docs.blender.org/manual/en/latest/render/shader_nodes/input/attribute.html) node in the [Shader Editor](https://docs.blender.org/manual/en/latest/editors/shader_editor.html) and simply specify the attribute string. The imported attributes can be seen in the [spreadsheet](https://docs.blender.org/manual/en/latest/editors/spreadsheet.html) browser of the Geometry Nodes tab and are also listed in the [addon UI](#attributes).
 
-![material](../images/7.png)
-
 
 ## Attributes
 
