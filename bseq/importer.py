@@ -183,7 +183,11 @@ def update_obj(scene, depsgraph=None):
         if obj.mode != "OBJECT":
             continue
 
-        current_frame = obj.BSEQ.frame
+        if depsgraph is not None:
+            current_frame = obj.evaluated_get(depsgraph).BSEQ.frame
+        else:
+            show_message_box("Warning: Might not be able load the correct frame because the dependency graph is not available.", "BSEQ Warning")
+            current_frame = obj.BSEQ.frame
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
