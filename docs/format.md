@@ -43,7 +43,7 @@ The additionally supported file formats are
 
 ## Add support for customized file formats
 
-You can add support for your customized file formats. For example, if you want to support `.example` file formats.
+You can add support for your own customized file formats. For example, if you want to support `.example` file formats.
 
 To do that,
 1. Create a `example.py` file in the folder additional_file_formats
