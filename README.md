@@ -87,21 +87,21 @@ DISCLAIMER: Some of the screenshots may not be up to date with the most recent v
 
 After installing addon, you can find it in the toolbar, which is accessible here or toggled by pressing the `n` key.
 
-![start](images/0.png)
+![drag](images/drag.png)
 
 Then you can find it here.
 
-![homepage](images/1.png)
+![homepage](images/location.png)
 
 ### 2. Load the animation sequence you want
 
 You can select the directory in which your data is located through the GUI by clicking the rightmost icon. It will open the default blender file explorer. Then you can go to the directory you want, for example, like image showed below. **You only need navigate to the directory and click "Accept". Files are shown but not selectable in this dialogue.**
 
-![selecticon](images/2.png)
+![directory](images/directory.png)
 
 Then the addon will automatically try to detect the sequences in this directory, so that you simply select the sequence you want. If the desired sequence is not shown, you can switch to enter a manual pattern, where a single `@` character is used to denote a running frame index.
 
-![after_selecting](images/3.png)
+![sequence](images/sequence.png)
 
 #### 2.1 Absolute vs. Relative Paths
 
@@ -111,19 +111,19 @@ When toggled on, the blender file must be saved before loading the sequence. The
 
 If toggled off (default), it will use absolute path to load the sequence. For this, the `.blend` file does not have to be saved in advance.
 
-![relative_path](images/4.png)
+![relative_path](images/path.png)
 
 #### 2.2 Sequence List View
 
 After the sequence being imported, it will be available in the `Imported Sequences` panel, with more settings being available in `Sequence Settings` panel once a sequence has been selected.
 
-![settings](images/5.png)
+![settings](images/list.png)
 
 By default, all supported file formats are simply imported as geometry (a collection of vertices, lines, triangles and quads). As such, you should be able to directly play/render the animation if it contains geometry.
 
 Note: When rendering the animation, please turn on the `Lock Interface`. This will prevent artifacts from occurring, especially if the user continues to operate the Blender interface during the render process.
 
-![lock interface](images/6.png)
+![lock interface](images/lock.png)
 
 ##### 2.2.1 Enable/ Disable
 
@@ -152,7 +152,7 @@ Notes:
 2. After applying `Point Cloud` or `Instances` geometry nodes, you need to assign the material inside the geometry nodes. So to save your work, you can simply assign the material here, then apply the `Point Cloud` or `Instances` geometry nodes.
 3. To access the attributes for shading, use the `Attribute` node in the Shader Editor and simply specify the attribute string. The imported attributes can be seen in the spreadsheet browser of the Geometry Nodes tab and are also listed in the addon UI.
 
-![material](images/7.png)
+![material](images/geometry_nodes.png)
 
 #### 2.3.2 Path Information
 
