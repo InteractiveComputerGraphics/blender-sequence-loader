@@ -1,5 +1,5 @@
 from bseq.utils import refresh_obj
-from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins, BSEQ_OT_set_as_split_norm, BSEQ_OT_remove_split_norm, BSEQ_OT_disable_selected, BSEQ_OT_enable_selected, BSEQ_OT_refresh_seq
+from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins, BSEQ_OT_set_as_split_norm, BSEQ_OT_remove_split_norm, BSEQ_OT_disable_selected, BSEQ_OT_enable_selected, BSEQ_OT_refresh_seq, BSEQ_OT_disable_all, BSEQ_OT_enable_all
 from .properties import BSEQ_scene_property, BSEQ_obj_property, BSEQ_mesh_property
 from .panels import BSEQ_UL_Obj_List, BSEQ_List_Panel, BSEQ_Settings, BSEQ_Import, BSEQ_Templates, BSEQ_UL_Att_List, draw_template
 from .messenger import subscribe_to_selected, unsubscribe_to_selected
@@ -43,4 +43,6 @@ __all__ = [
     "BSEQ_OT_disable_selected",
     "BSEQ_OT_enable_selected",
     "BSEQ_OT_refresh_seq",
+    "BSEQ_OT_disable_all",
+    "BSEQ_OT_enable_all",
 ]

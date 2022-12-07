@@ -41,7 +41,7 @@ class BSEQ_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        create_obj(fs, importer_prop.relative)
+        create_obj(fs, importer_prop.relative, importer_prop.root_path)
         return {"FINISHED"}
 
 
@@ -270,6 +270,30 @@ class BSEQ_OT_refresh_seq(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
-        refresh_obj(obj)
+        refresh_obj(obj, scene)
 
+        return {"FINISHED"}
+
+class BSEQ_OT_disable_all(bpy.types.Operator):
+    '''This operator disable all selected sequence'''
+    bl_label = "Disable All Sequences"
+    bl_idname = "bseq.disableall"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        for obj in bpy.context.scene.collection.all_objects:
+            if obj.BSEQ.init and obj.BSEQ.enabled:
+                obj.BSEQ.enabled = False
+        return {"FINISHED"}
+
+class BSEQ_OT_enable_all(bpy.types.Operator):
+    '''This operator enable all selected sequence'''
+    bl_label = "Enable All Sequences"
+    bl_idname = "bseq.enableall"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        for obj in bpy.context.scene.collection.all_objects:
+            if obj.BSEQ.init and not obj.BSEQ.enabled:
+                obj.BSEQ.enabled = True
         return {"FINISHED"}

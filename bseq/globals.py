@@ -38,4 +38,4 @@ def auto_refresh(scene, depsgraph=None):
             continue
         if obj.mode != "OBJECT":
             continue
-        refresh_obj(obj)
+        refresh_obj(obj, scene)

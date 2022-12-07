@@ -137,7 +137,7 @@ def update_mesh(meshio_mesh, mesh):
             mesh.normals_split_custom_set_from_vertices(v)
 
 
-def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):
+def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -156,9 +156,9 @@ def create_obj(fileseq, use_relaitve, transform_matrix=Matrix([[1, 0, 0, 0], [0,
     name = fileseq.basename() + "@" + fileseq.extension()
     mesh = bpy.data.meshes.new(name)
     object = bpy.data.objects.new(name, mesh)
-    object.BSEQ.use_relative = use_relaitve
-    if use_relaitve:
-        object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
+    object.BSEQ.use_relative = use_relative
+    if use_relative:
+        object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
     else:
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
@@ -191,7 +191,7 @@ def update_obj(scene, depsgraph=None):
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
-            pattern = bpy.path.abspath(pattern)
+            pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
