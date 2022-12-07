@@ -26,13 +26,13 @@ def stop_animation():
 
 
 
-def refresh_obj(obj):
+def refresh_obj(obj, scene):
     fs = obj.BSEQ.pattern
     if obj.BSEQ.use_relative:
-        fs = bpy.path.abspath(fs)
+        fs = bpy.path.abspath(fs, start=scene.BSEQ.root_path)
     fs = fileseq.findSequenceOnDisk(fs)
     fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
     fs = str(fs)
     if obj.BSEQ.use_relative:
-        fs = bpy.path.relpath(fs)
+        fs = bpy.path.relpath(fs, start=scene.BSEQ.root_path)
     obj.BSEQ.pattern = fs

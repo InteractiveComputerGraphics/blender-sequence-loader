@@ -74,6 +74,10 @@ class BSEQ_List_Panel(bpy.types.Panel):
         row.operator("bseq.enableselected", text="Enable Selected")
         row.operator("bseq.disableselected", text="Disable Selected")
         row.operator("bseq.refresh", text="Refresh")
+        row = layout.row()
+        row.operator("bseq.enableall", text="Enable All")
+        row.operator("bseq.disableall", text="Disable All")
+
 
 
 class BSEQ_Settings(bpy.types.Panel):
@@ -191,6 +195,10 @@ class BSEQ_Import(bpy.types.Panel):
 
         col1.label(text="Use Relative Path")
         col2.prop(importer_prop, "relative", text="")
+
+        if importer_prop.relative is True:
+            col1.label(text="Root Directory")
+            col2.prop(importer_prop, "root_path", text="")
 
         layout.operator("sequence.load")
         split = layout.split()

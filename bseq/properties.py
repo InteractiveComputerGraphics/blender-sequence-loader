@@ -8,6 +8,10 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                    description="You need to go to the folder with the sequence, then click \"Accept\". ",
                                    update=update_path)
     relative: bpy.props.BoolProperty(name='Use relative path', description="whether or not to use reletive path", default=False)
+    root_path: bpy.props.StringProperty(name="Root Directory",
+                                        subtype="DIR_PATH",
+                                        description="Select a root folder for all relative paths. When not set the current filename is used.",
+                                        update=update_path)
     fileseq: bpy.props.EnumProperty(
         name="File Sequences",
         description="Please choose the file sequences you want",
