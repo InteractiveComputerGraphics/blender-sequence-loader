@@ -239,3 +239,10 @@ def update_obj(scene, depsgraph=None):
             show_message_box('function preprocess does not return meshio object', "ERROR")
             continue
         update_mesh(meshio_mesh, obj.data)
+
+        # force to evaluate the keyframe animation system
+        obj.location = obj.evaluated_get(depsgraph).location
+        obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
+        obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
+        obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
+        obj.scale = obj.evaluated_get(depsgraph).scale
