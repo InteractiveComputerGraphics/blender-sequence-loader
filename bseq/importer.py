@@ -242,7 +242,12 @@ def update_obj(scene, depsgraph=None):
 
         # force to evaluate the keyframe animation system
         obj.location = obj.evaluated_get(depsgraph).location
-        obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
-        obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
-        obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
+        match obj.rotation_mode:
+            case "QUATERNION":
+                obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
+            case "AXIS_ANGLE":
+                obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
+            case _:
+                obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
+        
         obj.scale = obj.evaluated_get(depsgraph).scale
