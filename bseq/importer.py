@@ -51,6 +51,13 @@ def extract_faces(cell: meshio.CellBlock):
     show_message_box(cell.type + " is unsupported mesh format yet")
     return np.array([])
 
+def apply_transformation(meshio_mesh, obj):
+    print("Apply Transformations!")
+    if not meshio_mesh.field_data["transformation_matrix"] is None:
+        print("Tried to apply 4x4 transformation matrix!")
+        # apply transformation
+        obj.matrix_world = meshio_mesh.field_data["transformation_matrix"]
+
 
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
@@ -80,6 +87,7 @@ def update_mesh(meshio_mesh, mesh):
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
+
 
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
@@ -239,3 +247,4 @@ def update_obj(scene, depsgraph=None):
             show_message_box('function preprocess does not return meshio object', "ERROR")
             continue
         update_mesh(meshio_mesh, obj.data)
+        apply_transformation(meshio_mesh, obj)
