@@ -251,3 +251,15 @@ def update_obj(scene, depsgraph=None):
             continue
         update_mesh(meshio_mesh, obj.data)
         apply_transformation(meshio_mesh, obj)
+        
+        # force to evaluate the keyframe animation system
+        obj.location = obj.evaluated_get(depsgraph).location
+        match obj.rotation_mode:
+            case "QUATERNION":
+                obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
+            case "AXIS_ANGLE":
+                obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
+            case _:
+                obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
+
+        obj.scale = obj.evaluated_get(depsgraph).scale
