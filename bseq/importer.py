@@ -67,6 +67,9 @@ def update_mesh(meshio_mesh, mesh):
     n_loop = 0
     n_verts = len(mesh_vertices)
 
+    if n_verts == 0:
+        return
+
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
     loops_vert_idx = np.array([], dtype=np.uint64)
