@@ -44,6 +44,7 @@ classes = [
     BSEQ_OT_refresh_seq,
     BSEQ_OT_disable_all,
     BSEQ_OT_enable_all,
+    WM_OT_batchWavefront
 ]
 
 

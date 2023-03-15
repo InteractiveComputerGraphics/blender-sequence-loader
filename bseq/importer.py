@@ -1,4 +1,5 @@
 import bpy
+import mathutils
 import meshio
 import traceback
 import fileseq
@@ -51,12 +52,37 @@ def extract_faces(cell: meshio.CellBlock):
     show_message_box(cell.type + " is unsupported mesh format yet")
     return np.array([])
 
-def apply_transformation(meshio_mesh, obj):
-    print("Apply Transformations!")
+def apply_transformation(meshio_mesh, obj, depsgraph):
+    # force to evaluate the keyframe animation system
+    eval_location = obj.evaluated_get(depsgraph).location
+    eval_scale = obj.evaluated_get(depsgraph).scale
+
+    match obj.rotation_mode:
+        case "QUATERNION":
+            eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
+        case "AXIS_ANGLE":
+            eval_rotation = obj.evaluated_get(depsgraph).rotation_axis_angle
+        case _:
+            eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
+
+
+    # get evaluated transformation matrix
+    eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
+    print("Keyframe Transformations: ", eval_transform_matrix)
+
+    #combined_matrix = mathutils.Matrix.Identity(4)
+
+    rigid_body_transformation = mathutils.Matrix.Identity(4)
     if not meshio_mesh.field_data["transformation_matrix"] is None:
-        print("Tried to apply 4x4 transformation matrix!")
-        # apply transformation
-        obj.matrix_world = meshio_mesh.field_data["transformation_matrix"]
+        # first apply rigid-body transformations
+        rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
+        print("Rigid Body Transformation: ", rigid_body_transformation)
+        #combined_matrix *= rigid_body_transformation
+
+    #combined_matrix = eval_transform_matrix
+    #print("Combined_matrix: ", combined_matrix)
+
+    obj.matrix_world = rigid_body_transformation
 
 
 def update_mesh(meshio_mesh, mesh):
@@ -250,17 +276,6 @@ def update_obj(scene, depsgraph=None):
             show_message_box('function preprocess does not return meshio object', "ERROR")
             continue
         update_mesh(meshio_mesh, obj.data)
-        apply_transformation(meshio_mesh, obj)
 
-        # force to evaluate the keyframe animation system
-        obj.location = obj.evaluated_get(depsgraph).location
-        match obj.rotation_mode:
-            case "QUATERNION":
-                obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
-            case "AXIS_ANGLE":
-                obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
-            case _:
-                obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
-
-        obj.scale = obj.evaluated_get(depsgraph).scale
+        apply_transformation(meshio_mesh, obj, depsgraph)
         
