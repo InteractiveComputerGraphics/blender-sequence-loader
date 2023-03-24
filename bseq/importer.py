@@ -158,7 +158,10 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object = bpy.data.objects.new(name, mesh)
     object.BSEQ.use_relative = use_relative
     if use_relative:
-        object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
+        if root_path != "":
+            object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
+        else:
+            object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
     else:
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
@@ -191,7 +194,11 @@ def update_obj(scene, depsgraph=None):
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
-            pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
+            if scene.BSEQ.root_path != "":
+                pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
+            else:
+                pattern = bpy.path.abspath(pattern)
+
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
