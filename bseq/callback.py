@@ -3,18 +3,13 @@ import fileseq
 
 #  Code here are mostly about the callback/update/items functions used in properties.py
 
+file_sequences = []
 
 def update_path(self, context):
     # When the path has been changed, reset the selected sequence to None
     context.scene.BSEQ['fileseq'] = 1
     context.scene.BSEQ.use_pattern = False
     context.scene.BSEQ.pattern = ""
-
-
-def item_fileseq(self, context):
-    '''
-    Detects all the file sequences in the directory
-    '''
 
     p = context.scene.BSEQ.path
     try:
@@ -24,15 +19,22 @@ def item_fileseq(self, context):
 
     if not f:
         return [("None", "No sequence detected", "", 1)]
-    file_seq = []
+
+    file_sequences.clear()
     if len(f) >= 20:
-        file_seq.append(("None", "Too much sequence detected, could be false detection, please use pattern below", "", 1))
+        file_sequences.append(("None", "Too much sequence detected, could be false detection, please use pattern below", "", 1))
     else:
         count = 1
         for seq in f:
-            file_seq.append((str(seq), seq.basename() + "@" + seq.extension(), "", count))
+            file_sequences.append((str(seq), seq.basename() + "@" + seq.extension(), "", count))
             count += 1
-    return file_seq
+
+
+def item_fileseq(self, context):
+    '''
+    Detects all the file sequences in the directory
+    '''
+    return file_sequences
 
 
 def update_selected_obj_num(self, context):
