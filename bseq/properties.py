@@ -53,11 +53,26 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                          description="whether or not to auto refresh all the sequence every frame",
                                          default=False)
     
-    use_custom_transform: bpy.props.BoolProperty(name='Use custom transformation matrix', description="Whether or not to use a custom transformation matrix", default=False)
+    use_custom_transform: bpy.props.BoolProperty(name='Use custom transformation matrix', 
+                                                 description="Whether or not to use a custom transformation matrix", 
+                                                 default=False)
 
-    custom_location: bpy.props.FloatVectorProperty(name='Custom Location', description='Set custom location vector', size=3, subtype="TRANSLATION")
-    custom_rotation: bpy.props.FloatVectorProperty(name='Custom Rotation', description='Set custom rotation vector', size=4, subtype="QUATERNION", default=[1,0,0,0])
-    custom_scale: bpy.props.FloatVectorProperty(name='Custom Scale', description='Set custom scaling vector', size=3, subtype="COORDINATES", default=[1,1,1])
+    custom_location: bpy.props.FloatVectorProperty(name='Custom Location', 
+                                                   description='Set custom location vector', 
+                                                   size=3, 
+                                                   subtype="TRANSLATION")
+    
+    custom_rotation: bpy.props.FloatVectorProperty(name='Custom Rotation', 
+                                                   description='Set custom rotation vector', 
+                                                   size=4, 
+                                                   subtype="XYZ", 
+                                                   default=[1,0,0,0])
+    
+    custom_scale: bpy.props.FloatVectorProperty(name='Custom Scale', 
+                                                description='Set custom scaling vector', 
+                                                size=3, 
+                                                subtype="COORDINATES", 
+                                                default=[1,1,1])
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
@@ -68,7 +83,8 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
-
+    initial_transform_matrix: bpy.props.FloatVectorProperty(name='Custom Transformation Matrix', description='Set custom transformation', size=4, subtype="MATRIX")
+    #animated_transform_matrix:
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):

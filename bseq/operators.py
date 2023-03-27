@@ -304,10 +304,11 @@ class BSEQ_OT_enable_all(bpy.types.Operator):
         return {"FINISHED"}
 
 from pathlib import Path
+import meshio
 from bpy_extras.io_utils import ImportHelper
 
-class WM_OT_batchWavefront(bpy.types.Operator, ImportHelper):
-    """Batch Import Wavefront"""
+class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
+    """Batch Import Sequences"""
     bl_idname = "wm.seq_import_batch"
     bl_label = "Import multiple sequences"
     bl_options = {'PRESET', 'UNDO'}
@@ -417,3 +418,103 @@ class WM_OT_batchWavefront(bpy.types.Operator, ImportHelper):
             # load that specific file sequence (only if it is not already in the scene)
             #bpy.ops.sequence.load()
         return {'FINISHED'}
+
+class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
+    """Batch Import Meshio Objects"""
+    bl_idname = "wm.meshio_import_batch"
+    bl_label = "Import multiple Meshio objects"
+    bl_options = {'PRESET', 'UNDO'}
+
+    files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+
+    global_scale_setting: bpy.props.FloatProperty(
+            name="Scale",
+            description="Value by which to enlarge or shrink" \
+                    "the objects with respect to the world origin",
+            min=0.0001, max=10000.0,
+            soft_min=0.01, soft_max=1000.0,
+            default=1.0)
+
+    clamp_size_setting: bpy.props.FloatProperty(
+            name="Clamp Bounding Box",
+            description="Resize the objects to keep bounding box" \
+                    "under this value. Value 0 diables clamping",
+            min=0.0, max=1000.0,
+            soft_min=0.0, soft_max=1000.0,
+            default=0.0)
+    
+    axis_forward_setting: bpy.props.EnumProperty(
+            name="Forward Axis",
+            items=(('X', "X", ""),
+                   ('Y', "Y", ""),
+                   ('Z', "Z", ""),
+                   ('NEGATIVE_X', "-X", ""),
+                   ('NEGATIVE_Y', "-Y", ""),
+                   ('NEGATIVE_Z', "-Z", ""),
+                   ),
+            default='NEGATIVE_Z')
+            
+    axis_up_setting: bpy.props.EnumProperty(
+            name="Up Axis",
+            items=(('X', "X", ""),
+                   ('Y', "Y", ""),
+                   ('Z', "Z", ""),
+                   ('NEGATIVE_X', "-X", ""),
+                   ('NEGATIVE_Y', "-Y", ""),
+                   ('NEGATIVE_Z', "-Z", ""),
+                   ),
+            default='Y')
+            
+    validate_setting: bpy.props.BoolProperty(
+            name="Validate Meshes",
+            description="Check imported mesh objects for invalid data")
+    
+    vgroup_setting: bpy.props.BoolProperty(
+            name="Vertex Groups",
+            description="Import OBJ groups as vertex groups")
+            
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+        
+        box = layout.box()
+        box.label(text="Transform", icon='OBJECT_DATA')
+        col = box.column()
+        col.prop(self, "global_scale_setting")
+        col.prop(self, "clamp_size_setting")
+        col.separator()
+        col.row().prop(self, "axis_forward_setting", expand=True)
+        col.separator(factor=0.5)
+        col.row().prop(self, "axis_up_setting", expand=True)
+        col.separator()
+        
+        box = layout.box()
+        box.label(text="Options", icon='EXPORT')
+        col = box.column()
+        col.prop(self, "vgroup_setting")
+        col.prop(self, "validate_setting")
+
+    def execute(self, context):
+        scene = context.scene
+        importer_prop = scene.BSEQ
+
+        folder = Path(self.filepath)
+
+        for selection in self.files:
+            fp = Path(folder.parent, selection.name)
+            file = fileseq.FileSequence(str(fp))
+
+            transform_matrix = Matrix.Identity(4)
+            if importer_prop.use_custom_transform:
+                transform_matrix = Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
+
+            create_obj(file, False, importer_prop.root_path, transform_matrix=transform_matrix)
+
+        return {'FINISHED'}
+
+def menu_func_import(self, context):
+    self.layout.operator(
+            WM_OT_MeshioObject.bl_idname, 
+            text="Batch Meshio Object")

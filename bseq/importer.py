@@ -73,7 +73,7 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
     #combined_matrix = mathutils.Matrix.Identity(4)
 
     rigid_body_transformation = mathutils.Matrix.Identity(4)
-    if not meshio_mesh.field_data["transformation_matrix"] is None:
+    if meshio_mesh.field_data.get("transformation_matrix") is not None:
         # first apply rigid-body transformations
         rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
         print("Rigid Body Transformation: ", rigid_body_transformation)
@@ -82,7 +82,7 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
     #combined_matrix = eval_transform_matrix
     #print("Combined_matrix: ", combined_matrix)
 
-    obj.matrix_world = rigid_body_transformation
+    obj.matrix_world = rigid_body_transformation @ global_transform_matrix
 
 
 def update_mesh(meshio_mesh, mesh):
@@ -195,12 +195,15 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object = bpy.data.objects.new(name, mesh)
     object.BSEQ.use_relative = use_relative
     if use_relative:
-        object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
+        if root_path != "":
+            object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
+        else:
+            object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
     else:
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
-    object.matrix_world = transform_matrix
+    object.initial_transform_matrix = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
     if enabled:
@@ -228,7 +231,10 @@ def update_obj(scene, depsgraph=None):
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
         if obj.BSEQ.use_relative:
-            pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
+            if scene.BSEQ.root_path != "":
+                pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
+            else:
+                pattern = bpy.path.abspath(pattern)
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)

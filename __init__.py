@@ -22,6 +22,8 @@ if bpy.context.preferences.filepaths.use_relative_paths == True:
 
 from bseq import *
 
+from bseq.operators import menu_func_import
+
 classes = [
     BSEQ_obj_property,
     BSEQ_scene_property,
@@ -44,7 +46,8 @@ classes = [
     BSEQ_OT_refresh_seq,
     BSEQ_OT_disable_all,
     BSEQ_OT_enable_all,
-    WM_OT_batchWavefront
+    WM_OT_batchSequences,
+    WM_OT_MeshioObject
 ]
 
 
@@ -57,6 +60,7 @@ def register():
     bpy.types.Object.BSEQ = bpy.props.PointerProperty(type=BSEQ_obj_property)
     bpy.types.Mesh.BSEQ = bpy.props.PointerProperty(type=BSEQ_mesh_property)
 
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
     # manually call this function once
     # so when addon being installed, it can run correctly
@@ -70,6 +74,7 @@ def unregister():
     del bpy.types.Scene.BSEQ
     del bpy.types.Object.BSEQ
     bpy.app.handlers.load_post.remove(BSEQ_initialize)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     unsubscribe_to_selected()
 
 
