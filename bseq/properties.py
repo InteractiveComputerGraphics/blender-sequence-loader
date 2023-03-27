@@ -1,6 +1,6 @@
 import bpy
 from .callback import *
-
+from mathutils import Matrix
 
 class BSEQ_scene_property(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(name="Directory",
@@ -64,9 +64,9 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
     
     custom_rotation: bpy.props.FloatVectorProperty(name='Custom Rotation', 
                                                    description='Set custom rotation vector', 
-                                                   size=4, 
-                                                   subtype="XYZ", 
-                                                   default=[1,0,0,0])
+                                                   size=3, 
+                                                   subtype="EULER", 
+                                                   default=[0,0,0])
     
     custom_scale: bpy.props.FloatVectorProperty(name='Custom Scale', 
                                                 description='Set custom scaling vector', 
@@ -83,8 +83,10 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
-    initial_transform_matrix: bpy.props.FloatVectorProperty(name='Custom Transformation Matrix', description='Set custom transformation', size=4, subtype="MATRIX")
-    #animated_transform_matrix:
+    initial_transform_matrix: bpy.props.FloatVectorProperty(name='Custom Transformation Matrix',
+                                                            description='Set custom transformation',
+                                                            size=16,
+                                                            subtype="MATRIX")
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):

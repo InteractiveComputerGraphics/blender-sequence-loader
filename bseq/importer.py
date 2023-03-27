@@ -52,37 +52,39 @@ def extract_faces(cell: meshio.CellBlock):
     show_message_box(cell.type + " is unsupported mesh format yet")
     return np.array([])
 
+def has_keyframe(obj):
+    animdata = obj.animation_data
+    if animdata is not None and animdata.action is not None:
+        for fcurve in animdata.action.fcurves:
+            if fcurve.data_path == 'location' or fcurve.data_path == 'scale' or fcurve.data_path == 'rotation':
+                return len(fcurve.keyframe_points) > 0
+    return False
+
 def apply_transformation(meshio_mesh, obj, depsgraph):
     # force to evaluate the keyframe animation system
-    eval_location = obj.evaluated_get(depsgraph).location
-    eval_scale = obj.evaluated_get(depsgraph).scale
+    eval_transform_matrix = mathutils.Matrix.Identity(4)
+    if has_keyframe(obj):
+        eval_location = obj.evaluated_get(depsgraph).location
+        eval_scale = obj.evaluated_get(depsgraph).scale
 
-    match obj.rotation_mode:
-        case "QUATERNION":
-            eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
-        case "AXIS_ANGLE":
-            eval_rotation = obj.evaluated_get(depsgraph).rotation_axis_angle
-        case _:
-            eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
+        match obj.rotation_mode:
+            case "QUATERNION":
+                eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
+            case "AXIS_ANGLE":
+                eval_rotation = obj.evaluated_get(depsgraph).rotation_axis_angle
+            case _:
+                eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
 
-
-    # get evaluated transformation matrix
-    eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
-    print("Keyframe Transformations: ", eval_transform_matrix)
-
-    #combined_matrix = mathutils.Matrix.Identity(4)
+        # get evaluated transformation matrix
+        eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
+    #print("Keyframe Transformations: ", eval_transform_matrix)
+    print(has_keyframe(obj))
 
     rigid_body_transformation = mathutils.Matrix.Identity(4)
     if meshio_mesh.field_data.get("transformation_matrix") is not None:
-        # first apply rigid-body transformations
         rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
-        print("Rigid Body Transformation: ", rigid_body_transformation)
-        #combined_matrix *= rigid_body_transformation
 
-    #combined_matrix = eval_transform_matrix
-    #print("Combined_matrix: ", combined_matrix)
-
-    obj.matrix_world = rigid_body_transformation @ global_transform_matrix
+    obj.matrix_world = rigid_body_transformation @ obj.BSEQ.initial_transform_matrix @ eval_transform_matrix
 
 
 def update_mesh(meshio_mesh, mesh):
@@ -203,7 +205,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
-    object.initial_transform_matrix = transform_matrix
+    object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
     if enabled:
