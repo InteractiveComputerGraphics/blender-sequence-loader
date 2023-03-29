@@ -10,6 +10,4 @@ meshio
 future
 fileseq
 
-blender_install.py
-
 docs/_build/*
