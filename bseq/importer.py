@@ -3,6 +3,7 @@ import mathutils
 import meshio
 import traceback
 import fileseq
+import os
 from .utils import show_message_box
 import numpy as np
 from mathutils import Matrix
@@ -173,6 +174,25 @@ def update_mesh(meshio_mesh, mesh):
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
+
+# function to create a single meshio object
+def create_meshio_obj(filepath):
+    meshio_mesh = None
+    try:
+        meshio_mesh = meshio.read(filepath)
+    except Exception as e:
+        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                         "Meshio Loading Error" + str(e),
+                         icon="ERROR")
+        
+    #  create the object
+    name = os.path.basename(filepath) 
+    mesh = bpy.data.meshes.new(name)
+    object = bpy.data.objects.new(name, mesh)
+    update_mesh(meshio_mesh, object.data)
+    bpy.context.collection.objects.link(object)
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.context.view_layer.objects.active = object
 
 
 def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):

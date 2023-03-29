@@ -191,7 +191,11 @@ class BSEQ_Import(bpy.types.Panel):
         if importer_prop.use_pattern:
             col2.prop(importer_prop, "pattern", text="")
         else:
-            col2.prop(importer_prop, "fileseq", text="")
+            split2 = col2.split(factor=0.75)
+            col3 = split2.column()
+            col4 = split2.column()
+            col3.prop(importer_prop, "fileseq", text="")
+            col4.operator("bseq.refreshseqs", icon="FILE_REFRESH")
 
         col1.label(text="Use Relative Path")
         col2.prop(importer_prop, "relative", text="")
