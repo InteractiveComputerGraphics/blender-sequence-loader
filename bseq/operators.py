@@ -42,15 +42,11 @@ class BSEQ_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-<<<<<<< HEAD
         transform_matrix = Matrix.Identity(4)
         if importer_prop.use_custom_transform:
             transform_matrix = Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
 
         create_obj(fs, importer_prop.relative, importer_prop.root_path, transform_matrix=transform_matrix)
-=======
-        create_obj(fs, importer_prop.relative, importer_prop.root_path)
->>>>>>> upstream/main
         return {"FINISHED"}
 
 
@@ -280,7 +276,6 @@ class BSEQ_OT_refresh_seq(bpy.types.Operator):
         scene = context.scene
         obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
         refresh_obj(obj, scene)
-<<<<<<< HEAD
 
         return {"FINISHED"}
 
@@ -313,8 +308,6 @@ class BSEQ_OT_refresh_sequences(bpy.types.Operator):
     bl_label = "" #"Refresh Found Sequences"
     bl_idname = "bseq.refreshseqs"
     bl_options = {"UNDO"}
-=======
->>>>>>> upstream/main
 
     def execute(self, context):
         scene = context.scene
@@ -322,7 +315,6 @@ class BSEQ_OT_refresh_sequences(bpy.types.Operator):
         scene.BSEQ.path = scene.BSEQ.path
         return {"FINISHED"}
 
-<<<<<<< HEAD
 from pathlib import Path
 import meshio
 from bpy_extras.io_utils import ImportHelper
@@ -380,28 +372,3 @@ def menu_func_import(self, context):
     self.layout.operator(
             WM_OT_MeshioObject.bl_idname, 
             text="Batch Meshio Object")
-=======
-class BSEQ_OT_disable_all(bpy.types.Operator):
-    '''This operator disable all selected sequence'''
-    bl_label = "Disable All Sequences"
-    bl_idname = "bseq.disableall"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        for obj in bpy.context.scene.collection.all_objects:
-            if obj.BSEQ.init and obj.BSEQ.enabled:
-                obj.BSEQ.enabled = False
-        return {"FINISHED"}
-
-class BSEQ_OT_enable_all(bpy.types.Operator):
-    '''This operator enable all selected sequence'''
-    bl_label = "Enable All Sequences"
-    bl_idname = "bseq.enableall"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        for obj in bpy.context.scene.collection.all_objects:
-            if obj.BSEQ.init and not obj.BSEQ.enabled:
-                obj.BSEQ.enabled = True
-        return {"FINISHED"}
->>>>>>> upstream/main
