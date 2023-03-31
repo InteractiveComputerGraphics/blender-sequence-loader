@@ -334,12 +334,12 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
         folder = Path(self.filepath)
         used_seqs = []
         for selection in self.files:
-            fp = Path(folder.parent, selection.name)
+            fp = str(Path(folder.parent, selection.name))
 
             seqs = fileseq.findSequencesOnDisk(str(folder.parent))
 
             for s in seqs:
-                if selection in s and s not in used_seqs:
+                if fp in list(s) and s not in used_seqs:
                     transform_matrix = Matrix.Identity(4)
                     if importer_prop.use_custom_transform:
                         transform_matrix = Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)

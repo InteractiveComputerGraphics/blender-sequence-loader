@@ -64,17 +64,18 @@ def has_keyframe(obj, attr):
 def apply_transformation(meshio_mesh, obj, depsgraph):
     # evaluate the keyframe animation system
     eval_transform_matrix = mathutils.Matrix.Identity(4)
+    
+    eval_location = obj.evaluated_get(depsgraph).location if has_keyframe(obj, "location") else None
+    eval_scale = obj.evaluated_get(depsgraph).scale if has_keyframe(obj, "scale") else None
 
-    if has_keyframe(obj, "location"):
-        eval_location = obj.evaluated_get(depsgraph).location
-    if has_keyframe(obj, "scale"):
-        eval_scale = obj.evaluated_get(depsgraph).scale
     if has_keyframe(obj, "rotation_quaternion"):
         eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
     elif has_keyframe(obj, "rotation_axis_angle"):
         eval_rotation = obj.evaluated_get(depsgraph).rotation_axis_angle
     elif has_keyframe(obj, "rotation_euler"):
         eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
+    else:
+        eval_rotation = None
 
     eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
 
@@ -85,7 +86,6 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
 
     # multiply everything together (with custom transform matrix)
     obj.matrix_world = rigid_body_transformation @ obj.BSEQ.initial_transform_matrix @ eval_transform_matrix
-
 
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
@@ -195,7 +195,7 @@ def create_meshio_obj(filepath):
     bpy.context.view_layer.objects.active = object
 
 
-def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):
+def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
