@@ -371,4 +371,4 @@ class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
 def menu_func_import(self, context):
     self.layout.operator(
             WM_OT_MeshioObject.bl_idname, 
-            text="Batch Meshio Object")
+            text="MeshIO Object")
