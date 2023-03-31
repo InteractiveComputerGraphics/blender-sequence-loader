@@ -109,7 +109,6 @@ def readBIN_to_meshio(filepath):
 
         i += 1
 
-
     mesh.field_data = field_datas[0]
 
     return mesh

@@ -63,8 +63,6 @@ def has_keyframe(obj, attr):
 
 def apply_transformation(meshio_mesh, obj, depsgraph):
     # evaluate the keyframe animation system
-    eval_transform_matrix = mathutils.Matrix.Identity(4)
-    
     eval_location = obj.evaluated_get(depsgraph).location if has_keyframe(obj, "location") else None
     eval_scale = obj.evaluated_get(depsgraph).scale if has_keyframe(obj, "scale") else None
 
@@ -94,10 +92,8 @@ def update_mesh(meshio_mesh, mesh):
     n_poly = 0
     n_loop = 0
     n_verts = len(mesh_vertices)
-
     if n_verts == 0:
         return
-
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
     loops_vert_idx = np.array([], dtype=np.uint64)

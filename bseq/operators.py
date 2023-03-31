@@ -343,11 +343,10 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
             matching_seqs = [s for s in seqs if fp in list(s) and s not in used_seqs]
             
             if matching_seqs:
-                s = matching_seqs[0]
                 transform_matrix = (Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
                                     if importer_prop.use_custom_transform else Matrix.Identity(4))
-                create_obj(s, False, importer_prop.root_path, transform_matrix=transform_matrix)
-                used_seqs.add(s)
+                create_obj(matching_seqs[0], False, importer_prop.root_path, transform_matrix=transform_matrix)
+                used_seqs.add(matching_seqs[0])
         return {'FINISHED'}
 
 class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
