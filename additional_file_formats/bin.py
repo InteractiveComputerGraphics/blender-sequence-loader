@@ -18,7 +18,6 @@ def readBIN_to_meshio(filepath):
     # currently assume that numBodies is always 1
     (numBodies,), bytes = struct.unpack('i', bytes[:4]), bytes[4:]
     numBodies *= isFirstFile
-    #print("numBodies: ", numBodies)
 
     field_datas = []
     for i in range(0, numBodies):
@@ -29,8 +28,6 @@ def readBIN_to_meshio(filepath):
         objFile, bytes = bytes[:strLength], bytes[strLength:]
         if i == 0:
             objFileString = objFile.decode('ascii')
-
-        #print("objFileString: ", objFileString)
 
         cur_field_data = {}
         cur_field_data["translation"] = None
@@ -60,8 +57,6 @@ def readBIN_to_meshio(filepath):
         dirPath = os.path.dirname(filepath)
         objPath = os.path.join(dirPath, objFileString)
 
-        #print("Tried to load object at path: ", objPath)
-
         mesh = meshio.read(objPath)
     else:
         otherFile = open(filepath, 'rb')
@@ -72,13 +67,6 @@ def readBIN_to_meshio(filepath):
 
         # since there is no object referenced, create empty mesh
         mesh = meshio.Mesh([], [])
-
-    #print("Field Data List:", field_datas)
-    #print()
-    #print("Bytes left:", len(bytes))
-    #print()
-
-    #print(mesh.points)
 
     i = 0
     while len(bytes) != 0:
@@ -107,17 +95,10 @@ def readBIN_to_meshio(filepath):
         rotationMatrix[2][0:3] = r[2], r[5], r[8]
 
         cur_field_data["rotation"] = rotationMatrix.to_quaternion()
-
-        cur_field_data["transformation_matrix"] = mathutils.Matrix.LocRotScale(cur_field_data["translation"], cur_field_data["rotation"], cur_field_data["scaling"])
-
-        #print("Translation:")
-        #print(cur_field_data["translation"])
-        #print("Rotation:")
-        #print(cur_field_data["rotation"])
-        #print("Scaling:")
-        #print(cur_field_data["scaling"])
-        #print("Transformation matrix:")
-        #print(cur_field_data["transformation_matrix"])
+        cur_field_data["transformation_matrix"] = mathutils.Matrix.LocRotScale(
+                                                    cur_field_data["translation"], 
+                                                    cur_field_data["rotation"], 
+                                                    cur_field_data["scaling"])
 
         if isFirstFile:
             field_datas[i]["translation"] = cur_field_data["translation"]
@@ -131,17 +112,7 @@ def readBIN_to_meshio(filepath):
 
     mesh.field_data = field_datas[0]
 
-    #print("Field data:")
-    #print(mesh.field_data)
-
     return mesh
-
-    #print("-----------------------")
-    #print(objPath)
-    #print("-----------------------")
-    bpy.ops.import_scene.obj(filepath=objPath)
-
-    return meshio.Mesh([], [], field_data=field_data)
 
 # no need for write function
 meshio.register_format("bin", [".bin"], readBIN_to_meshio, {".bin": None})

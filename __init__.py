@@ -21,7 +21,6 @@ if bpy.context.preferences.filepaths.use_relative_paths == True:
     bpy.context.preferences.filepaths.use_relative_paths = False
 
 from bseq import *
-
 from bseq.operators import menu_func_import
 
 classes = [

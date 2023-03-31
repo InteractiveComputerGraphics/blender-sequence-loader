@@ -119,7 +119,6 @@ def update_mesh(meshio_mesh, mesh):
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
 
-
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
@@ -224,6 +223,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
+    # Flatten custom transformation matrix for the property
     object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'

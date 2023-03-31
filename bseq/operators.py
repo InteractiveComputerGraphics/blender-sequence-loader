@@ -42,9 +42,11 @@ class BSEQ_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        transform_matrix = Matrix.Identity(4)
-        if importer_prop.use_custom_transform:
-            transform_matrix = Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
+        transform_matrix = (Matrix.LocRotScale(
+                                    importer_prop.custom_location, 
+                                    importer_prop.custom_rotation, 
+                                    importer_prop.custom_scale)
+                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
 
         create_obj(fs, importer_prop.relative, importer_prop.root_path, transform_matrix=transform_matrix)
         return {"FINISHED"}
@@ -332,24 +334,20 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
         importer_prop = scene.BSEQ
 
         folder = Path(self.filepath)
-        used_seqs = []
+        used_seqs = set()
+
         for selection in self.files:
+            # Check if there exists a matching file sequence for every selection
             fp = str(Path(folder.parent, selection.name))
-
             seqs = fileseq.findSequencesOnDisk(str(folder.parent))
-
-            for s in seqs:
-                if fp in list(s) and s not in used_seqs:
-                    transform_matrix = Matrix.Identity(4)
-                    if importer_prop.use_custom_transform:
-                        transform_matrix = Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
-
-                    create_obj(s, False, importer_prop.root_path, transform_matrix=transform_matrix)
-
-                    used_seqs.append(s)
-                    break
-            # load that specific file sequence (only if it is not already in the scene)
-            #bpy.ops.sequence.load()
+            matching_seqs = [s for s in seqs if fp in list(s) and s not in used_seqs]
+            
+            if matching_seqs:
+                s = matching_seqs[0]
+                transform_matrix = (Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
+                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
+                create_obj(s, False, importer_prop.root_path, transform_matrix=transform_matrix)
+                used_seqs.add(s)
         return {'FINISHED'}
 
 class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
