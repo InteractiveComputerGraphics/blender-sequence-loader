@@ -11,6 +11,10 @@ def update_path(self, context):
     context.scene.BSEQ.use_pattern = False
     context.scene.BSEQ.pattern = ""
 
+    '''
+    Detects all the file sequences in the directory
+    '''
+    
     p = context.scene.BSEQ.path
     try:
         f = fileseq.findSequencesOnDisk(p)
@@ -31,11 +35,7 @@ def update_path(self, context):
 
 
 def item_fileseq(self, context):
-    '''
-    Detects all the file sequences in the directory
-    '''
     return file_sequences
-
 
 
 def update_selected_obj_num(self, context):

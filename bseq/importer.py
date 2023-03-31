@@ -256,6 +256,7 @@ def update_obj(scene, depsgraph=None):
                 pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
             else:
                 pattern = bpy.path.abspath(pattern)
+
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
