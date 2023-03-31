@@ -2,7 +2,7 @@ bl_info = {
     "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Interactive Computer Graphics",
-    "version": (0, 1, 4),
+    "version": (0, 1, 5),
     "blender": (3, 4, 0),
     "warning": "",
     "support": "COMMUNITY",
