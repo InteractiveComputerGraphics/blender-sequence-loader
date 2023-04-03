@@ -1,9 +1,10 @@
 import bpy
+from mathutils import Matrix
 import fileseq
 from .messenger import *
 import traceback
 from .utils import refresh_obj, show_message_box
-from .importer import create_obj
+from .importer import create_obj, create_meshio_obj
 import numpy as np
 
 
@@ -41,7 +42,13 @@ class BSEQ_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        create_obj(fs, importer_prop.relative, importer_prop.root_path)
+        transform_matrix = (Matrix.LocRotScale(
+                                    importer_prop.custom_location, 
+                                    importer_prop.custom_rotation, 
+                                    importer_prop.custom_scale)
+                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
+
+        create_obj(fs, importer_prop.relative, importer_prop.root_path, transform_matrix=transform_matrix)
         return {"FINISHED"}
 
 
@@ -297,3 +304,68 @@ class BSEQ_OT_enable_all(bpy.types.Operator):
             if obj.BSEQ.init and not obj.BSEQ.enabled:
                 obj.BSEQ.enabled = True
         return {"FINISHED"}
+
+class BSEQ_OT_refresh_sequences(bpy.types.Operator):
+    '''This operator refreshes all found sequences'''
+    bl_label = "" #"Refresh Found Sequences"
+    bl_idname = "bseq.refreshseqs"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        # call the update function of path by setting it to its own value
+        scene.BSEQ.path = scene.BSEQ.path
+        return {"FINISHED"}
+
+from pathlib import Path
+import meshio
+from bpy_extras.io_utils import ImportHelper
+
+class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
+    """Batch Import Sequences"""
+    bl_idname = "wm.seq_import_batch"
+    bl_label = "Import multiple sequences"
+    bl_options = {'PRESET', 'UNDO'}
+
+    files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+
+    def execute(self, context):
+        scene = context.scene
+        importer_prop = scene.BSEQ
+
+        folder = Path(self.filepath)
+        used_seqs = set()
+
+        for selection in self.files:
+            # Check if there exists a matching file sequence for every selection
+            fp = str(Path(folder.parent, selection.name))
+            seqs = fileseq.findSequencesOnDisk(str(folder.parent))
+            matching_seqs = [s for s in seqs if fp in list(s) and s not in used_seqs]
+            
+            if matching_seqs:
+                transform_matrix = (Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
+                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
+                create_obj(matching_seqs[0], False, importer_prop.root_path, transform_matrix=transform_matrix)
+                used_seqs.add(matching_seqs[0])
+        return {'FINISHED'}
+
+class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
+    """Batch Import Meshio Objects"""
+    bl_idname = "wm.meshio_import_batch"
+    bl_label = "Import multiple Meshio objects"
+    bl_options = {'PRESET', 'UNDO'}
+
+    files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+            
+    def execute(self, context):
+        folder = Path(self.filepath)
+
+        for selection in self.files:
+            fp = Path(folder.parent, selection.name)
+            create_meshio_obj(str(fp))
+        return {'FINISHED'}
+
+def menu_func_import(self, context):
+    self.layout.operator(
+            WM_OT_MeshioObject.bl_idname, 
+            text="MeshIO Object")

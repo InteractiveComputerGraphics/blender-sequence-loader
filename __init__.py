@@ -2,8 +2,8 @@ bl_info = {
     "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Interactive Computer Graphics",
-    "version": (0, 1, 3),
-    "blender": (3, 1, 0),
+    "version": (0, 1, 4),
+    "blender": (3, 4, 0),
     "warning": "",
     "support": "COMMUNITY",
     "category": "Import-Export",
@@ -21,6 +21,7 @@ if bpy.context.preferences.filepaths.use_relative_paths == True:
     bpy.context.preferences.filepaths.use_relative_paths = False
 
 from bseq import *
+from bseq.operators import menu_func_import
 
 classes = [
     BSEQ_obj_property,
@@ -44,6 +45,9 @@ classes = [
     BSEQ_OT_refresh_seq,
     BSEQ_OT_disable_all,
     BSEQ_OT_enable_all,
+    BSEQ_OT_refresh_sequences,
+    WM_OT_batchSequences,
+    WM_OT_MeshioObject
 ]
 
 
@@ -56,6 +60,7 @@ def register():
     bpy.types.Object.BSEQ = bpy.props.PointerProperty(type=BSEQ_obj_property)
     bpy.types.Mesh.BSEQ = bpy.props.PointerProperty(type=BSEQ_mesh_property)
 
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
     # manually call this function once
     # so when addon being installed, it can run correctly
@@ -69,6 +74,7 @@ def unregister():
     del bpy.types.Scene.BSEQ
     del bpy.types.Object.BSEQ
     bpy.app.handlers.load_post.remove(BSEQ_initialize)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     unsubscribe_to_selected()
 
 

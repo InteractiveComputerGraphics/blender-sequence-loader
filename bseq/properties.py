@@ -1,6 +1,6 @@
 import bpy
 from .callback import *
-
+from mathutils import Matrix
 
 class BSEQ_scene_property(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(name="Directory",
@@ -22,6 +22,10 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                         default=False)
     pattern: bpy.props.StringProperty(name="Pattern",
                                       description="You can specify the pattern here, in case the sequence can't be deteced.")
+    
+    file_paths: bpy.props.StringProperty(name="File",
+                                        subtype="FILE_PATH",
+                                        description="Select a root folder for all relative paths. When not set the current filename is used.")
 
     selected_obj_deselectall_flag: bpy.props.BoolProperty(default=True,
                                                           description="the flag to determine whether call deselect all or not ")
@@ -48,7 +52,27 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
     auto_refresh: bpy.props.BoolProperty(name='auto refresh',
                                          description="whether or not to auto refresh all the sequence every frame",
                                          default=False)
+    
+    use_custom_transform: bpy.props.BoolProperty(name='Use custom transformation matrix', 
+                                                 description="Whether or not to use a custom transformation matrix", 
+                                                 default=False)
 
+    custom_location: bpy.props.FloatVectorProperty(name='Custom Location', 
+                                                   description='Set custom location vector', 
+                                                   size=3, 
+                                                   subtype="TRANSLATION")
+    
+    custom_rotation: bpy.props.FloatVectorProperty(name='Custom Rotation', 
+                                                   description='Set custom rotation vector', 
+                                                   size=3, 
+                                                   subtype="EULER", 
+                                                   default=[0,0,0])
+    
+    custom_scale: bpy.props.FloatVectorProperty(name='Custom Scale', 
+                                                description='Set custom scaling vector', 
+                                                size=3, 
+                                                subtype="COORDINATES", 
+                                                default=[1,1,1])
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
@@ -59,7 +83,10 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
-
+    initial_transform_matrix: bpy.props.FloatVectorProperty(name='Custom Transformation Matrix',
+                                                            description='Set custom transformation',
+                                                            size=16,
+                                                            subtype="MATRIX")
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):

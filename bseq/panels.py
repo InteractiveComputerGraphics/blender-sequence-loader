@@ -191,16 +191,23 @@ class BSEQ_Import(bpy.types.Panel):
         if importer_prop.use_pattern:
             col2.prop(importer_prop, "pattern", text="")
         else:
-            col2.prop(importer_prop, "fileseq", text="")
+            split2 = col2.split(factor=0.75)
+            col3 = split2.column()
+            col4 = split2.column()
+            col3.prop(importer_prop, "fileseq", text="")
+            col4.operator("bseq.refreshseqs", icon="FILE_REFRESH")
 
         col1.label(text="Use Relative Path")
         col2.prop(importer_prop, "relative", text="")
 
-        if importer_prop.relative is True:
+        if importer_prop.relative:
             col1.label(text="Root Directory")
             col2.prop(importer_prop, "root_path", text="")
 
         layout.operator("sequence.load")
+
+        layout.operator("wm.seq_import_batch")
+        
         split = layout.split()
         col1 = split.column()
         col2 = split.column()
@@ -227,7 +234,19 @@ class BSEQ_Import(bpy.types.Panel):
         col2.prop(importer_prop, "print", text="")
         col1.label(text="Auto refresh all the sequence every frame")
         col2.prop(importer_prop, "auto_refresh", text="")
+        col1.label(text="Use custom transformation matrix")
+        col2.prop(importer_prop, "use_custom_transform", text="")
 
+        if importer_prop.use_custom_transform:
+            box.label(text="Location:")
+            box.prop(importer_prop, "custom_location", text="")
+
+            box.label(text="Rotation:")
+            box.prop(importer_prop, "custom_rotation", text="")
+
+            box.label(text="Scale:")
+            box.prop(importer_prop, "custom_scale", text="")
+        
 
 class BSEQ_Templates(bpy.types.Menu):
     '''

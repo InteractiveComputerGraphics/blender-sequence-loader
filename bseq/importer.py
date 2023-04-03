@@ -1,7 +1,9 @@
 import bpy
+import mathutils
 import meshio
 import traceback
 import fileseq
+import os
 from .utils import show_message_box
 import numpy as np
 from mathutils import Matrix
@@ -51,6 +53,37 @@ def extract_faces(cell: meshio.CellBlock):
     show_message_box(cell.type + " is unsupported mesh format yet")
     return np.array([])
 
+def has_keyframe(obj, attr):
+    animdata = obj.animation_data
+    if animdata is not None and animdata.action is not None:
+        for fcurve in animdata.action.fcurves:
+            if fcurve.data_path == attr:
+                return len(fcurve.keyframe_points) > 0
+    return False
+
+def apply_transformation(meshio_mesh, obj, depsgraph):
+    # evaluate the keyframe animation system
+    eval_location = obj.evaluated_get(depsgraph).location if has_keyframe(obj, "location") else None
+    eval_scale = obj.evaluated_get(depsgraph).scale if has_keyframe(obj, "scale") else None
+
+    if has_keyframe(obj, "rotation_quaternion"):
+        eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
+    elif has_keyframe(obj, "rotation_axis_angle"):
+        eval_rotation = obj.evaluated_get(depsgraph).rotation_axis_angle
+    elif has_keyframe(obj, "rotation_euler"):
+        eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
+    else:
+        eval_rotation = None
+
+    eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
+
+    # evaluate the rigid body transformations (only relevant for .bin format)
+    rigid_body_transformation = mathutils.Matrix.Identity(4)
+    if meshio_mesh.field_data.get("transformation_matrix") is not None:
+        rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
+
+    # multiply everything together (with custom transform matrix)
+    obj.matrix_world = rigid_body_transformation @ obj.BSEQ.initial_transform_matrix @ eval_transform_matrix
 
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
@@ -59,7 +92,8 @@ def update_mesh(meshio_mesh, mesh):
     n_poly = 0
     n_loop = 0
     n_verts = len(mesh_vertices)
-
+    if n_verts == 0:
+        return
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
     loops_vert_idx = np.array([], dtype=np.uint64)
@@ -136,8 +170,27 @@ def update_mesh(meshio_mesh, mesh):
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
 
+# function to create a single meshio object
+def create_meshio_obj(filepath):
+    meshio_mesh = None
+    try:
+        meshio_mesh = meshio.read(filepath)
+    except Exception as e:
+        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                         "Meshio Loading Error" + str(e),
+                         icon="ERROR")
+        
+    #  create the object
+    name = os.path.basename(filepath) 
+    mesh = bpy.data.meshes.new(name)
+    object = bpy.data.objects.new(name, mesh)
+    update_mesh(meshio_mesh, object.data)
+    bpy.context.collection.objects.link(object)
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.context.view_layer.objects.active = object
 
-def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])):
+
+def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -166,7 +219,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
-    object.matrix_world = transform_matrix
+    # Flatten custom transformation matrix for the property
+    object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
     if enabled:
@@ -247,14 +301,5 @@ def update_obj(scene, depsgraph=None):
             continue
         update_mesh(meshio_mesh, obj.data)
 
-        # force to evaluate the keyframe animation system
-        obj.location = obj.evaluated_get(depsgraph).location
-        match obj.rotation_mode:
-            case "QUATERNION":
-                obj.rotation_quaternion = obj.evaluated_get(depsgraph).rotation_quaternion
-            case "AXIS_ANGLE":
-                obj.rotation_axis_angle = obj.evaluated_get(depsgraph).rotation_axis_angle
-            case _:
-                obj.rotation_euler = obj.evaluated_get(depsgraph).rotation_euler
+        apply_transformation(meshio_mesh, obj, depsgraph)
         
-        obj.scale = obj.evaluated_get(depsgraph).scale
