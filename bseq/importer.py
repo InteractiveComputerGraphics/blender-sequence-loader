@@ -63,8 +63,8 @@ def has_keyframe(obj, attr):
 
 def apply_transformation(meshio_mesh, obj, depsgraph):
     # evaluate the keyframe animation system
-    eval_location = obj.evaluated_get(depsgraph).location if has_keyframe(obj, "location") else None
-    eval_scale = obj.evaluated_get(depsgraph).scale if has_keyframe(obj, "scale") else None
+    eval_location = obj.evaluated_get(depsgraph).location if has_keyframe(obj, "location") else obj.location
+    eval_scale = obj.evaluated_get(depsgraph).scale if has_keyframe(obj, "scale") else obj.scale
 
     if has_keyframe(obj, "rotation_quaternion"):
         eval_rotation = obj.evaluated_get(depsgraph).rotation_quaternion
@@ -73,7 +73,7 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
     elif has_keyframe(obj, "rotation_euler"):
         eval_rotation = obj.evaluated_get(depsgraph).rotation_euler
     else:
-        eval_rotation = None
+        eval_rotation = obj.rotation_euler
 
     eval_transform_matrix = mathutils.Matrix.LocRotScale(eval_location, eval_rotation, eval_scale)
 
@@ -83,7 +83,7 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
         rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
 
     # multiply everything together (with custom transform matrix)
-    obj.matrix_world = rigid_body_transformation @ obj.BSEQ.initial_transform_matrix @ eval_transform_matrix
+    obj.matrix_world = rigid_body_transformation @ eval_transform_matrix
 
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
@@ -220,7 +220,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
     # Flatten custom transformation matrix for the property
-    object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
+    #object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
+    object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
     if enabled:
