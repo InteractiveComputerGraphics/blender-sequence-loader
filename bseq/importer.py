@@ -219,8 +219,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         object.BSEQ.pattern = str(fileseq)
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
-    # Flatten custom transformation matrix for the property
-    #object.BSEQ.initial_transform_matrix = [transform_matrix[j][i] for i in range(4) for j in range(4)]
+    object.BSEQ.start_end_frame = (fileseq.start(), fileseq.end())
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'

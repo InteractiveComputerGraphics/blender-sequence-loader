@@ -46,6 +46,7 @@ classes = [
     BSEQ_OT_disable_all,
     BSEQ_OT_enable_all,
     BSEQ_OT_refresh_sequences,
+    BSEQ_OT_set_start_end_frames,
     WM_OT_batchSequences,
     WM_OT_MeshioObject
 ]
