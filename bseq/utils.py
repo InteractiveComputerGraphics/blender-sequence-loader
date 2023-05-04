@@ -33,8 +33,6 @@ def refresh_obj(obj, scene):
             fs = bpy.path.abspath(fs, start=scene.BSEQ.root_path)
         else:
             fs = bpy.path.abspath(fs)
-
-        #fs = bpy.path.abspath(fs, start=scene.BSEQ.root_path)
     fs = fileseq.findSequenceOnDisk(fs)
     fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
     fs = str(fs)
@@ -43,5 +41,4 @@ def refresh_obj(obj, scene):
             fs = bpy.path.relpath(fs, start=scene.BSEQ.root_path)
         else:
             fs = bpy.path.relpath(fs)
-
     obj.BSEQ.pattern = fs
