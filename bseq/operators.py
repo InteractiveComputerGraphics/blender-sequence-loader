@@ -326,12 +326,8 @@ class BSEQ_OT_set_start_end_frames(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        # call the update function of path by setting it to its own value
         obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
-
         (start, end) = obj.BSEQ.start_end_frame
-        print("Start Frame: ", start)
-        print("End Frame: ", end)
         scene.frame_start = start
         scene.frame_end = end
 

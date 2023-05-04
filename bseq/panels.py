@@ -30,7 +30,7 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
             else:
                 row.prop(item.BSEQ, "enabled", text = "DISABLED", icon="PAUSE")
                 row.label(text = "Animation Stopped")
-            row.operator("bseq.set_start_end_frames", text="Set timeline to start and end frames of sequence")
+            row.operator("bseq.set_start_end_frames", text="Set timeline")
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)

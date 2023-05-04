@@ -35,6 +35,7 @@ def refresh_obj(obj, scene):
             fs = bpy.path.abspath(fs)
     fs = fileseq.findSequenceOnDisk(fs)
     fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
+    obj.BSEQ.start_end_frame = (fs.start(), fs.end())
     fs = str(fs)
     if obj.BSEQ.use_relative:
         if scene.BSEQ.root_path != "":
