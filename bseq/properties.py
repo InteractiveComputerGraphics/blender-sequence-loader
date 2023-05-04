@@ -83,10 +83,6 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
-    initial_transform_matrix: bpy.props.FloatVectorProperty(name='Custom Transformation Matrix',
-                                                            description='Set custom transformation',
-                                                            size=16,
-                                                            subtype="MATRIX")
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):
