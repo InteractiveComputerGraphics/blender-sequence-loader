@@ -327,9 +327,9 @@ class BSEQ_OT_set_start_end_frames(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
-        length = obj.BSEQ.length
+        (start, end) = obj.BSEQ.start_end_frame
         scene.frame_start = 0
-        scene.frame_end = length - 1
+        scene.frame_end = end - start
 
         return {"FINISHED"}
 

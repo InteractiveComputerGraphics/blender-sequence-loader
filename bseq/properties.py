@@ -83,7 +83,7 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     use_relative: bpy.props.BoolProperty(default=False)
     pattern: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
-    length: bpy.props.IntProperty(name="Length of Sequence", default=0)
+    start_end_frame: bpy.props.IntVectorProperty(name="Start and End Frames", size=2, default=(0, 0))
 
 # set this property for mesh, not object (maybe change later?)
 class BSEQ_mesh_property(bpy.types.PropertyGroup):
