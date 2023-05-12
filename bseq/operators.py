@@ -315,7 +315,24 @@ class BSEQ_OT_refresh_sequences(bpy.types.Operator):
         scene = context.scene
         # call the update function of path by setting it to its own value
         scene.BSEQ.path = scene.BSEQ.path
+
         return {"FINISHED"}
+    
+class BSEQ_OT_set_start_end_frames(bpy.types.Operator):
+    '''This changes the timeline start and end frames to the length of a specific sequence'''
+    bl_label = "Set timeline"
+    bl_idname = "bseq.set_start_end_frames"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        scene = context.scene
+        obj = bpy.data.objects[scene.BSEQ.selected_obj_num]
+        (start, end) = obj.BSEQ.start_end_frame
+        scene.frame_start = 0
+        scene.frame_end = end - start
+
+        return {"FINISHED"}
+
 
 from pathlib import Path
 import meshio

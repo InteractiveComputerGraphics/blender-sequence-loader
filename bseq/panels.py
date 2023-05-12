@@ -77,6 +77,7 @@ class BSEQ_List_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("bseq.enableall", text="Enable All")
         row.operator("bseq.disableall", text="Disable All")
+        row.operator("bseq.set_start_end_frames", text="Set timeline")
 
 
 
