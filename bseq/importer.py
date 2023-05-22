@@ -181,6 +181,11 @@ def create_meshio_obj(filepath):
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
         
+    if ".obj" in filepath:
+        bpy.ops.import_scene.obj(filepath=filepath)
+        obj = bpy.context.selected_objects[0]
+        obj.name = os.path.basename(filepath)
+        return
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
