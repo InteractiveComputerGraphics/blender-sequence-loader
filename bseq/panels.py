@@ -116,6 +116,8 @@ class BSEQ_Settings(bpy.types.Panel):
         col2.prop(obj.BSEQ, 'use_relative', text="")
         col1.label(text='Pattern')
         col2.prop(obj.BSEQ, 'pattern', text="")
+        col1.label(text='Last loading time (ms)')
+        col2.prop(obj.BSEQ, 'last_benchmark', text="")
 
         # geometry nodes settings
         layout.label(text="Geometry Nodes")
