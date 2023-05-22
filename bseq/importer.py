@@ -180,8 +180,8 @@ def create_meshio_obj(filepath):
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
-        
-    if ".obj" in filepath:
+    
+    if filepath.endswith(".obj"):
         bpy.ops.import_scene.obj(filepath=filepath)
         obj = bpy.context.selected_objects[0]
         obj.name = os.path.basename(filepath)
