@@ -196,6 +196,10 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
+    if fileseq.extension() == '.obj':
+        create_meshio_obj(filepath)
+        return
+
     meshio_mesh = None
     enabled = True
     try:
