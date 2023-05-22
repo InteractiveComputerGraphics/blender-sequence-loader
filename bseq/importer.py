@@ -7,6 +7,7 @@ import os
 from .utils import show_message_box
 import numpy as np
 from mathutils import Matrix
+import time
 # this import is not useless
 import additional_file_formats
 
@@ -233,6 +234,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
 def update_obj(scene, depsgraph=None):
 
     for obj in bpy.data.objects:
+        start_time = time.perf_counter()
+
         if obj.BSEQ.init == False:
             continue
         if obj.BSEQ.enabled == False:
@@ -302,4 +305,6 @@ def update_obj(scene, depsgraph=None):
         update_mesh(meshio_mesh, obj.data)
 
         apply_transformation(meshio_mesh, obj, depsgraph)
-        
+
+        end_time = time.perf_counter()
+        obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
