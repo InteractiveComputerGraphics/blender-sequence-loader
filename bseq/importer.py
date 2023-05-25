@@ -181,6 +181,7 @@ def create_meshio_obj(filepath):
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
     
+    # Do I need this for multi-loading?
     if filepath.endswith(".obj"):
         bpy.ops.import_scene.obj(filepath=filepath)
         obj = bpy.context.selected_objects[0]
@@ -201,24 +202,27 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
-    if fileseq.extension() == '.obj':
-        create_meshio_obj(filepath)
-        return
-
-    meshio_mesh = None
-    enabled = True
-    try:
-        meshio_mesh = meshio.read(filepath)
-    except Exception as e:
-        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                         "Meshio Loading Error" + str(e),
-                         icon="ERROR")
+    if filepath.endswith(".obj"):
+        bpy.ops.import_scene.obj(filepath=filepath)
+        object = bpy.context.selected_objects[-1]
+        object.name = fileseq.basename() + "@" + fileseq.extension()
         enabled = False
+    else:
+        meshio_mesh = None
+        enabled = True
+        try:
+            meshio_mesh = meshio.read(filepath)
+        except Exception as e:
+            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                            "Meshio Loading Error" + str(e),
+                            icon="ERROR")
+            enabled = False
+
+        name = fileseq.basename() + "@" + fileseq.extension()
+        mesh = bpy.data.meshes.new(name)
+        object = bpy.data.objects.new(name, mesh)
 
     #  create the object
-    name = fileseq.basename() + "@" + fileseq.extension()
-    mesh = bpy.data.meshes.new(name)
-    object = bpy.data.objects.new(name, mesh)
     object.BSEQ.use_relative = use_relative
     if use_relative:
         if root_path != "":
