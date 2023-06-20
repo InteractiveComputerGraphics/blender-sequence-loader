@@ -94,6 +94,9 @@ def update_mesh(meshio_mesh, mesh):
     n_loop = 0
     n_verts = len(mesh_vertices)
     if n_verts == 0:
+        mesh.clear_geometry()
+        mesh.update()
+        mesh.validate()
         return
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
@@ -202,11 +205,14 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
-    if filepath.endswith(".obj"):
+    #.obj sequences have to be handled differently
+    isObj = filepath.endswith(".obj")
+    if isObj:
         bpy.ops.import_scene.obj(filepath=filepath)
         object = bpy.context.selected_objects[-1]
         object.name = fileseq.basename() + "@" + fileseq.extension()
-        enabled = False
+        # object.data.name = fileseq.basename() + "@" + fileseq.extension()
+        enabled = True
     else:
         meshio_mesh = None
         enabled = True
@@ -237,6 +243,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
+    if isObj:
+        return
     if enabled:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
@@ -249,6 +257,9 @@ def update_obj(scene, depsgraph=None):
     for obj in bpy.data.objects:
         start_time = time.perf_counter()
 
+        isObj = obj.BSEQ.pattern.endswith(".obj")
+        print("isObj: ", isObj)
+        
         if obj.BSEQ.init == False:
             continue
         if obj.BSEQ.enabled == False:
@@ -305,14 +316,23 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                meshio_mesh = meshio.read(filepath)
+                if filepath.endswith(".obj"):
+                    # Reload the object
+                    obj.select_set(True)
+                    bpy.ops.object.delete()
+                    # bpy.ops.import_scene.obj(filepath=filepath)
+                    # object = bpy.context.selected_objects[-1]
+                    # object.name = fileseq.basename() + "@" + fileseq.extension()
+                    # object.data.name = fileseq.basename() + "@" + fileseq.extension()
+                else:
+                    meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),
                                  icon="ERROR")
                 continue
 
-        if not isinstance(meshio_mesh, meshio.Mesh):
+        if not isinstance(meshio_mesh, meshio.Mesh) or not isObj:
             show_message_box('function preprocess does not return meshio object', "ERROR")
             continue
         update_mesh(meshio_mesh, obj.data)
