@@ -120,6 +120,8 @@ def update_mesh(meshio_mesh, mesh):
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
 
+    start_time = time.perf_counter()
+
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
@@ -128,11 +130,19 @@ def update_mesh(meshio_mesh, mesh):
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
+
     mesh.vertices.foreach_set("co", mesh_vertices.ravel())
     mesh.loops.foreach_set("vertex_index", loops_vert_idx)
     mesh.polygons.foreach_set("loop_start", faces_loop_start)
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
+
+    # mesh.clear_geometry()
+    # mesh.from_pydata(mesh_vertices, [], data)
+
+    end_time = time.perf_counter()
+    print("foreach_set time: ", end_time - start_time)
+
 
     mesh.update()
     mesh.validate()
@@ -208,13 +218,19 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
 
     #.obj sequences have to be handled differently
     isObj = filepath.endswith(".obj")
-    if isObj:
+    if isObj and bpy.context.scene.BSEQ.use_blender_obj_import:
         print(str(filepath))
         bpy.ops.import_scene.obj(filepath=filepath)
-        object = bpy.context.selected_objects[-1]
-        object.name = fileseq.basename() + "@" + fileseq.extension()
-        # object.data.name = fileseq.basename() + "@" + fileseq.extension()
         enabled = True
+
+        tmp_obj = bpy.context.selected_objects[-1]
+
+        name = fileseq.basename() + "@" + fileseq.extension()
+        object = bpy.data.objects.new(name, tmp_obj.data)
+
+        tmp_obj.select_set(True)
+        bpy.ops.object.delete()
+
     else:
         meshio_mesh = None
         enabled = True
@@ -245,9 +261,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
-    if isObj:
-        return
-    if enabled:
+    if enabled and not isObj:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
@@ -283,21 +297,20 @@ def update_obj(scene, depsgraph=None):
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
-        if pattern.endswith(".obj"):
+        if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
             filepath = fs[current_frame % len(fs)]
 
             # Reload the object
-            tmp_transform = obj.matrix_world
-            obj.select_set(True)
-            bpy.ops.object.delete()
             bpy.ops.import_scene.obj(filepath=filepath)
-            obj = bpy.context.selected_objects[-1]
+            tmp_obj = bpy.context.selected_objects[-1]
             print(str(filepath))
             print(current_frame % len(fs))
             print(obj.name)
-            obj.name = fs.basename() + "@" + fs.extension()
-            obj.data.name = fs.basename() + "@" + fs.extension()
-            obj.matrix_world = tmp_transform
+
+            obj.data = tmp_obj.data
+            tmp_obj.select_set(True)
+            bpy.ops.object.delete()
+
             apply_transformation(meshio_mesh, obj, depsgraph)
 
             end_time = time.perf_counter()

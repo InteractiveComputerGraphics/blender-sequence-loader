@@ -73,6 +73,10 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                                 size=3, 
                                                 subtype="COORDINATES", 
                                                 default=[1,1,1])
+    
+    use_blender_obj_import: bpy.props.BoolProperty(name='Use Blender Object Import',
+                                                   description="Whether or not to use Blender's built-in object import function",
+                                                   default=True)
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)
