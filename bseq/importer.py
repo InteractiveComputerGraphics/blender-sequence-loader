@@ -80,8 +80,9 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
 
     # evaluate the rigid body transformations (only relevant for .bin format)
     rigid_body_transformation = mathutils.Matrix.Identity(4)
-    if meshio_mesh.field_data.get("transformation_matrix") is not None:
-        rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
+    if meshio_mesh is not None:
+        if meshio_mesh.field_data.get("transformation_matrix") is not None:
+            rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
 
     # multiply everything together (with custom transform matrix)
     obj.matrix_world = rigid_body_transformation @ eval_transform_matrix
@@ -256,9 +257,6 @@ def update_obj(scene, depsgraph=None):
 
     for obj in bpy.data.objects:
         start_time = time.perf_counter()
-
-        isObj = obj.BSEQ.pattern.endswith(".obj")
-        print("isObj: ", isObj)
         
         if obj.BSEQ.init == False:
             continue
@@ -284,6 +282,24 @@ def update_obj(scene, depsgraph=None):
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
+        if pattern.endswith(".obj"):
+            filepath = fs[current_frame % len(fs)]
+
+            # Reload the object
+            tmp_transform = obj.matrix_world
+            obj.select_set(True)
+            bpy.ops.object.delete()
+            bpy.ops.import_scene.obj(filepath=filepath)
+            obj = bpy.context.selected_objects[-1]
+            obj.name = fs.basename() + "@" + fs.extension()
+            obj.data.name = fs.basename() + "@" + fs.extension()
+            obj.matrix_world = tmp_transform
+            apply_transformation(meshio_mesh, obj, depsgraph)
+
+            end_time = time.perf_counter()
+            obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
+            return
+        
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
             try:
@@ -316,23 +332,14 @@ def update_obj(scene, depsgraph=None):
         else:
             filepath = fs[current_frame % len(fs)]
             try:
-                if filepath.endswith(".obj"):
-                    # Reload the object
-                    obj.select_set(True)
-                    bpy.ops.object.delete()
-                    # bpy.ops.import_scene.obj(filepath=filepath)
-                    # object = bpy.context.selected_objects[-1]
-                    # object.name = fileseq.basename() + "@" + fileseq.extension()
-                    # object.data.name = fileseq.basename() + "@" + fileseq.extension()
-                else:
-                    meshio_mesh = meshio.read(filepath)
+                meshio_mesh = meshio.read(filepath)
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),
                                  icon="ERROR")
                 continue
 
-        if not isinstance(meshio_mesh, meshio.Mesh) or not isObj:
+        if not isinstance(meshio_mesh, meshio.Mesh):
             show_message_box('function preprocess does not return meshio object', "ERROR")
             continue
         update_mesh(meshio_mesh, obj.data)
