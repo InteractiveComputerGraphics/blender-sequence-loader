@@ -209,6 +209,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     #.obj sequences have to be handled differently
     isObj = filepath.endswith(".obj")
     if isObj:
+        print(str(filepath))
         bpy.ops.import_scene.obj(filepath=filepath)
         object = bpy.context.selected_objects[-1]
         object.name = fileseq.basename() + "@" + fileseq.extension()
@@ -291,6 +292,9 @@ def update_obj(scene, depsgraph=None):
             bpy.ops.object.delete()
             bpy.ops.import_scene.obj(filepath=filepath)
             obj = bpy.context.selected_objects[-1]
+            print(str(filepath))
+            print(current_frame % len(fs))
+            print(obj.name)
             obj.name = fs.basename() + "@" + fs.extension()
             obj.data.name = fs.basename() + "@" + fs.extension()
             obj.matrix_world = tmp_transform
@@ -298,7 +302,7 @@ def update_obj(scene, depsgraph=None):
 
             end_time = time.perf_counter()
             obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
-            return
+            continue
         
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
