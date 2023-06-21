@@ -119,9 +119,7 @@ def update_mesh(meshio_mesh, mesh):
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
-
-    start_time = time.perf_counter()
-
+    
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
@@ -130,19 +128,15 @@ def update_mesh(meshio_mesh, mesh):
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
-
     mesh.vertices.foreach_set("co", mesh_vertices.ravel())
     mesh.loops.foreach_set("vertex_index", loops_vert_idx)
     mesh.polygons.foreach_set("loop_start", faces_loop_start)
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
 
+    # newer function but is about 4 times slower
     # mesh.clear_geometry()
     # mesh.from_pydata(mesh_vertices, [], data)
-
-    end_time = time.perf_counter()
-    print("foreach_set time: ", end_time - start_time)
-
 
     mesh.update()
     mesh.validate()
@@ -219,7 +213,6 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     #.obj sequences have to be handled differently
     isObj = filepath.endswith(".obj")
     if isObj and bpy.context.scene.BSEQ.use_blender_obj_import:
-        print(str(filepath))
         bpy.ops.import_scene.obj(filepath=filepath)
         enabled = True
 
@@ -303,9 +296,6 @@ def update_obj(scene, depsgraph=None):
             # Reload the object
             bpy.ops.import_scene.obj(filepath=filepath)
             tmp_obj = bpy.context.selected_objects[-1]
-            print(str(filepath))
-            print(current_frame % len(fs))
-            print(obj.name)
 
             obj.data = tmp_obj.data
             tmp_obj.select_set(True)
