@@ -211,8 +211,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     filepath = fileseq[current_frame % len(fileseq)]
 
     #.obj sequences have to be handled differently
-    isObj = filepath.endswith(".obj")
-    if isObj and bpy.context.scene.BSEQ.use_blender_obj_import:
+    is_obj_seq = filepath.endswith(".obj")
+    if is_obj_seq and bpy.context.scene.BSEQ.use_blender_obj_import:
         bpy.ops.import_scene.obj(filepath=filepath)
         enabled = True
 
@@ -254,7 +254,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
-    if enabled and not isObj:
+    if enabled and not is_obj_seq:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
