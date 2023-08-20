@@ -80,8 +80,9 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
 
     # evaluate the rigid body transformations (only relevant for .bin format)
     rigid_body_transformation = mathutils.Matrix.Identity(4)
-    if meshio_mesh.field_data.get("transformation_matrix") is not None:
-        rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
+    if meshio_mesh is not None:
+        if meshio_mesh.field_data.get("transformation_matrix") is not None:
+            rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
 
     # multiply everything together (with custom transform matrix)
     obj.matrix_world = rigid_body_transformation @ eval_transform_matrix
@@ -94,6 +95,9 @@ def update_mesh(meshio_mesh, mesh):
     n_loop = 0
     n_verts = len(mesh_vertices)
     if n_verts == 0:
+        mesh.clear_geometry()
+        mesh.update()
+        mesh.validate()
         return
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
@@ -115,7 +119,7 @@ def update_mesh(meshio_mesh, mesh):
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
-
+    
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
@@ -129,6 +133,10 @@ def update_mesh(meshio_mesh, mesh):
     mesh.polygons.foreach_set("loop_start", faces_loop_start)
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
+
+    # newer function but is about 4 times slower
+    # mesh.clear_geometry()
+    # mesh.from_pydata(mesh_vertices, [], data)
 
     mesh.update()
     mesh.validate()
@@ -180,7 +188,13 @@ def create_meshio_obj(filepath):
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
-        
+    
+    # Do I need this for multi-loading?
+    if filepath.endswith(".obj"):
+        bpy.ops.import_scene.obj(filepath=filepath)
+        obj = bpy.context.selected_objects[0]
+        obj.name = os.path.basename(filepath)
+        return
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
@@ -196,20 +210,36 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
-    meshio_mesh = None
-    enabled = True
-    try:
-        meshio_mesh = meshio.read(filepath)
-    except Exception as e:
-        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                         "Meshio Loading Error" + str(e),
-                         icon="ERROR")
-        enabled = False
+    #.obj sequences have to be handled differently
+    is_obj_seq = filepath.endswith(".obj")
+    if is_obj_seq and bpy.context.scene.BSEQ.use_blender_obj_import:
+        bpy.ops.import_scene.obj(filepath=filepath)
+        enabled = True
+
+        tmp_obj = bpy.context.selected_objects[-1]
+
+        name = fileseq.basename() + "@" + fileseq.extension()
+        object = bpy.data.objects.new(name, tmp_obj.data)
+
+        tmp_obj.select_set(True)
+        bpy.ops.object.delete()
+
+    else:
+        meshio_mesh = None
+        enabled = True
+        try:
+            meshio_mesh = meshio.read(filepath)
+        except Exception as e:
+            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                            "Meshio Loading Error" + str(e),
+                            icon="ERROR")
+            enabled = False
+
+        name = fileseq.basename() + "@" + fileseq.extension()
+        mesh = bpy.data.meshes.new(name)
+        object = bpy.data.objects.new(name, mesh)
 
     #  create the object
-    name = fileseq.basename() + "@" + fileseq.extension()
-    mesh = bpy.data.meshes.new(name)
-    object = bpy.data.objects.new(name, mesh)
     object.BSEQ.use_relative = use_relative
     if use_relative:
         if root_path != "":
@@ -224,7 +254,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
-    if enabled:
+    if enabled and not is_obj_seq:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
@@ -260,6 +290,23 @@ def update_obj(scene, depsgraph=None):
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
+        if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
+            filepath = fs[current_frame % len(fs)]
+
+            # Reload the object
+            bpy.ops.import_scene.obj(filepath=filepath)
+            tmp_obj = bpy.context.selected_objects[-1]
+
+            obj.data = tmp_obj.data
+            tmp_obj.select_set(True)
+            bpy.ops.object.delete()
+
+            apply_transformation(meshio_mesh, obj, depsgraph)
+
+            end_time = time.perf_counter()
+            obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
+            continue
+        
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
             try:

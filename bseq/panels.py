@@ -207,6 +207,9 @@ class BSEQ_Import(bpy.types.Panel):
             col1.label(text="Root Directory")
             col2.prop(importer_prop, "root_path", text="")
 
+        col1.label(text="Use Blender .obj Importer")
+        col2.prop(importer_prop, "use_blender_obj_import", text="")
+
         layout.operator("sequence.load")
 
         layout.operator("wm.seq_import_batch")
