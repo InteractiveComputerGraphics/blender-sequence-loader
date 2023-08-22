@@ -24,12 +24,24 @@ def print_information(scene):
                 file.write("Object name: {}\n".format(obj.name))
                 file.write("Is it being animated: {}\n".format(bseq_prop.enabled))
                 file.write("Filepath: {}\n".format(bseq_prop.pattern))
-                file.write("Is it relative path: {}\n".format(bseq_prop.use_relative))
+                file.write("Is it relative path: {}\n".format(bpy.path.is_subdir(obj.BSEQ.pattern, bpy.path.abspath("//"))))
                 file.write("\n\n")
 
 
-def auto_refresh(scene, depsgraph=None):
-    if not bpy.context.scene.BSEQ.auto_refresh:
+def auto_refresh_all(scene, depsgraph=None):
+    if not bpy.context.scene.BSEQ.auto_refresh_all:
+        return
+    for obj in bpy.data.objects:
+        if obj.BSEQ.init == False:
+            continue
+        if obj.BSEQ.enabled == False:
+            continue
+        if obj.mode != "OBJECT":
+            continue
+        refresh_obj(obj, scene)
+
+def auto_refresh_active(scene, depsgraph=None):
+    if not bpy.context.scene.BSEQ.auto_refresh_active:
         return
     for obj in bpy.data.objects:
         if obj.BSEQ.init == False:

@@ -27,8 +27,9 @@ def stop_animation():
 
 
 def refresh_obj(obj, scene):
+    is_relative = bpy.path.is_subdir(obj.BSEQ.pattern, bpy.path.abspath("//"))
     fs = obj.BSEQ.pattern
-    if obj.BSEQ.use_relative:
+    if is_relative:
         if scene.BSEQ.root_path != "":
             fs = bpy.path.abspath(fs, start=scene.BSEQ.root_path)
         else:
@@ -38,7 +39,8 @@ def refresh_obj(obj, scene):
     fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
     obj.BSEQ.start_end_frame = (fs.start(), fs.end())
     fs = str(fs)
-    if obj.BSEQ.use_relative:
+    # obj.BSEQ.pattern is a path and I want to check if it is a relative path
+    if is_relative:
         if scene.BSEQ.root_path != "":
             fs = bpy.path.relpath(fs, start=scene.BSEQ.root_path)
         else:

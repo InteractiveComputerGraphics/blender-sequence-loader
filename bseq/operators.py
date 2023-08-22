@@ -7,10 +7,9 @@ from .utils import refresh_obj, show_message_box
 from .importer import create_obj, create_meshio_obj
 import numpy as np
 
-
 #  Here are load and delete operations
 class BSEQ_OT_load(bpy.types.Operator):
-    '''This operator loads a sequnce'''
+    '''This operator loads a sequence'''
     bl_label = "Load Sequence"
     bl_idname = "sequence.load"
     bl_options = {"UNDO"}
@@ -48,13 +47,13 @@ class BSEQ_OT_load(bpy.types.Operator):
                                     importer_prop.custom_scale)
                                     if importer_prop.use_custom_transform else Matrix.Identity(4))
 
-        create_obj(fs, importer_prop.relative, importer_prop.root_path, transform_matrix=transform_matrix)
+        create_obj(fs, importer_prop.root_path, transform_matrix=transform_matrix)
         return {"FINISHED"}
 
 
 class BSEQ_OT_edit(bpy.types.Operator):
-    '''This operator changes a sequnce'''
-    bl_label = "Edit Sequences Path"
+    '''This operator changes a sequence'''
+    bl_label = "Edit Sequence's Path"
     bl_idname = "sequence.edit"
     bl_options = {"UNDO"}
 
@@ -93,15 +92,18 @@ class BSEQ_OT_edit(bpy.types.Operator):
         if not obj:
             return {"CANCELLED"}
         if importer_prop.relative:
-            obj.BSEQ.pattern = bpy.path.relpath(str(fs))
+            if importer_prop.root_path != "":
+                object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=importer_prop.root_path)
+            else:
+                object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
+
         else:
             obj.BSEQ.pattern = str(fs)
-        obj.BSEQ.use_relative = importer_prop.relative
         return {"FINISHED"}
 
 
 class BSEQ_OT_resetpt(bpy.types.Operator):
-    '''This operator reset the geometry nodes of the sequence as a point cloud'''
+    '''This operator resets the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Point Cloud"
     bl_idname = "bseq.resetpt"
     bl_options = {"UNDO"}
@@ -136,7 +138,7 @@ class BSEQ_OT_resetpt(bpy.types.Operator):
 
 
 class BSEQ_OT_resetmesh(bpy.types.Operator):
-    '''This operator reset the geometry nodes of the sequence as a point cloud'''
+    '''This operator resets the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Mesh"
     bl_idname = "bseq.resetmesh"
     bl_options = {"UNDO"}
@@ -161,7 +163,7 @@ class BSEQ_OT_resetmesh(bpy.types.Operator):
 
 
 class BSEQ_OT_resetins(bpy.types.Operator):
-    '''This operator reset the geometry nodes of the sequence as a point cloud'''
+    '''This operator resets the geometry nodes of the sequence as a point cloud'''
     bl_label = "Reset Geometry Nodes as Instances"
     bl_idname = "bseq.resetins"
     bl_options = {"UNDO"}
@@ -209,8 +211,8 @@ class BSEQ_OT_resetins(bpy.types.Operator):
 
 
 class BSEQ_OT_set_as_split_norm(bpy.types.Operator):
-    '''This operator set the vertex attribute as vertex split normals'''
-    bl_label = "Set as split normal per Vertex"
+    '''This operator sets the vertex attributes as vertex split normals'''
+    bl_label = "Set as split normal per vertex"
     bl_idname = "bseq.setsplitnorm"
     bl_options = {"UNDO"}
 
@@ -228,8 +230,8 @@ class BSEQ_OT_set_as_split_norm(bpy.types.Operator):
 
 
 class BSEQ_OT_remove_split_norm(bpy.types.Operator):
-    '''This operator remove the vertex attribute as vertex split normals'''
-    bl_label = "Remove split normal per Vertex"
+    '''This operator removes the vertex attributes as vertex split normals'''
+    bl_label = "Remove split normal per vertex"
     bl_idname = "bseq.removesplitnorm"
     bl_options = {"UNDO"}
 
@@ -244,8 +246,8 @@ class BSEQ_OT_remove_split_norm(bpy.types.Operator):
 
 
 class BSEQ_OT_disable_selected(bpy.types.Operator):
-    '''This operator disable all selected sequence'''
-    bl_label = "Disable Selected Sequence"
+    '''This operator disables all selected sequence'''
+    bl_label = "Disable selected sequence"
     bl_idname = "bseq.disableselected"
     bl_options = {"UNDO"}
 
@@ -257,8 +259,8 @@ class BSEQ_OT_disable_selected(bpy.types.Operator):
 
 
 class BSEQ_OT_enable_selected(bpy.types.Operator):
-    '''This operator enable all selected sequence'''
-    bl_label = "Enable Selected Sequence"
+    '''This operator enables all selected sequence'''
+    bl_label = "Enable selected sequence"
     bl_idname = "bseq.enableselected"
     bl_options = {"UNDO"}
 
@@ -270,8 +272,8 @@ class BSEQ_OT_enable_selected(bpy.types.Operator):
 
 
 class BSEQ_OT_refresh_seq(bpy.types.Operator):
-    '''This operator refresh the sequence'''
-    bl_label = "Refresh Sequence"
+    '''This operator refreshes the sequence'''
+    bl_label = "Refresh sequence"
     bl_idname = "bseq.refresh"
 
     def execute(self, context):
@@ -282,8 +284,8 @@ class BSEQ_OT_refresh_seq(bpy.types.Operator):
         return {"FINISHED"}
 
 class BSEQ_OT_disable_all(bpy.types.Operator):
-    '''This operator disable all selected sequence'''
-    bl_label = "Disable All Sequences"
+    '''This operator disables all selected sequence'''
+    bl_label = "Disable all sequences"
     bl_idname = "bseq.disableall"
     bl_options = {"UNDO"}
 
@@ -294,8 +296,8 @@ class BSEQ_OT_disable_all(bpy.types.Operator):
         return {"FINISHED"}
 
 class BSEQ_OT_enable_all(bpy.types.Operator):
-    '''This operator enable all selected sequence'''
-    bl_label = "Enable All Sequences"
+    '''This operator enables all selected sequence'''
+    bl_label = "Enable all sequences"
     bl_idname = "bseq.enableall"
     bl_options = {"UNDO"}
 
@@ -307,8 +309,8 @@ class BSEQ_OT_enable_all(bpy.types.Operator):
 
 class BSEQ_OT_refresh_sequences(bpy.types.Operator):
     '''This operator refreshes all found sequences'''
-    bl_label = "" #"Refresh Found Sequences"
-    bl_idname = "bseq.refreshseqs"
+    bl_label = "Refresh all sequences"
+    bl_idname = "bseq.refreshall"
     bl_options = {"UNDO"}
 
     def execute(self, context):
@@ -319,7 +321,7 @@ class BSEQ_OT_refresh_sequences(bpy.types.Operator):
         return {"FINISHED"}
     
 class BSEQ_OT_set_start_end_frames(bpy.types.Operator):
-    '''This changes the timeline start and end frames to the length of a specific sequence'''
+    '''This operator changes the timeline start and end frames to the length of a specific sequence'''
     bl_label = "Set timeline"
     bl_idname = "bseq.set_start_end_frames"
     bl_options = {"UNDO"}
@@ -341,14 +343,26 @@ from bpy_extras.io_utils import ImportHelper
 class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
     """Batch Import Sequences"""
     bl_idname = "wm.seq_import_batch"
-    bl_label = "Import multiple sequences"
+    bl_label = "Import Sequences"
     bl_options = {'PRESET', 'UNDO'}
+
+    # filter_glob: bpy.types.StringProperty(
+    #     default="*.txt",
+    #     options={'HIDDEN'},
+    #     maxlen=255,  # Max internal buffer length, longer would be clamped.
+    # )
 
     files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
 
     def execute(self, context):
         scene = context.scene
         importer_prop = scene.BSEQ
+
+        if importer_prop.relative and not bpy.data.is_saved:
+            #  use relative but file not saved
+            show_message_box("When using relative path, please save file before using it", icon="ERROR")
+            return {"CANCELLED"}
+
 
         folder = Path(self.filepath)
         used_seqs = set()
@@ -362,14 +376,48 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
             if matching_seqs:
                 transform_matrix = (Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
                                     if importer_prop.use_custom_transform else Matrix.Identity(4))
-                create_obj(matching_seqs[0], False, importer_prop.root_path, transform_matrix=transform_matrix)
+                create_obj(matching_seqs[0], importer_prop.root_path, transform_matrix=transform_matrix)
                 used_seqs.add(matching_seqs[0])
         return {'FINISHED'}
+    
+    def draw(self, context):
+        pass
+
+class WM_OT_batchSequences_Settings(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "Settings Panel"
+    bl_options = {'HIDE_HEADER'}
+    # bl_parent_id = "FILE_PT_operator" # Optional
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "WM_OT_seq_import_batch"
+
+    def draw(self, context):
+        layout = self.layout
+        importer_prop = context.scene.BSEQ
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
+
+        sfile = context.space_data
+        operator = sfile.active_operator
+
+        layout.prop(operator, 'type')
+        layout.prop(operator, 'use_setting')
+
+        layout.alignment = 'LEFT'
+        layout.prop(importer_prop, "relative", text="Relative Path")
+        if importer_prop.relative:
+            layout.prop(importer_prop, "root_path", text="Root Directory")
 
 class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
     """Batch Import Meshio Objects"""
     bl_idname = "wm.meshio_import_batch"
-    bl_label = "Import multiple Meshio objects"
+    bl_label = "Import Multiple Meshio Objects"
     bl_options = {'PRESET', 'UNDO'}
 
     files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
@@ -386,3 +434,58 @@ def menu_func_import(self, context):
     self.layout.operator(
             WM_OT_MeshioObject.bl_idname, 
             text="MeshIO Object")
+
+# Default Keymap Configuration
+addon_keymaps = []
+
+def add_keymap():
+    wm = bpy.context.window_manager
+
+    # Add new keymap section for BSEQ
+
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("sequence.load", type='F', value='PRESS', shift=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.disableselected", type='D', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.enableselected", type='E', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.refresh", type='R', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.disableall", type='D', value='PRESS', shift=True, alt=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.enableall", type='E', value='PRESS', shift=True, alt=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.refreshall", type='R', value='PRESS', shift=True, alt=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("bseq.set_start_end_frames", type='F', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("wm.seq_import_batch", type='I', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("wm.meshio_import_batch", type='M', value='PRESS', shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
+        
+def delete_keymap():
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()

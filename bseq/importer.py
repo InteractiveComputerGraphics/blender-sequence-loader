@@ -205,7 +205,7 @@ def create_meshio_obj(filepath):
     bpy.context.view_layer.objects.active = object
 
 
-def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
+def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -240,8 +240,8 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         object = bpy.data.objects.new(name, mesh)
 
     #  create the object
-    object.BSEQ.use_relative = use_relative
-    if use_relative:
+    print("File path: " + filepath)
+    if bpy.path.is_subdir(filepath, bpy.path.abspath("//")):
         if root_path != "":
             object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
         else:
@@ -280,7 +280,8 @@ def update_obj(scene, depsgraph=None):
             current_frame = obj.BSEQ.frame
         meshio_mesh = None
         pattern = obj.BSEQ.pattern
-        if obj.BSEQ.use_relative:
+        # check if the path is relative
+        if bpy.path.is_subdir(pattern, bpy.path.abspath("//")):
             if scene.BSEQ.root_path != "":
                 pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
             else:

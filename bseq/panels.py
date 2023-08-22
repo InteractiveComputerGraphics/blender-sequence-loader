@@ -22,18 +22,22 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            row = layout.row()
-            row.prop(item, "name", text='Name ', emboss=False)
+            split = layout.split(factor=0.7)
+            col1 = split.column()
+            col2 = split.column()
+            split2 = col2.split(factor=0.5)
+            col2 = split2.column()
+            col3 = split2.column()
+            col1.prop(item, "name", text='', emboss=False)
             if item.BSEQ.enabled:
-                row.prop(item.BSEQ, "enabled", text = "ENABLED", icon="PLAY")
-                row.prop(item.BSEQ, "frame", text = "Current Frame:")
+                col2.prop(item.BSEQ, "enabled", text="", icon="PLAY")
+                col3.prop(item.BSEQ, "frame", text="")
             else:
-                row.prop(item.BSEQ, "enabled", text = "DISABLED", icon="PAUSE")
-                row.label(text = "Animation Stopped")
+                col2.prop(item.BSEQ, "enabled", text ="", icon="PAUSE")
+                col3.label(text="", icon="BLANK1")
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
-
 
 class BSEQ_UL_Att_List(bpy.types.UIList):
     '''
@@ -43,84 +47,65 @@ class BSEQ_UL_Att_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
             layout.enabled = False
-            layout.prop(item, "name", text='Name ', emboss=False)
+            layout.prop(item, "name", text='', emboss=False)
             obj = bpy.data.objects[context.scene.BSEQ.selected_obj_num]
             mesh = obj.data
             if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == item.name:
-                layout.label(text="using as split norm")
+                layout.label(text="Use as split norm.")
 
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
 
-
-class BSEQ_List_Panel(bpy.types.Panel):
-    '''
-    This is the panel of imported sequences, bottom part of images/9.png
-    '''
-    bl_label = "Imported Sequences"
-    bl_idname = "BSEQ_PT_list"
+class BSEQ_Panel:
     bl_space_type = 'VIEW_3D'
     bl_region_type = "UI"
     bl_category = "Sequence Loader"
     bl_context = "objectmode"
 
-    def draw(self, context):
-        layout = self.layout
-        sim_loader = context.scene.BSEQ
-        row = layout.row()
-        row.template_list("BSEQ_UL_Obj_List", "", bpy.data, "objects", sim_loader, "selected_obj_num", rows=2)
-        row = layout.row()
-        row.operator("bseq.enableselected", text="Enable Selected")
-        row.operator("bseq.disableselected", text="Disable Selected")
-        row.operator("bseq.refresh", text="Refresh")
-        row = layout.row()
-        row.operator("bseq.enableall", text="Enable All")
-        row.operator("bseq.disableall", text="Disable All")
-        row.operator("bseq.set_start_end_frames", text="Set timeline")
-
-
-
-class BSEQ_Settings(bpy.types.Panel):
-    '''
-    This is the panel of settings of selected sequence
-    '''
-    bl_label = "Sequence Settings"
-    bl_idname = "BSEQ_PT_settings"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = "UI"
-    bl_category = "Sequence Loader"
-    bl_context = "objectmode"
-    bl_options = {"DEFAULT_CLOSED"}
+class BSEQ_Globals_Panel(BSEQ_Panel, bpy.types.Panel):
+    bl_label = "Global Settings"
+    bl_idname = "BSEQ_PT_global"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         sim_loader = context.scene.BSEQ
+        split = layout.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+
+        col1.label(text='Global Settings')
+        col2.prop(sim_loader, "print", text="Print Sequence Information")
+        col2.prop(sim_loader, "auto_refresh_active", text="Auto Refresh Active")
+        col2.prop(sim_loader, "auto_refresh_all", text="Auto Refresh All")
+
+class BSEQ_Advanced_Panel(BSEQ_Panel, bpy.types.Panel):
+    bl_label = "Advanced Settings"
+    bl_idname = "BSEQ_PT_advanced"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        sim_loader = context.scene.BSEQ
+
+        split = layout.split()
+        col1 = split.column()
+        col2 = split.column()
+
         if sim_loader.selected_obj_num >= len(bpy.data.objects):
             return
         obj = bpy.data.objects[sim_loader.selected_obj_num]
         if not obj.BSEQ.init:
             return
 
-        # path settings
-        layout.label(text="Sequence Information (read-only)")
-        box = layout.box()
-
-        split = box.split()
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=False)
-
-        col2.enabled = False
-        col1.label(text='Relative')
-        col2.prop(obj.BSEQ, 'use_relative', text="")
-        col1.label(text='Pattern')
-        col2.prop(obj.BSEQ, 'pattern', text="")
-        col1.label(text='Last loading time (ms)')
-        col2.prop(obj.BSEQ, 'last_benchmark', text="")
+        col1.label(text='Script')
+        col2.prop_search(obj.BSEQ, 'script_name', bpy.data, 'texts', text="")
 
         # geometry nodes settings
-        layout.label(text="Geometry Nodes")
+        layout.label(text="Geometry Nodes (select sequence first)")
+
         box = layout.box()
         box.label(text="Point Cloud and Instances Material")
         split = box.split()
@@ -140,6 +125,59 @@ class BSEQ_Settings(bpy.types.Panel):
         col3.operator('bseq.resetins', text="Instances")
 
 
+class BSEQ_List_Panel(BSEQ_Panel, bpy.types.Panel):
+    '''
+    This is the panel of imported sequences, bottom part of images/9.png
+    '''
+    bl_label = "Sequences"
+    bl_idname = "BSEQ_PT_list"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        sim_loader = context.scene.BSEQ
+        row = layout.row()
+        row.template_list("BSEQ_UL_Obj_List", "", bpy.data, "objects", sim_loader, "selected_obj_num", rows=2)
+        row = layout.row()
+        row.operator("bseq.enableselected", text="Activate")
+        row.operator("bseq.disableselected", text="Deactivate")
+        row.operator("bseq.refresh", text="Refresh")
+        row = layout.row()
+        row.operator("bseq.enableall", text="Activate All")
+        row.operator("bseq.disableall", text="Deactivate All")
+        row.operator("bseq.set_start_end_frames", text="Set timeline")
+
+class BSEQ_Settings(BSEQ_Panel, bpy.types.Panel):
+    '''
+    This is the panel of settings of selected sequence
+    '''
+    bl_label = "Sequence Properties"
+    bl_idname = "BSEQ_PT_settings"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        layout = self.layout
+        sim_loader = context.scene.BSEQ
+        importer_prop = context.scene.BSEQ
+
+        if sim_loader.selected_obj_num >= len(bpy.data.objects):
+            return
+        obj = bpy.data.objects[sim_loader.selected_obj_num]
+        if not obj.BSEQ.init:
+            return
+
+        split = layout.split()
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+
+        col1.label(text='Pattern')
+        col2.prop(obj.BSEQ, 'pattern', text="")
+        col1.label(text='Last loading time (ms)')
+        row2 = col2.row()
+        row2.enabled = False
+        row2.prop(obj.BSEQ, 'last_benchmark', text="", )
+
         # attributes settings
         layout.label(text="Attributes")
         box = layout.box()
@@ -148,39 +186,70 @@ class BSEQ_Settings(bpy.types.Panel):
         box.operator("bseq.setsplitnorm", text="Set selected as normal")
         box.operator("bseq.removesplitnorm", text="Clear normal")
 
-        # advance settings
-        layout.label(text="Advanced")
-        box = layout.box()
-        split = box.split()
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=False)
-        col1.label(text="Show Settings")
-        col2.prop(obj.BSEQ, 'use_advance', text="")
-        if obj.BSEQ.use_advance:
-            col1.label(text='Script')
-            col2.prop_search(obj.BSEQ, 'script_name', bpy.data, 'texts', text="")
-
-
-class BSEQ_Import(bpy.types.Panel):
+class BSEQ_Import(BSEQ_Panel, bpy.types.Panel):
     '''
     This is the panel of main addon interface. see  images/1.jpg
     '''
-    bl_label = "Sequence Loader"
+    bl_label = "Import"
     bl_idname = "BSEQ_PT_panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Sequence Loader"
-    bl_context = "objectmode"
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
         importer_prop = scene.BSEQ
 
-        layout.label(text="Basic Import Settings")
-        box = layout.box()
-        split = box.split()
+        layout.operator("wm.seq_import_batch")
+        
+        split = layout.split()
+        col1 = split.column()
+        col2 = split.column()
+
+        #layout.label(text="Global Settings")
+        #box = layout.box()
+        split = layout.split(factor=0.5)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
+
+        col1.label(text="Import Settings")
+
+        # col2.prop(importer_prop, "use_blender_obj_import", text="Blender .obj Importer")
+        col2.prop(importer_prop, "relative", text="Relative Path")
+
+        if importer_prop.relative:
+            col1.label(text="Root Directory")
+            col2.prop(importer_prop, "root_path", text="")
+
+        col2.prop(importer_prop, "use_imported_normals", text="Use Imported Normals")
+
+        col2.prop(importer_prop, "use_custom_transform", text="Custom Transform")
+
+        if importer_prop.use_custom_transform:
+            split = layout.split(factor=0.33)
+            box_col1 = split.column()
+            box_col2 = split.column()
+            box_col3 = split.column()
+
+            box_col1.label(text="Location:")
+            box_col1.prop(importer_prop, "custom_location", text="")
+
+            box_col2.label(text="Rotation:")
+            box_col2.prop(importer_prop, "custom_rotation", text="")
+
+            box_col3.label(text="Scale:")
+            box_col3.prop(importer_prop, "custom_scale", text="")
+
+class BSEQ_Import_Child1(BSEQ_Panel, bpy.types.Panel):
+    bl_parent_id = "BSEQ_PT_panel"
+    bl_label = "Import from folder"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        importer_prop = scene.BSEQ
+
+        split = layout.split()
         col1 = split.column()
         col1.alignment = 'RIGHT'
         col2 = split.column(align=False)
@@ -188,7 +257,7 @@ class BSEQ_Import(bpy.types.Panel):
         col1.label(text="Directory")
         col2.prop(importer_prop, "path", text="")
 
-        col1.label(text="Use Custom Pattern")
+        col1.label(text="Custom Pattern")
         col2.prop(importer_prop, "use_pattern", text="")
         col1.label(text="Sequence Pattern")
         if importer_prop.use_pattern:
@@ -198,61 +267,23 @@ class BSEQ_Import(bpy.types.Panel):
             col3 = split2.column()
             col4 = split2.column()
             col3.prop(importer_prop, "fileseq", text="")
-            col4.operator("bseq.refreshseqs", icon="FILE_REFRESH")
-
-        col1.label(text="Use Relative Path")
-        col2.prop(importer_prop, "relative", text="")
-
-        if importer_prop.relative:
-            col1.label(text="Root Directory")
-            col2.prop(importer_prop, "root_path", text="")
-
-        col1.label(text="Use Blender .obj Importer")
-        col2.prop(importer_prop, "use_blender_obj_import", text="")
+            col4.operator("bseq.refreshall", text='', icon="FILE_REFRESH")
 
         layout.operator("sequence.load")
 
-        layout.operator("wm.seq_import_batch")
-        
+class BSEQ_Import_Child2(BSEQ_Panel, bpy.types.Panel):
+    bl_parent_id = "BSEQ_PT_panel"
+    bl_label = "Test"
+    bl_options = {'HIDE_HEADER'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        importer_prop = scene.BSEQ
+
         split = layout.split()
         col1 = split.column()
         col2 = split.column()
-
-        # check if edit_obj exist
-        # if not exist any more, then delete the object manually
-        # see here https://blender.stackexchange.com/a/164835 for more details
-        # I personally think this implementation is not a good design,
-        # but can't think of any better ways now
-        if importer_prop.edit_obj and context.scene.objects.get(importer_prop.edit_obj.name) == None:
-            bpy.data.objects.remove(importer_prop.edit_obj)
-
-        col1.prop_search(importer_prop, 'edit_obj', bpy.data, 'objects', text="")
-        col2.operator("sequence.edit")
-
-        layout.label(text="Global Settings")
-        box = layout.box()
-        split = box.split()
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=False)
-
-        col1.label(text="Print Sequence Information on Render")
-        col2.prop(importer_prop, "print", text="")
-        col1.label(text="Auto refresh all the sequence every frame")
-        col2.prop(importer_prop, "auto_refresh", text="")
-        col1.label(text="Use custom transformation matrix")
-        col2.prop(importer_prop, "use_custom_transform", text="")
-
-        if importer_prop.use_custom_transform:
-            box.label(text="Location:")
-            box.prop(importer_prop, "custom_location", text="")
-
-            box.label(text="Rotation:")
-            box.prop(importer_prop, "custom_rotation", text="")
-
-            box.label(text="Scale:")
-            box.prop(importer_prop, "custom_scale", text="")
-        
 
 class BSEQ_Templates(bpy.types.Menu):
     '''
