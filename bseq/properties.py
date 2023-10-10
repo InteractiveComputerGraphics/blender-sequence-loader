@@ -107,6 +107,11 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                                    description="Use Blender's built-in .obj import function (or meshio's .obj import function)",
                                                    default=True,
                                                    )
+    
+    filter_string: bpy.props.StringProperty(name='Filter String',
+                                            description='Filter string for file sequences',
+                                            default='',
+                                            )
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)

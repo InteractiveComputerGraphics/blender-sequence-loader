@@ -22,19 +22,27 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            split = layout.split(factor=0.7)
+            split = layout.split(factor=0.5)
             col1 = split.column()
             col2 = split.column()
-            split2 = col2.split(factor=0.5)
+            split2 = col2.split(factor=0.25)
             col2 = split2.column()
             col3 = split2.column()
+            split3 = col3.split(factor=0.33)
+            col3 = split3.column()
+            col4 = split3.column()
+            col4.alignment = 'CENTER'
+            start_frame = item.BSEQ.start_end_frame[0]
+            end_frame = item.BSEQ.start_end_frame[1]
             col1.prop(item, "name", text='', emboss=False)
             if item.BSEQ.enabled:
                 col2.prop(item.BSEQ, "enabled", text="", icon="PLAY")
                 col3.prop(item.BSEQ, "frame", text="")
+                col4.label(text=str(start_frame) + '-' + str(end_frame))
             else:
                 col2.prop(item.BSEQ, "enabled", text ="", icon="PAUSE")
                 col3.label(text="", icon="BLANK1")
+                col4.label(text=str(start_frame) + '-' + str(end_frame))
         else:
             # actually, I guess this line of code won't be executed?
             layout.label(text="", translate=False, icon_value=icon)
@@ -213,7 +221,8 @@ class BSEQ_Import(BSEQ_Panel, bpy.types.Panel):
 
         col1.label(text="Import Settings")
 
-        # col2.prop(importer_prop, "use_blender_obj_import", text="Blender .obj Importer")
+        col2.prop(importer_prop, "filter_string", text="Filter String")
+
         col2.prop(importer_prop, "relative", text="Relative Path")
 
         if importer_prop.relative:

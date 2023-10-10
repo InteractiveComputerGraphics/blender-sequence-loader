@@ -346,13 +346,33 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
     bl_label = "Import Sequences"
     bl_options = {'PRESET', 'UNDO'}
 
-    # filter_glob: bpy.types.StringProperty(
-    #     default="*.txt",
-    #     options={'HIDDEN'},
-    #     maxlen=255,  # Max internal buffer length, longer would be clamped.
-    # )
+    def update_filter_glob(self, context):
+        bpy.ops.wm.seq_import_batch('INVOKE_DEFAULT')
+
+    filter_string: bpy.props.StringProperty(
+        default="*.obj",
+        options={'HIDDEN'},
+        update=update_filter_glob,
+    )
+
+    filename_ext=''
+    filter_glob: bpy.props.StringProperty(
+        default='*.obj',
+        options={'HIDDEN', 'LIBRARY_EDITABLE'},
+    )
 
     files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    
+    def invoke(self, context, event):
+        scene = context.scene
+        if scene.BSEQ.filter_string:
+            self.filter_glob = scene.BSEQ.filter_string
+        else:
+            self.filter_glob = "*"
+
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
 
     def execute(self, context):
         scene = context.scene
@@ -363,6 +383,7 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
             show_message_box("When using relative path, please save file before using it", icon="ERROR")
             return {"CANCELLED"}
 
+        self.filter_glob = '*'
 
         folder = Path(self.filepath)
         used_seqs = set()
@@ -379,7 +400,7 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
                 create_obj(matching_seqs[0], importer_prop.root_path, transform_matrix=transform_matrix)
                 used_seqs.add(matching_seqs[0])
         return {'FINISHED'}
-    
+
     def draw(self, context):
         pass
 
@@ -403,11 +424,10 @@ class WM_OT_batchSequences_Settings(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False  # No animation.
 
-        sfile = context.space_data
-        operator = sfile.active_operator
+        # sfile = context.space_data
+        # operator = sfile.active_operator
 
-        layout.prop(operator, 'type')
-        layout.prop(operator, 'use_setting')
+        layout.prop(importer_prop, 'filter_string')
 
         layout.alignment = 'LEFT'
         layout.prop(importer_prop, "relative", text="Relative Path")
