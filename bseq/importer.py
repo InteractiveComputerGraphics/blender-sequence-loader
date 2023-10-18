@@ -359,6 +359,9 @@ def update_obj(scene, depsgraph=None):
             # Delete the temporary object with the data
             bpy.data.objects.remove(new_tmp_obj, do_unlink=True)
 
+            # purge old meshes
+            bpy.ops.outliner.orphans_purge(do_recursive=True)
+
             apply_transformation(meshio_mesh, obj, depsgraph)
 
             end_time = time.perf_counter()
