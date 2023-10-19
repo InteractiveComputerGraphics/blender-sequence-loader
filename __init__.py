@@ -32,9 +32,9 @@ classes = [
     BSEQ_OT_resetpt,
     BSEQ_OT_resetins,
     BSEQ_OT_resetmesh,
-    BSEQ_Import,
-    BSEQ_Import_Child1,
-    BSEQ_Import_Child2,
+    BSEQ_PT_Import,
+    BSEQ_PT_Import_Child1,
+    BSEQ_PT_Import_Child2,
     BSEQ_Globals_Panel,
     BSEQ_List_Panel,
     BSEQ_UL_Obj_List,
@@ -51,9 +51,9 @@ classes = [
     BSEQ_OT_enable_all,
     BSEQ_OT_refresh_sequences,
     BSEQ_OT_set_start_end_frames,
-    WM_OT_batchSequences,
-    WM_OT_batchSequences_Settings,
-    WM_OT_MeshioObject
+    BSEQ_OT_batchSequences,
+    BSEQ_PT_batchSequences_Settings,
+    BSEQ_OT_MeshioObject
 ]
 
 def register():

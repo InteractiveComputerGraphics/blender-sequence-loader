@@ -194,7 +194,7 @@ class BSEQ_Settings(BSEQ_Panel, bpy.types.Panel):
         box.operator("bseq.setsplitnorm", text="Set selected as normal")
         box.operator("bseq.removesplitnorm", text="Clear normal")
 
-class BSEQ_Import(BSEQ_Panel, bpy.types.Panel):
+class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
     '''
     This is the panel of main addon interface. see  images/1.jpg
     '''
@@ -248,7 +248,7 @@ class BSEQ_Import(BSEQ_Panel, bpy.types.Panel):
             box_col3.label(text="Scale:")
             box_col3.prop(importer_prop, "custom_scale", text="")
 
-class BSEQ_Import_Child1(BSEQ_Panel, bpy.types.Panel):
+class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"
     bl_label = "Import from folder"
     bl_options = {'DEFAULT_CLOSED'}
@@ -280,7 +280,7 @@ class BSEQ_Import_Child1(BSEQ_Panel, bpy.types.Panel):
 
         layout.operator("sequence.load")
 
-class BSEQ_Import_Child2(BSEQ_Panel, bpy.types.Panel):
+class BSEQ_PT_Import_Child2(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"
     bl_label = "Test"
     bl_options = {'HIDE_HEADER'}

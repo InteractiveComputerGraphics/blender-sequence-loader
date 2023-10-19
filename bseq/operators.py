@@ -340,7 +340,7 @@ from pathlib import Path
 import meshio
 from bpy_extras.io_utils import ImportHelper
 
-class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
+class BSEQ_OT_batchSequences(bpy.types.Operator, ImportHelper):
     """Batch Import Sequences"""
     bl_idname = "wm.seq_import_batch"
     bl_label = "Import Sequences"
@@ -404,7 +404,7 @@ class WM_OT_batchSequences(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         pass
 
-class WM_OT_batchSequences_Settings(bpy.types.Panel):
+class BSEQ_PT_batchSequences_Settings(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Settings Panel"
@@ -434,7 +434,7 @@ class WM_OT_batchSequences_Settings(bpy.types.Panel):
         if importer_prop.relative:
             layout.prop(importer_prop, "root_path", text="Root Directory")
 
-class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
+class BSEQ_OT_MeshioObject(bpy.types.Operator, ImportHelper):
     """Batch Import Meshio Objects"""
     bl_idname = "wm.meshio_import_batch"
     bl_label = "Import Multiple Meshio Objects"
@@ -452,7 +452,7 @@ class WM_OT_MeshioObject(bpy.types.Operator, ImportHelper):
 
 def menu_func_import(self, context):
     self.layout.operator(
-            WM_OT_MeshioObject.bl_idname, 
+            BSEQ_OT_MeshioObject.bl_idname, 
             text="MeshIO Object")
 
 # Default Keymap Configuration
