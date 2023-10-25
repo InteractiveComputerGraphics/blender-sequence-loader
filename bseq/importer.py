@@ -189,26 +189,26 @@ def create_meshio_obj(filepath):
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
     
-    # Do I need this for multi-loading?
-    if filepath.endswith(".obj"):
-        # Save all current objects
-        objs = set(bpy.context.scene.objects)
-        # Reload the object
-        bpy.ops.import_scene.obj(filepath=filepath)
-        # Substract all previous items from the current items and print their names
-        imported_objs = set(bpy.context.scene.objects) - objs
+    # if filepath.endswith(".obj"):
+    #     # Save all current objects
+    #     objs = set(bpy.context.scene.objects)
+    #     # Reload the object
+    #     bpy.ops.import_scene.obj(filepath=filepath)
+    #     # Substract all previous items from the current items and print their names
+    #     imported_objs = set(bpy.context.scene.objects) - objs
 
-        # Check if the imported object worked correctly
-        if len(imported_objs) == 1:
-            obj = imported_objs.pop()
-        else:
-            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                "obj. Loading Error in create_meshio_obj",
-                                icon="ERROR")
-            return
+    #     # Check if the imported object worked correctly
+    #     if len(imported_objs) == 1:
+    #         obj = imported_objs.pop()
+    #     else:
+    #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+    #                             "obj. Loading Error in create_meshio_obj",
+    #                             icon="ERROR")
+    #         return
         
-        obj.name = os.path.basename(filepath)
-        return
+    #     obj.name = os.path.basename(filepath)
+    #     return
+    
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
@@ -225,50 +225,50 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     filepath = fileseq[current_frame % len(fileseq)]
 
     #.obj sequences have to be handled differently
-    is_obj_seq = filepath.endswith(".obj")
-    if is_obj_seq and bpy.context.scene.BSEQ.use_blender_obj_import:
+    # is_obj_seq = filepath.endswith(".obj")
+    # if is_obj_seq and bpy.context.scene.BSEQ.use_blender_obj_import:
 
-        # Save all current objects
-        objs = set(bpy.context.scene.objects)
-        # Reload the object
-        bpy.ops.import_scene.obj(filepath=filepath)
-        # Substract all previous items from the current items and print their names
-        imported_objs = set(bpy.context.scene.objects) - objs
+    #     # Save all current objects
+    #     objs = set(bpy.context.scene.objects)
+    #     # Reload the object
+    #     bpy.ops.import_scene.obj(filepath=filepath)
+    #     # Substract all previous items from the current items and print their names
+    #     imported_objs = set(bpy.context.scene.objects) - objs
 
-        # Check if the imported object worked correctly
-        if len(imported_objs) == 1:
-            tmp_obj = imported_objs.pop()
-        else:
-            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                "obj. Loading Error in create_obj",
-                                icon="ERROR")
-            return
+    #     # Check if the imported object worked correctly
+    #     if len(imported_objs) == 1:
+    #         tmp_obj = imported_objs.pop()
+    #     else:
+    #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+    #                             "obj. Loading Error in create_obj",
+    #                             icon="ERROR")
+    #         return
 
-        name = fileseq.basename() + "@" + fileseq.extension()
+    #     name = fileseq.basename() + "@" + fileseq.extension()
 
-        # Create object with empty mesh
-        object = bpy.data.objects.new(name, bpy.data.meshes.new(name))
-        object.data = tmp_obj.data
+    #     # Create object with empty mesh
+    #     object = bpy.data.objects.new(name, bpy.data.meshes.new(name))
+    #     object.data = tmp_obj.data
         
-        # Delete tmp_obj with data
-        bpy.data.objects.remove(tmp_obj, do_unlink=True)
+    #     # Delete tmp_obj with data
+    #     bpy.data.objects.remove(tmp_obj, do_unlink=True)
 
-        enabled = True
+    #     enabled = True
 
-    else:
-        meshio_mesh = None
-        enabled = True
-        try:
-            meshio_mesh = meshio.read(filepath)
-        except Exception as e:
-            show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                            "Meshio Loading Error" + str(e),
-                            icon="ERROR")
-            enabled = False
+    # else:
+    meshio_mesh = None
+    enabled = True
+    try:
+        meshio_mesh = meshio.read(filepath)
+    except Exception as e:
+        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                        "Meshio Loading Error" + str(e),
+                        icon="ERROR")
+        enabled = False
 
-        name = fileseq.basename() + "@" + fileseq.extension()
-        mesh = bpy.data.meshes.new(name)
-        object = bpy.data.objects.new(name, mesh)
+    name = fileseq.basename() + "@" + fileseq.extension()
+    mesh = bpy.data.meshes.new(name)
+    object = bpy.data.objects.new(name, mesh)
 
     #  create the object
     if bpy.path.is_subdir(filepath, bpy.path.abspath("//")):
@@ -321,48 +321,48 @@ def update_obj(scene, depsgraph=None):
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
 
-        if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
-            filepath = fs[current_frame % len(fs)]
+        # if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
+        #     filepath = fs[current_frame % len(fs)]
 
-            # Save all current objects
-            objs = set(scene.objects)
+        #     # Save all current objects
+        #     objs = set(scene.objects)
 
-            # Reload the object
-            bpy.ops.import_scene.obj(filepath=filepath)
+        #     # Reload the object
+        #     bpy.ops.import_scene.obj(filepath=filepath)
 
-            # Substract all previous items from the current items and print their names
-            imported_objs = set(scene.objects) - objs
+        #     # Substract all previous items from the current items and print their names
+        #     imported_objs = set(scene.objects) - objs
 
-            # Check if the imported object worked correctly
-            if len(imported_objs) == 1:
-                new_tmp_obj = imported_objs.pop()
-            else:
-                show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                 "obj. Loading Error in update_obj",
-                                 icon="ERROR")
-                continue
+        #     # Check if the imported object worked correctly
+        #     if len(imported_objs) == 1:
+        #         new_tmp_obj = imported_objs.pop()
+        #     else:
+        #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+        #                          "obj. Loading Error in update_obj",
+        #                          icon="ERROR")
+        #         continue
             
-            # Copy the data except for material
-            if obj.data.materials:
-                # assign to 1st material slot
-                new_tmp_obj.data.materials[0] = obj.data.materials[0]
-            else:
-                # no slots
-                new_tmp_obj.data.materials.append(obj.data.materials[0])
+        #     # Copy the data except for material
+        #     if obj.data.materials:
+        #         # assign to 1st material slot
+        #         new_tmp_obj.data.materials[0] = obj.data.materials[0]
+        #     else:
+        #         # no slots
+        #         new_tmp_obj.data.materials.append(obj.data.materials[0])
 
-            obj.data = new_tmp_obj.data
+        #     obj.data = new_tmp_obj.data
 
-            # Delete the temporary object with the data
-            bpy.data.objects.remove(new_tmp_obj, do_unlink=True)
+        #     # Delete the temporary object with the data
+        #     bpy.data.objects.remove(new_tmp_obj, do_unlink=True)
 
-            # purge old meshes
-            bpy.ops.outliner.orphans_purge(do_recursive=True)
+        #     # purge old meshes
+        #     bpy.ops.outliner.orphans_purge(do_recursive=True)
 
-            apply_transformation(meshio_mesh, obj, depsgraph)
+        #     apply_transformation(meshio_mesh, obj, depsgraph)
 
-            end_time = time.perf_counter()
-            obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
-            continue
+        #     end_time = time.perf_counter()
+        #     obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
+        #     continue
         
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
