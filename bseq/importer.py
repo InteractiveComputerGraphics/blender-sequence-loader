@@ -197,14 +197,13 @@ def create_meshio_obj(filepath):
         bpy.ops.import_scene.obj(filepath=filepath)
         # Substract all previous items from the current items and print their names
         imported_objs = set(bpy.context.scene.objects) - objs
-        print(", ".join(o.name for o in imported_objs))
 
         # Check if the imported object worked correctly
         if len(imported_objs) == 1:
             obj = imported_objs.pop()
         else:
             show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                "obj. Loading Error",
+                                "obj. Loading Error in create_meshio_obj",
                                 icon="ERROR")
             return
         
@@ -235,14 +234,13 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
         bpy.ops.import_scene.obj(filepath=filepath)
         # Substract all previous items from the current items and print their names
         imported_objs = set(bpy.context.scene.objects) - objs
-        print(", ".join(o.name for o in imported_objs))
 
         # Check if the imported object worked correctly
         if len(imported_objs) == 1:
             tmp_obj = imported_objs.pop()
         else:
             show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                "obj. Loading Error",
+                                "obj. Loading Error in create_obj",
                                 icon="ERROR")
             return
 
@@ -273,7 +271,6 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
         object = bpy.data.objects.new(name, mesh)
 
     #  create the object
-    print("File path: " + filepath)
     if bpy.path.is_subdir(filepath, bpy.path.abspath("//")):
         if root_path != "":
             object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
@@ -327,25 +324,24 @@ def update_obj(scene, depsgraph=None):
         if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
             filepath = fs[current_frame % len(fs)]
 
-            print("File path update: " + filepath)
-
             # Save all current objects
             objs = set(scene.objects)
+
             # Reload the object
             bpy.ops.import_scene.obj(filepath=filepath)
+
             # Substract all previous items from the current items and print their names
             imported_objs = set(scene.objects) - objs
-            print(", ".join(o.name for o in imported_objs))
 
             # Check if the imported object worked correctly
             if len(imported_objs) == 1:
                 new_tmp_obj = imported_objs.pop()
             else:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                 "obj. Loading Error",
+                                 "obj. Loading Error in update_obj",
                                  icon="ERROR")
                 continue
-
+            
             # Copy the data except for material
             if obj.data.materials:
                 # assign to 1st material slot
