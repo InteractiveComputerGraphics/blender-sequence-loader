@@ -208,7 +208,7 @@ def create_meshio_obj(filepath):
         
     #     obj.name = os.path.basename(filepath)
     #     return
-    
+
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
@@ -284,7 +284,7 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
-    if enabled and not is_obj_seq:
+    if enabled: # and not is_obj_seq:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
