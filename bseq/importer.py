@@ -81,7 +81,7 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
     # evaluate the rigid body transformations (only relevant for .bin format)
     rigid_body_transformation = mathutils.Matrix.Identity(4)
     if meshio_mesh is not None:
-        if meshio_mesh.field_data.get("transformation_matrix") is not None:
+        if "transformation_matrix" in meshio_mesh.field_data:
             rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
 
     # multiply everything together (with custom transform matrix)
@@ -142,11 +142,10 @@ def update_mesh(meshio_mesh, mesh):
     mesh.validate()
 
     #  copy attributes
-    attributes = mesh.attributes
     for k, v in meshio_mesh.point_data.items():
         k = "bseq_" + k
         attribute = None
-        if k not in attributes:
+        if k not in mesh.attributes:
             if len(v.shape) == 1:
                 # one dimensional attribute
                 attribute = mesh.attributes.new(k, "FLOAT", "POINT")
@@ -165,7 +164,7 @@ def update_mesh(meshio_mesh, mesh):
                 show_message_box('more than 2 dimensional tensor, ignored')
                 continue
         else:
-            attribute = attributes[k]
+            attribute = mesh.attributes[k]
         name_string = None
         if attribute.data_type == "FLOAT":
             name_string = "value"
@@ -174,10 +173,36 @@ def update_mesh(meshio_mesh, mesh):
 
         attribute.data.foreach_set(name_string, v.ravel())
 
-        # set as split norm
-        if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-            mesh.use_auto_smooth = True
-            mesh.normals_split_custom_set_from_vertices(v)
+        # # set as split norm
+        # if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
+        #     mesh.use_auto_smooth = True
+        #     mesh.normals_split_custom_set_from_vertices(v)
+
+    # I want to set normals if the scene property use_imported_normals is true and the normals are either in point_data["obj:vn"] or field_data["obj:vn"]
+    if bpy.context.scene.BSEQ.use_imported_normals:
+        print("use_imported_normals")
+        # print all the keys in point_data, field_data, cell_data
+        print("point_data", meshio_mesh.point_data.keys())
+        print("field_data", meshio_mesh.field_data.keys())
+        print("cell_data", meshio_mesh.cell_data.keys())
+
+        mesh.use_auto_smooth = True
+
+
+        if "obj:vn" in meshio_mesh.point_data and len(meshio_mesh.point_data["obj:vn"]) == len(mesh.vertices):
+            print("obj:vn in point_data", len(mesh.loops))
+            # vert_norms = [tuple(x) for x in meshio_mesh.point_data["obj:vn"]]
+
+            mesh.normals_split_custom_set_from_vertices(meshio_mesh.point_data["obj:vn"])
+
+            for i in range(len(mesh.vertices)):
+                print(mesh.vertices[i].normal)
+        elif "obj:vn" in meshio_mesh.field_data and "obj:vn_face_idx" in meshio_mesh.cell_data:
+            print("obj:vn in field_data")
+            indices = meshio_mesh.cell_data["obj:vn_face_idx"][0]
+            indices = [item for sublist in indices for item in sublist]
+            vert_norms = [meshio_mesh.field_data["obj:vn"][i - 1] for i in indices]
+            mesh.normals_split_custom_set(vert_norms)
 
 # function to create a single meshio object
 def create_meshio_obj(filepath):
@@ -188,27 +213,7 @@ def create_meshio_obj(filepath):
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
-    
-    # if filepath.endswith(".obj"):
-    #     # Save all current objects
-    #     objs = set(bpy.context.scene.objects)
-    #     # Reload the object
-    #     bpy.ops.import_scene.obj(filepath=filepath)
-    #     # Substract all previous items from the current items and print their names
-    #     imported_objs = set(bpy.context.scene.objects) - objs
-
-    #     # Check if the imported object worked correctly
-    #     if len(imported_objs) == 1:
-    #         obj = imported_objs.pop()
-    #     else:
-    #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-    #                             "obj. Loading Error in create_meshio_obj",
-    #                             icon="ERROR")
-    #         return
-        
-    #     obj.name = os.path.basename(filepath)
-    #     return
-
+        return
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
@@ -224,38 +229,6 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
 
-    #.obj sequences have to be handled differently
-    # is_obj_seq = filepath.endswith(".obj")
-    # if is_obj_seq and bpy.context.scene.BSEQ.use_blender_obj_import:
-
-    #     # Save all current objects
-    #     objs = set(bpy.context.scene.objects)
-    #     # Reload the object
-    #     bpy.ops.import_scene.obj(filepath=filepath)
-    #     # Substract all previous items from the current items and print their names
-    #     imported_objs = set(bpy.context.scene.objects) - objs
-
-    #     # Check if the imported object worked correctly
-    #     if len(imported_objs) == 1:
-    #         tmp_obj = imported_objs.pop()
-    #     else:
-    #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-    #                             "obj. Loading Error in create_obj",
-    #                             icon="ERROR")
-    #         return
-
-    #     name = fileseq.basename() + "@" + fileseq.extension()
-
-    #     # Create object with empty mesh
-    #     object = bpy.data.objects.new(name, bpy.data.meshes.new(name))
-    #     object.data = tmp_obj.data
-        
-    #     # Delete tmp_obj with data
-    #     bpy.data.objects.remove(tmp_obj, do_unlink=True)
-
-    #     enabled = True
-
-    # else:
     meshio_mesh = None
     enabled = True
     try:
@@ -284,12 +257,11 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     object.matrix_world = transform_matrix
     driver = object.driver_add("BSEQ.frame")
     driver.driver.expression = 'frame'
-    if enabled: # and not is_obj_seq:
+    if enabled:
         update_mesh(meshio_mesh, object.data)
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
-
 
 def update_obj(scene, depsgraph=None):
 
@@ -320,49 +292,6 @@ def update_obj(scene, depsgraph=None):
         # in case the blender file was created on windows system, but opened in linux system
         pattern = bpy.path.native_pathsep(pattern)
         fs = fileseq.FileSequence(pattern)
-
-        # if pattern.endswith(".obj") and scene.BSEQ.use_blender_obj_import:
-        #     filepath = fs[current_frame % len(fs)]
-
-        #     # Save all current objects
-        #     objs = set(scene.objects)
-
-        #     # Reload the object
-        #     bpy.ops.import_scene.obj(filepath=filepath)
-
-        #     # Substract all previous items from the current items and print their names
-        #     imported_objs = set(scene.objects) - objs
-
-        #     # Check if the imported object worked correctly
-        #     if len(imported_objs) == 1:
-        #         new_tmp_obj = imported_objs.pop()
-        #     else:
-        #         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-        #                          "obj. Loading Error in update_obj",
-        #                          icon="ERROR")
-        #         continue
-            
-        #     # Copy the data except for material
-        #     if obj.data.materials:
-        #         # assign to 1st material slot
-        #         new_tmp_obj.data.materials[0] = obj.data.materials[0]
-        #     else:
-        #         # no slots
-        #         new_tmp_obj.data.materials.append(obj.data.materials[0])
-
-        #     obj.data = new_tmp_obj.data
-
-        #     # Delete the temporary object with the data
-        #     bpy.data.objects.remove(new_tmp_obj, do_unlink=True)
-
-        #     # purge old meshes
-        #     bpy.ops.outliner.orphans_purge(do_recursive=True)
-
-        #     apply_transformation(meshio_mesh, obj, depsgraph)
-
-        #     end_time = time.perf_counter()
-        #     obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
-        #     continue
         
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]

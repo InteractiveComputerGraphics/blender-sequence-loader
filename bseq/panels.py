@@ -22,18 +22,19 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            split = layout.split(factor=0.5)
+            split = layout.split(factor=0.4)
             col1 = split.column()
             col2 = split.column()
             split2 = col2.split(factor=0.25)
             col2 = split2.column()
             col3 = split2.column()
-            split3 = col3.split(factor=0.33)
+            split3 = col3.split(factor=0.5)
             col3 = split3.column()
             col4 = split3.column()
-            col4.alignment = 'CENTER'
+            col4.alignment = 'EXPAND'
             start_frame = item.BSEQ.start_end_frame[0]
             end_frame = item.BSEQ.start_end_frame[1]
+
             col1.prop(item, "name", text='', emboss=False)
             if item.BSEQ.enabled:
                 col2.prop(item.BSEQ, "enabled", text="", icon="PLAY")
