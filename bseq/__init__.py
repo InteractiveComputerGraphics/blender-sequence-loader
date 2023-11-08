@@ -1,5 +1,5 @@
 from bseq.utils import refresh_obj
-from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins, BSEQ_OT_set_as_split_norm, BSEQ_OT_remove_split_norm, BSEQ_OT_disable_selected, BSEQ_OT_enable_selected, BSEQ_OT_refresh_seq, BSEQ_OT_disable_all, BSEQ_OT_enable_all, BSEQ_OT_refresh_sequences, BSEQ_OT_set_start_end_frames, BSEQ_OT_batchSequences, BSEQ_PT_batchSequences_Settings, BSEQ_OT_MeshioObject
+from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_resetmesh, BSEQ_OT_resetins, BSEQ_OT_set_as_split_norm, BSEQ_OT_remove_split_norm, BSEQ_OT_disable_selected, BSEQ_OT_enable_selected, BSEQ_OT_refresh_seq, BSEQ_OT_disable_all, BSEQ_OT_enable_all, BSEQ_OT_refresh_sequences, BSEQ_OT_set_start_end_frames, BSEQ_OT_batch_sequences, BSEQ_PT_batch_sequences_settings, BSEQ_OT_meshio_object, BSEQ_OT_import_zip
 from .properties import BSEQ_scene_property, BSEQ_obj_property, BSEQ_mesh_property
 from .panels import BSEQ_UL_Obj_List, BSEQ_List_Panel, BSEQ_Settings, BSEQ_PT_Import, BSEQ_PT_Import_Child1, BSEQ_PT_Import_Child2, BSEQ_Globals_Panel, BSEQ_Advanced_Panel, BSEQ_Templates, BSEQ_UL_Att_List, draw_template
 from .messenger import subscribe_to_selected, unsubscribe_to_selected
@@ -52,7 +52,8 @@ __all__ = [
     "BSEQ_OT_enable_all",
     "BSEQ_OT_refresh_sequences",
     "BSEQ_OT_set_start_end_frames",
-    "BSEQ_OT_batchSequences",
-    "BSEQ_PT_batchSequences_Settings",
-    "BSEQ_OT_MeshioObject"
+    "BSEQ_OT_batch_sequences",
+    "BSEQ_PT_batch_sequences_settings",
+    "BSEQ_OT_meshio_object",
+    "BSEQ_OT_import_zip"
 ]

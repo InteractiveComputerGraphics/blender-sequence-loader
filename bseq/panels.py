@@ -249,6 +249,8 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
             box_col3.label(text="Scale:")
             box_col3.prop(importer_prop, "custom_scale", text="")
 
+        layout.operator("bseq.import_zip", text="Import from zip")
+        
 class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"
     bl_label = "Import from folder"

@@ -51,9 +51,10 @@ classes = [
     BSEQ_OT_enable_all,
     BSEQ_OT_refresh_sequences,
     BSEQ_OT_set_start_end_frames,
-    BSEQ_OT_batchSequences,
-    BSEQ_PT_batchSequences_Settings,
-    BSEQ_OT_MeshioObject
+    BSEQ_OT_batch_sequences,
+    BSEQ_PT_batch_sequences_settings,
+    BSEQ_OT_meshio_object,
+    BSEQ_OT_import_zip
 ]
 
 def register():

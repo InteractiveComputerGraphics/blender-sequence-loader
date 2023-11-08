@@ -335,12 +335,11 @@ class BSEQ_OT_set_start_end_frames(bpy.types.Operator):
 
         return {"FINISHED"}
 
-
 from pathlib import Path
 import meshio
 from bpy_extras.io_utils import ImportHelper
 
-class BSEQ_OT_batchSequences(bpy.types.Operator, ImportHelper):
+class BSEQ_OT_batch_sequences(bpy.types.Operator, ImportHelper):
     """Batch Import Sequences"""
     bl_idname = "wm.seq_import_batch"
     bl_label = "Import Sequences"
@@ -404,7 +403,7 @@ class BSEQ_OT_batchSequences(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         pass
 
-class BSEQ_PT_batchSequences_Settings(bpy.types.Panel):
+class BSEQ_PT_batch_sequences_settings(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Settings Panel"
@@ -434,7 +433,28 @@ class BSEQ_PT_batchSequences_Settings(bpy.types.Panel):
         if importer_prop.relative:
             layout.prop(importer_prop, "root_path", text="Root Directory")
 
-class BSEQ_OT_MeshioObject(bpy.types.Operator, ImportHelper):
+class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
+    """Import a zip file"""
+    bl_idname = "bseq.import_zip"
+    bl_label = "Import Zip"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".zip"
+    filter_glob: bpy.props.StringProperty(
+        default="*.zip",
+        options={'HIDDEN', 'LIBRARY_EDITABLE'},
+    )
+
+    files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    
+    def execute(self, context):
+        import zipfile
+        zip_file = zipfile.ZipFile(self.filepath)
+        zip_file.extractall(Path(self.filepath).parent)
+            
+        return {'FINISHED'}
+
+class BSEQ_OT_meshio_object(bpy.types.Operator, ImportHelper):
     """Batch Import Meshio Objects"""
     bl_idname = "wm.meshio_import_batch"
     bl_label = "Import Multiple Meshio Objects"
@@ -452,7 +472,7 @@ class BSEQ_OT_MeshioObject(bpy.types.Operator, ImportHelper):
 
 def menu_func_import(self, context):
     self.layout.operator(
-            BSEQ_OT_MeshioObject.bl_idname, 
+            BSEQ_OT_meshio_object.bl_idname, 
             text="MeshIO Object")
 
 # Default Keymap Configuration
