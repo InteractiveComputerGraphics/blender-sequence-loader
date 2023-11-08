@@ -87,6 +87,31 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
     # multiply everything together (with custom transform matrix)
     obj.matrix_world = rigid_body_transformation @ eval_transform_matrix
 
+# function to create a single custom Blender mesh attribute
+def create_or_retrieve_attribute(mesh, k, v):
+    if k not in mesh.attributes:
+        if len(v) == 0:
+            return mesh.attributes.new(k, "FLOAT", "POINT")
+        if len(v.shape) == 1:
+            # one dimensional attribute
+            return mesh.attributes.new(k, "FLOAT", "POINT")
+        if len(v.shape) == 2:
+            dim = v.shape[1]
+            if dim > 3:
+                show_message_box('higher than 3 dimensional attribue, ignored')
+                return None
+            if dim == 1:
+                return mesh.attributes.new(k, "FLOAT", "POINT")
+            if dim == 2:
+                return mesh.attributes.new(k, "FLOAT2", "POINT")
+            if dim == 3:
+                return mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
+        if len(v.shape) > 2:
+            show_message_box('more than 2 dimensional tensor, ignored')
+            return None
+    else:
+        return mesh.attributes[k]
+
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
     mesh_vertices = meshio_mesh.points
@@ -141,30 +166,18 @@ def update_mesh(meshio_mesh, mesh):
     mesh.update()
     mesh.validate()
 
+    if bpy.context.scene.BSEQ.use_imported_normals:
+        if "obj:vn" in meshio_mesh.point_data:
+            mesh.BSEQ.split_norm_att_name = "bseq_obj:vn"
+        elif "normals" in meshio_mesh.point_data and len(meshio_mesh.point_data["normals"]) == len(mesh.vertices):
+            mesh.BSEQ.split_norm_att_name = "bseq_normals"
+        elif "obj:vn" in meshio_mesh.field_data and "obj:vn_face_idx" in meshio_mesh.cell_data:
+            mesh.BSEQ.split_norm_att_name = "obj:vn"
+
     #  copy attributes
     for k, v in meshio_mesh.point_data.items():
         k = "bseq_" + k
-        attribute = None
-        if k not in mesh.attributes:
-            if len(v.shape) == 1:
-                # one dimensional attribute
-                attribute = mesh.attributes.new(k, "FLOAT", "POINT")
-            if len(v.shape) == 2:
-                dim = v.shape[1]
-                if dim > 3:
-                    show_message_box('higher than 3 dimensional attribue, ignored')
-                    continue
-                if dim == 1:
-                    attribute = mesh.attributes.new(k, "FLOAT", "POINT")
-                if dim == 2:
-                    attribute = mesh.attributes.new(k, "FLOAT2", "POINT")
-                if dim == 3:
-                    attribute = mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
-            if len(v.shape) > 2:
-                show_message_box('more than 2 dimensional tensor, ignored')
-                continue
-        else:
-            attribute = mesh.attributes[k]
+        attribute = create_or_retrieve_attribute(mesh, k, v)
         name_string = None
         if attribute.data_type == "FLOAT":
             name_string = "value"
@@ -173,36 +186,20 @@ def update_mesh(meshio_mesh, mesh):
 
         attribute.data.foreach_set(name_string, v.ravel())
 
-        # # set as split norm
-        # if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-        #     mesh.use_auto_smooth = True
-        #     mesh.normals_split_custom_set_from_vertices(v)
+        # set as split normal per vertex
+        if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
+            mesh.use_auto_smooth = True
+            mesh.normals_split_custom_set_from_vertices(v)
 
-    # I want to set normals if the scene property use_imported_normals is true and the normals are either in point_data["obj:vn"] or field_data["obj:vn"]
-    if bpy.context.scene.BSEQ.use_imported_normals:
-        print("use_imported_normals")
-        # print all the keys in point_data, field_data, cell_data
-        print("point_data", meshio_mesh.point_data.keys())
-        print("field_data", meshio_mesh.field_data.keys())
-        print("cell_data", meshio_mesh.cell_data.keys())
-
-        mesh.use_auto_smooth = True
-
-
-        if "obj:vn" in meshio_mesh.point_data and len(meshio_mesh.point_data["obj:vn"]) == len(mesh.vertices):
-            print("obj:vn in point_data", len(mesh.loops))
-            # vert_norms = [tuple(x) for x in meshio_mesh.point_data["obj:vn"]]
-
-            mesh.normals_split_custom_set_from_vertices(meshio_mesh.point_data["obj:vn"])
-
-            for i in range(len(mesh.vertices)):
-                print(mesh.vertices[i].normal)
-        elif "obj:vn" in meshio_mesh.field_data and "obj:vn_face_idx" in meshio_mesh.cell_data:
-            print("obj:vn in field_data")
-            indices = meshio_mesh.cell_data["obj:vn_face_idx"][0]
-            indices = [item for sublist in indices for item in sublist]
-            vert_norms = [meshio_mesh.field_data["obj:vn"][i - 1] for i in indices]
-            mesh.normals_split_custom_set(vert_norms)
+    for k, v in meshio_mesh.field_data.items():
+        if k not in mesh.attributes:
+            attribute = create_or_retrieve_attribute(mesh, k, [])
+        
+        # set split normal per loop per vertex
+        if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
+            # Currently hard-coded for .obj files
+            indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
+            mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
 
 # function to create a single meshio object
 def create_meshio_obj(filepath):
@@ -222,7 +219,6 @@ def create_meshio_obj(filepath):
     bpy.context.collection.objects.link(object)
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
-
 
 def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
 
