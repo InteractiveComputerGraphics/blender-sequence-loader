@@ -6,8 +6,6 @@ import datetime
 
 import numpy as np
 
-# from ..__about__ import __version__
-# from .._exceptions import WriteError
 # from .._files import open_file
 # from .._helpers import register_format
 # from .._mesh import CellBlock, Mesh
@@ -16,7 +14,7 @@ import meshio
 
 
 def read(filename):
-    with open_file(filename, "r") as f:
+    with open(filename, "r") as f:
         mesh = read_buffer(f)
     return mesh
 
@@ -125,48 +123,13 @@ def read_buffer(f):
     cells = []
     for f, gid in zip(face_groups, face_group_ids):
         if f.shape[1] == 3:
-            cells.append(CellBlock("triangle", f - 1))
+            cells.append(meshio.CellBlock("triangle", f - 1))
         elif f.shape[1] == 4:
-            cells.append(CellBlock("quad", f - 1))
+            cells.append(meshio.CellBlock("quad", f - 1))
         else:
-            cells.append(CellBlock("polygon", f - 1))
+            cells.append(meshio.CellBlock("polygon", f - 1))
         cell_data["obj:group_ids"].append(gid)
 
-    return Mesh(points, cells, point_data=point_data, cell_data=cell_data, field_data=field_data)
+    return meshio.Mesh(points, cells, point_data=point_data, cell_data=cell_data, field_data=field_data)
 
-
-def write(filename, mesh):
-    for c in mesh.cells:
-        if c.type not in ["triangle", "quad", "polygon"]:
-            raise WriteError(
-                "Wavefront .obj files can only contain triangle or quad cells."
-            )
-
-    with open_file(filename, "w") as f:
-        f.write(
-            "# Created by meshio v{}, {}\n".format(
-                __version__, datetime.datetime.now().isoformat()
-            )
-        )
-        for p in mesh.points:
-            f.write(f"v {p[0]} {p[1]} {p[2]}\n")
-
-        if "obj:vn" in mesh.point_data:
-            dat = mesh.point_data["obj:vn"]
-            fmt = "vn " + " ".join(["{}"] * dat.shape[1]) + "\n"
-            for vn in dat:
-                f.write(fmt.format(*vn))
-
-        if "obj:vt" in mesh.point_data:
-            dat = mesh.point_data["obj:vt"]
-            fmt = "vt " + " ".join(["{}"] * dat.shape[1]) + "\n"
-            for vt in dat:
-                f.write(fmt.format(*vt))
-
-        for cell_block in mesh.cells:
-            fmt = "f " + " ".join(["{}"] * cell_block.data.shape[1]) + "\n"
-            for c in cell_block.data:
-                f.write(fmt.format(*(c + 1)))
-
-
-register_format("obj", [".obj"], read, {"obj": write})
+meshio.register_format("obj", [".obj"], read, {"obj": None})
