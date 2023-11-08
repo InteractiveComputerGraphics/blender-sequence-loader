@@ -451,8 +451,33 @@ class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
         import zipfile
         zip_file = zipfile.ZipFile(self.filepath)
         zip_file.extractall(Path(self.filepath).parent)
-            
+        zip_file.close()
+
+        folder = str(Path(self.filepath).parent) + '/' + str(Path(self.filepath).name)
+        folder = folder[:-4]
+
+        seqs = fileseq.findSequencesOnDisk(str(folder))
+        for s in seqs:
+            create_obj(s, folder, transform_matrix=Matrix.Identity(4))
+        
+        created_folder = context.scene.BSEQ.imported_zips.add()
+        created_folder.path = folder
+
         return {'FINISHED'}
+
+class BSEQ_OT_delete_zips(bpy.types.Operator):
+    """Delete a zip file"""
+    bl_idname = "bseq.delete_zips"
+    bl_label = "Delete Zip"
+    bl_options = {'PRESET', 'UNDO'}
+
+    def execute(self, context):
+        folders = context.scene.BSEQ.imported_zips
+        for folder in folders:
+            import shutil
+            shutil.rmtree(folder.path)
+        return {'FINISHED'}
+    
 
 class BSEQ_OT_meshio_object(bpy.types.Operator, ImportHelper):
     """Batch Import Meshio Objects"""

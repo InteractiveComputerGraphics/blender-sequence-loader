@@ -54,7 +54,8 @@ classes = [
     BSEQ_OT_batch_sequences,
     BSEQ_PT_batch_sequences_settings,
     BSEQ_OT_meshio_object,
-    BSEQ_OT_import_zip
+    BSEQ_OT_import_zip,
+    BSEQ_OT_delete_zips
 ]
 
 def register():
@@ -76,6 +77,7 @@ def register():
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
+    bpy.utils.unregister_class(BSEQ_ImportedZip)
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.BSEQ
     del bpy.types.Object.BSEQ

@@ -2,6 +2,13 @@ import bpy
 from .callback import *
 from mathutils import Matrix
 
+class BSEQ_ImportedZip(bpy.types.PropertyGroup):
+    path: bpy.props.StringProperty(name="Directory",
+                                    subtype="DIR_PATH",
+                                    )
+
+bpy.utils.register_class(BSEQ_ImportedZip)
+
 class BSEQ_scene_property(bpy.types.PropertyGroup):
     path: bpy.props.StringProperty(name="Directory",
                                    subtype="DIR_PATH",
@@ -112,6 +119,8 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                             description='Filter string for file sequences',
                                             default='',
                                             )
+    
+    imported_zips: bpy.props.CollectionProperty(type=BSEQ_ImportedZip)
 
 class BSEQ_obj_property(bpy.types.PropertyGroup):
     init: bpy.props.BoolProperty(default=False)

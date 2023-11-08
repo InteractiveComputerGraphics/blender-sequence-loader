@@ -249,8 +249,13 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
             box_col3.label(text="Scale:")
             box_col3.prop(importer_prop, "custom_scale", text="")
 
-        layout.operator("bseq.import_zip", text="Import from zip")
-        
+        split = layout.split(factor=0.5)
+        col1 = split.column()
+        col2 = split.column()
+
+        col1.operator("bseq.import_zip", text="Import from zip")
+        col2.operator("bseq.delete_zips", text="Delete created folders")
+
 class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"
     bl_label = "Import from folder"
