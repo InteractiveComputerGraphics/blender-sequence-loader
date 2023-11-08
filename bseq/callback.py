@@ -25,7 +25,7 @@ def update_path(self, context):
         return [("None", "No sequence detected", "", 1)]
 
     file_sequences.clear()
-    if len(f) >= 100:
+    if len(f) >= 30:
         file_sequences.append(("None", "Too much sequence detected, could be false detection, please use pattern below", "", 1))
     else:
         count = 1
