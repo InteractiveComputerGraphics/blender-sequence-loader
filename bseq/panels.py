@@ -207,7 +207,10 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
         scene = context.scene
         importer_prop = scene.BSEQ
 
-        layout.operator("wm.seq_import_batch")
+        row = layout.row()
+
+        row.scale_y = 1.5
+        row.operator("wm.seq_import_batch")
         
         split = layout.split()
         col1 = split.column()
@@ -249,13 +252,6 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
             box_col3.label(text="Scale:")
             box_col3.prop(importer_prop, "custom_scale", text="")
 
-        split = layout.split(factor=0.5)
-        col1 = split.column()
-        col2 = split.column()
-
-        col1.operator("bseq.import_zip", text="Import from zip")
-        col2.operator("bseq.delete_zips", text="Delete created folders")
-
 class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"
     bl_label = "Import from folder"
@@ -287,6 +283,14 @@ class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
             col4.operator("bseq.refreshall", text='', icon="FILE_REFRESH")
 
         layout.operator("sequence.load")
+
+        split = layout.split(factor=0.5)
+        col1 = split.column()
+        col2 = split.column()
+
+        col1.operator("bseq.import_zip", text="Import from zip")
+        col2.operator("bseq.delete_zips", text="Delete created folders")
+
 
 class BSEQ_PT_Import_Child2(BSEQ_Panel, bpy.types.Panel):
     bl_parent_id = "BSEQ_PT_panel"

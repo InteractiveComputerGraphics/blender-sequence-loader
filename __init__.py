@@ -2,8 +2,8 @@ bl_info = {
     "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Interactive Computer Graphics",
-    "version": (0, 1, 6),
-    "blender": (3, 4, 0),
+    "version": (0, 2, 0),
+    "blender": (3, 6, 0),
     "warning": "",
     "support": "COMMUNITY",
     "category": "Import-Export",
@@ -55,7 +55,8 @@ classes = [
     BSEQ_PT_batch_sequences_settings,
     BSEQ_OT_meshio_object,
     BSEQ_OT_import_zip,
-    BSEQ_OT_delete_zips
+    BSEQ_OT_delete_zips,
+    BSEQ_addon_preferences
 ]
 
 def register():
@@ -77,7 +78,6 @@ def register():
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
-    bpy.utils.unregister_class(BSEQ_ImportedZip)
     bpy.types.TEXT_MT_templates.remove(draw_template)
     del bpy.types.Scene.BSEQ
     del bpy.types.Object.BSEQ
