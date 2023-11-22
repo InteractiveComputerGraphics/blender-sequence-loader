@@ -3,11 +3,24 @@ from mathutils import Matrix
 import fileseq
 from .messenger import *
 import traceback
-from .utils import refresh_obj, show_message_box
+from .utils import refresh_obj, show_message_box, get_relative_path
 from .importer import create_obj, create_meshio_obj
 import numpy as np
 
 addon_name = "blendersequenceloader"
+
+def relative_path_error():
+    show_message_box("When using relative path, please save file before using it", icon="ERROR")
+    return {"CANCELLED"}
+
+def get_transform_matrix(importer_prop):
+    if importer_prop.use_custom_transform:
+        return Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
+    else:
+        return Matrix.Identity(4)
+    
+def create_obj_wrapper(seq, importer_prop):
+    create_obj(seq, importer_prop.use_relative, importer_prop.root_path, transform_matrix=get_transform_matrix(importer_prop))
 
 #  Here are load and delete operations
 class BSEQ_OT_load(bpy.types.Operator):
@@ -20,10 +33,8 @@ class BSEQ_OT_load(bpy.types.Operator):
         scene = context.scene
         importer_prop = scene.BSEQ
 
-        if importer_prop.relative and not bpy.data.is_saved:
-            #  use relative but file not saved
-            show_message_box("When using relative path, please save file before using it", icon="ERROR")
-            return {"CANCELLED"}
+        if importer_prop.use_relative and not bpy.data.is_saved:
+            return relative_path_error()
 
         fs = importer_prop.fileseq
         use_pattern = importer_prop.use_pattern
@@ -43,13 +54,7 @@ class BSEQ_OT_load(bpy.types.Operator):
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
 
-        transform_matrix = (Matrix.LocRotScale(
-                                    importer_prop.custom_location, 
-                                    importer_prop.custom_rotation, 
-                                    importer_prop.custom_scale)
-                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
-
-        create_obj(fs, importer_prop.root_path, transform_matrix=transform_matrix)
+        create_obj_wrapper(fs, importer_prop)
         return {"FINISHED"}
 
 
@@ -63,10 +68,9 @@ class BSEQ_OT_edit(bpy.types.Operator):
         scene = context.scene
         importer_prop = scene.BSEQ
 
-        if importer_prop.relative and not bpy.data.is_saved:
+        if importer_prop.use_relative and not bpy.data.is_saved:
             #  use relative but file not saved
-            show_message_box("When using relative path, please save file before using it", icon="ERROR")
-            return {"CANCELLED"}
+            return relative_path_error()
 
         fs = importer_prop.fileseq
         use_pattern = importer_prop.use_pattern
@@ -93,7 +97,7 @@ class BSEQ_OT_edit(bpy.types.Operator):
         obj = sim_loader.edit_obj
         if not obj:
             return {"CANCELLED"}
-        if importer_prop.relative:
+        if importer_prop.use_relative:
             if importer_prop.root_path != "":
                 object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=importer_prop.root_path)
             else:
@@ -379,10 +383,8 @@ class BSEQ_OT_batch_sequences(bpy.types.Operator, ImportHelper):
         scene = context.scene
         importer_prop = scene.BSEQ
 
-        if importer_prop.relative and not bpy.data.is_saved:
-            #  use relative but file not saved
-            show_message_box("When using relative path, please save file before using it", icon="ERROR")
-            return {"CANCELLED"}
+        if importer_prop.use_relative and not bpy.data.is_saved:
+            return relative_path_error()
 
         self.filter_glob = '*'
 
@@ -393,13 +395,13 @@ class BSEQ_OT_batch_sequences(bpy.types.Operator, ImportHelper):
             # Check if there exists a matching file sequence for every selection
             fp = str(Path(folder.parent, selection.name))
             seqs = fileseq.findSequencesOnDisk(str(folder.parent))
-            matching_seqs = [s for s in seqs if fp in list(s) and s not in used_seqs]
-            
-            if matching_seqs:
-                transform_matrix = (Matrix.LocRotScale(importer_prop.custom_location, importer_prop.custom_rotation, importer_prop.custom_scale)
-                                    if importer_prop.use_custom_transform else Matrix.Identity(4))
-                create_obj(matching_seqs[0], importer_prop.root_path, transform_matrix=transform_matrix)
-                used_seqs.add(matching_seqs[0])
+            matching_seq = [s for s in seqs if fp in list(s) and str(s) not in used_seqs]
+
+            if matching_seq:
+                matching_seq = matching_seq[0]
+                used_seqs.add(str(matching_seq))
+
+                create_obj_wrapper(matching_seq, importer_prop)
         return {'FINISHED'}
 
     def draw(self, context):
@@ -425,15 +427,15 @@ class BSEQ_PT_batch_sequences_settings(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False  # No animation.
 
-        # sfile = context.space_data
-        # operator = sfile.active_operator
+        # # sfile = context.space_data
+        # # operator = sfile.active_operator
 
-        layout.prop(importer_prop, 'filter_string')
+        # layout.prop(importer_prop, 'filter_string')
 
-        layout.alignment = 'LEFT'
-        layout.prop(importer_prop, "relative", text="Relative Path")
-        if importer_prop.relative:
-            layout.prop(importer_prop, "root_path", text="Root Directory")
+        # layout.alignment = 'LEFT'
+        # layout.prop(importer_prop, "relative", text="Relative Path")
+        # if importer_prop.use_relative:
+        #     layout.prop(importer_prop, "root_path", text="Root Directory")
 
 class BSEQ_addon_preferences(bpy.types.AddonPreferences):
     bl_idname = addon_name
@@ -444,9 +446,10 @@ class BSEQ_addon_preferences(bpy.types.AddonPreferences):
             )
 
     def draw(self, context):
-        layout = self.layout
-        layout.label(text="Please set a folder to store the extracted zip files")
-        layout.prop(self, "zips_folder", text="Zips Folder")
+        # layout = self.layout
+        # layout.label(text="Please set a folder to store the extracted zip files")
+        # layout.prop(self, "zips_folder", text="Zips Folder")
+        pass
 
 zip_folder_name = '/tmp_zips'
 
@@ -465,6 +468,8 @@ class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
     files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     
     def execute(self, context):
+        importer_prop = context.scene.BSEQ
+
         import zipfile
         zip_file = zipfile.ZipFile(self.filepath)
 
@@ -477,14 +482,19 @@ class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
 
         valid_files = [info.filename for info in zip_file.infolist() if not info.filename.startswith('__MACOSX/')]
         zip_file.extractall(zips_folder, members=valid_files)
-        zip_file.close()
+        zip_file.close()    
 
         folder = str(zips_folder) + '/' + str(Path(self.filepath).name)[:-4]
         print(folder)
 
         seqs = fileseq.findSequencesOnDisk(str(folder))
+        if not seqs:
+            show_message_box("No sequences found in the zip file", icon="ERROR")
+            return {"CANCELLED"}
+
         for s in seqs:
-            create_obj(s, folder, transform_matrix=Matrix.Identity(4))
+            # Import it with absolute paths
+            create_obj(s, False, folder, transform_matrix=get_transform_matrix(importer_prop))
         
         # created_folder = context.scene.BSEQ.imported_zips.add()
         # created_folder.path = folder
@@ -507,6 +517,28 @@ class BSEQ_OT_delete_zips(bpy.types.Operator):
         import shutil
         shutil.rmtree(zips_folder)
 
+        return {'FINISHED'}
+    
+class BSEQ_OT_load_all(bpy.types.Operator):
+    """Load all sequences"""
+    bl_idname = "bseq.load_all"
+    bl_label = "Load All"
+    bl_options = {'PRESET', 'UNDO'}
+
+    def execute(self, context):
+        importer_prop = context.scene.BSEQ
+
+        if importer_prop.use_relative and not bpy.data.is_saved:
+            return relative_path_error()
+
+        dir = importer_prop.path
+        seqs = fileseq.findSequencesOnDisk(str(dir))
+
+        for s in seqs:
+            print(s)
+
+        for s in seqs:
+            create_obj_wrapper(s, importer_prop)
         return {'FINISHED'}
     
 

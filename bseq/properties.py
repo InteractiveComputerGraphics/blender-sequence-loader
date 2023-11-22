@@ -9,9 +9,9 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                    update=update_path,
                                    )
     
-    relative: bpy.props.BoolProperty(name='Use relative path', 
+    use_relative: bpy.props.BoolProperty(name='Use relative path', 
                                      description="Use relative path", 
-                                     default=True,
+                                     default=False,
                                      )
     
     use_imported_normals: bpy.props.BoolProperty(name='Use Imported Normals',
@@ -119,7 +119,9 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
                                     description="If disabled, the sequence won't be updated each frame")
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty()
+    path: bpy.props.StringProperty(subtype="DIR_PATH")
     pattern: bpy.props.StringProperty()
+    current_file: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
     start_end_frame: bpy.props.IntVectorProperty(name="Start and end frames", size=2, default=(0, 0))
     last_benchmark: bpy.props.FloatProperty(name="Last loading time")

@@ -23,8 +23,9 @@ def print_information(scene):
             if bseq_prop.init:
                 file.write("Object name: {}\n".format(obj.name))
                 file.write("Is it being animated: {}\n".format(bseq_prop.enabled))
-                file.write("Filepath: {}\n".format(bseq_prop.pattern))
-                file.write("Is it relative path: {}\n".format(bpy.path.is_subdir(obj.BSEQ.pattern, bpy.path.abspath("//"))))
+                file.write("Filepath: {}\n".format(bseq_prop.path))
+                file.write("Pattern: {}\n".format(bseq_prop.pattern))
+                file.write("Current file: {}\n".format(bseq_prop.current_file))
                 file.write("\n\n")
 
 

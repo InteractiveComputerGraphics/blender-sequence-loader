@@ -85,10 +85,14 @@ class BSEQ_Globals_Panel(BSEQ_Panel, bpy.types.Panel):
         col1.alignment = 'RIGHT'
         col2 = split.column()
 
-        col1.label(text='Global Settings')
-        col2.prop(sim_loader, "print", text="Print Sequence Information")
-        col2.prop(sim_loader, "auto_refresh_active", text="Auto Refresh Active")
-        col2.prop(sim_loader, "auto_refresh_all", text="Auto Refresh All")
+        col1.label(text="Root Directory")
+        col2.prop(sim_loader, "root_path", text="")
+        col1.label(text="Print Sequence Information")
+        col2.prop(sim_loader, "print", text="")
+        col1.label(text="Auto Refresh Active")
+        col2.prop(sim_loader, "auto_refresh_active", text="")
+        col1.label(text="Auto Refresh All")
+        col2.prop(sim_loader, "auto_refresh_all", text="")
 
 class BSEQ_Advanced_Panel(BSEQ_Panel, bpy.types.Panel):
     bl_label = "Advanced Settings"
@@ -180,8 +184,16 @@ class BSEQ_Settings(BSEQ_Panel, bpy.types.Panel):
         col1.alignment = 'RIGHT'
         col2 = split.column(align=False)
 
+        col1.label(text='Path')
+        col2.prop(obj.BSEQ, 'path', text="")
         col1.label(text='Pattern')
         col2.prop(obj.BSEQ, 'pattern', text="")
+        # Read-only
+        col1.label(text='Current File')
+        # make it read-only
+        row1 = col2.row()
+        row1.enabled = False
+        row1.prop(obj.BSEQ, 'current_file', text="")
         col1.label(text='Last loading time (ms)')
         row2 = col2.row()
         row2.enabled = False
@@ -225,13 +237,14 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
 
         col1.label(text="Import Settings")
 
-        col2.prop(importer_prop, "filter_string", text="Filter String")
+        # col2.prop(importer_prop, "filter_string", text="Filter String")
 
-        col2.prop(importer_prop, "relative", text="Relative Path")
+        col2.prop(importer_prop, "use_relative", text="Relative Path")
 
-        if importer_prop.relative:
-            col1.label(text="Root Directory")
-            col2.prop(importer_prop, "root_path", text="")
+        split = layout.split(factor=0.5)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=False)
 
         col2.prop(importer_prop, "use_imported_normals", text="Use Imported Normals")
 
@@ -282,14 +295,18 @@ class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
             col3.prop(importer_prop, "fileseq", text="")
             col4.operator("bseq.refreshall", text='', icon="FILE_REFRESH")
 
-        layout.operator("sequence.load")
-
-        split = layout.split(factor=0.5)
+        split = layout.split(factor=0.7)
         col1 = split.column()
         col2 = split.column()
+        col1.operator("sequence.load")
+        col2.operator("bseq.load_all")
 
-        col1.operator("bseq.import_zip", text="Import from zip")
-        col2.operator("bseq.delete_zips", text="Delete created folders")
+        # split = layout.split(factor=0.5)
+        # col1 = split.column()
+        # col2 = split.column()
+
+        # col1.operator("bseq.import_zip", text="Import from zip")
+        # col2.operator("bseq.delete_zips", text="Delete created folders")
 
 
 class BSEQ_PT_Import_Child2(BSEQ_Panel, bpy.types.Panel):

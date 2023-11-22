@@ -4,7 +4,7 @@ import meshio
 import traceback
 import fileseq
 import os
-from .utils import show_message_box
+from .utils import show_message_box, get_relative_path, get_absolute_path
 import numpy as np
 from mathutils import Matrix
 import time
@@ -221,7 +221,7 @@ def create_meshio_obj(filepath):
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
 
-def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
+def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identity(4)):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -241,13 +241,14 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     object = bpy.data.objects.new(name, mesh)
 
     #  create the object
-    if bpy.path.is_subdir(filepath, bpy.path.abspath("//")):
-        if root_path != "":
-            object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
-        else:
-            object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
+    if use_relative:
+        full_path = get_relative_path(str(fileseq), root_path)
     else:
-        object.BSEQ.pattern = str(fileseq)
+        full_path = str(fileseq)
+    # path is only the directory in which the file is located
+    object.BSEQ.path = os.path.dirname(full_path)
+    object.BSEQ.pattern = os.path.basename(full_path)
+    object.BSEQ.current_file = filepath
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
     object.BSEQ.start_end_frame = (fileseq.start(), fileseq.end())
@@ -261,7 +262,6 @@ def create_obj(fileseq, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1,
     bpy.context.view_layer.objects.active = object
 
 def update_obj(scene, depsgraph=None):
-
     for obj in bpy.data.objects:
         start_time = time.perf_counter()
 
@@ -278,17 +278,11 @@ def update_obj(scene, depsgraph=None):
             show_message_box("Warning: Might not be able load the correct frame because the dependency graph is not available.", "BSEQ Warning")
             current_frame = obj.BSEQ.frame
         meshio_mesh = None
-        pattern = obj.BSEQ.pattern
-        # check if the path is relative
-        if bpy.path.is_subdir(pattern, bpy.path.abspath("//")):
-            if scene.BSEQ.root_path != "":
-                pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
-            else:
-                pattern = bpy.path.abspath(pattern)
-
+        
         # in case the blender file was created on windows system, but opened in linux system
-        pattern = bpy.path.native_pathsep(pattern)
-        fs = fileseq.FileSequence(pattern)
+        full_path = get_absolute_path(obj, scene)
+
+        fs = fileseq.FileSequence(full_path)
         
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
@@ -303,6 +297,7 @@ def update_obj(scene, depsgraph=None):
             user_process = locals()['process']
             try:
                 user_process(fs, current_frame, obj.data)
+                obj.BSEQ.current_file = "Controlled by user process"
             except Exception as e:
                 show_message_box("Error when calling user process: " + traceback.format_exc(), icon="ERROR")
             del locals()['process']
@@ -313,6 +308,7 @@ def update_obj(scene, depsgraph=None):
             user_preprocess = locals()['preprocess']
             try:
                 meshio_mesh = user_preprocess(fs, current_frame)
+                obj.BSEQ.current_file = "Controlled by user preprocess"
             except Exception as e:
                 show_message_box("Error when calling user preprocess: " + traceback.format_exc(), icon="ERROR")
                 # this continue means only if error occures, then goes to next bpy.object
@@ -321,8 +317,10 @@ def update_obj(scene, depsgraph=None):
                 del locals()['preprocess']
         else:
             filepath = fs[current_frame % len(fs)]
+            filepath = os.path.normpath(filepath)
             try:
                 meshio_mesh = meshio.read(filepath)
+                obj.BSEQ.current_file = filepath
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),

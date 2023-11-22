@@ -54,9 +54,10 @@ classes = [
     BSEQ_OT_batch_sequences,
     BSEQ_PT_batch_sequences_settings,
     BSEQ_OT_meshio_object,
-    BSEQ_OT_import_zip,
-    BSEQ_OT_delete_zips,
-    BSEQ_addon_preferences
+    # BSEQ_OT_import_zip,
+    # BSEQ_OT_delete_zips,
+    # BSEQ_addon_preferences,
+    BSEQ_OT_load_all
 ]
 
 def register():

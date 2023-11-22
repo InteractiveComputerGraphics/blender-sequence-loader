@@ -1,5 +1,6 @@
 import bpy
 import fileseq
+import os
 
 def show_message_box(message="", title="Message Box", icon="INFO"):
     '''
@@ -24,25 +25,36 @@ def stop_animation():
         #  if playing animation, then stop it, otherwise it will keep showing message box
         bpy.ops.screen.animation_cancel()
 
+def get_relative_path(path, root_path):
+    if root_path != "":
+        path = bpy.path.relpath(path, start=root_path)
+    else:
+        path = bpy.path.relpath(path)    
+    return path
+
+# convert relative path to absolute path
+def convert_to_absolute_path(path, root_path):
+    if root_path != "":
+        path = bpy.path.abspath(path, start=root_path)
+    else:
+        path = bpy.path.abspath(path)    
+    return path
+
+def get_absolute_path(obj, scene):
+    full_path = os.path.join(bpy.path.native_pathsep(obj.BSEQ.path), obj.BSEQ.pattern)
+    full_path = convert_to_absolute_path(full_path, scene.BSEQ.root_path)
+    return full_path
 
 
 def refresh_obj(obj, scene):
-    is_relative = bpy.path.is_subdir(obj.BSEQ.pattern, bpy.path.abspath("//"))
-    fs = obj.BSEQ.pattern
-    if is_relative:
-        if scene.BSEQ.root_path != "":
-            fs = bpy.path.abspath(fs, start=scene.BSEQ.root_path)
-        else:
-            fs = bpy.path.abspath(fs)
-    fs = bpy.path.native_pathsep(fs)
+    is_relative = obj.BSEQ.path.startswith("//")
+    print("is_relative: ", is_relative)
+    fs = get_absolute_path(obj, scene)
     fs = fileseq.findSequenceOnDisk(fs)
     fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
     obj.BSEQ.start_end_frame = (fs.start(), fs.end())
     fs = str(fs)
-    # obj.BSEQ.pattern is a path and I want to check if it is a relative path
     if is_relative:
-        if scene.BSEQ.root_path != "":
-            fs = bpy.path.relpath(fs, start=scene.BSEQ.root_path)
-        else:
-            fs = bpy.path.relpath(fs)
-    obj.BSEQ.pattern = fs
+        fs = get_relative_path(fs, scene.BSEQ.root_path)
+    obj.BSEQ.path = os.path.dirname(fs)
+    obj.BSEQ.pattern = os.path.basename(fs)
