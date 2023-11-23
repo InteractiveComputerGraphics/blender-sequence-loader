@@ -52,3 +52,13 @@ def auto_refresh_active(scene, depsgraph=None):
         if obj.mode != "OBJECT":
             continue
         refresh_obj(obj, scene)
+
+# This becomes necessary, because when deleting objects from the viewport, they dont actually get removed from the
+# sequences list, because this is not a global delete. This handler only removes sequences that are not referenced
+# in any scene or collection. This handler is added to save_pre, so that unused data blocks dont get saved
+def clean_unused_bseq_data(savefile):
+    for obj in bpy.data.objects:
+        if obj.BSEQ.init and len(obj.users_collection)==0 and len(obj.users_scene)==0:
+
+            # This will throw an error if it is actually still used somewhere
+            bpy.data.objects.remove(obj)
