@@ -228,27 +228,21 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
         col1 = split.column()
         col2 = split.column()
 
-        #layout.label(text="Global Settings")
-        #box = layout.box()
         split = layout.split(factor=0.5)
         col1 = split.column()
         col1.alignment = 'RIGHT'
         col2 = split.column(align=False)
-
-        col1.label(text="Import Settings")
 
         # col2.prop(importer_prop, "filter_string", text="Filter String")
 
-        col2.prop(importer_prop, "use_relative", text="Relative Path")
+        col1.label(text="Relative Path")
+        col2.prop(importer_prop, "use_relative", text="")
 
-        split = layout.split(factor=0.5)
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=False)
+        col1.label(text="Import Default Normals")
+        col2.prop(importer_prop, "use_imported_normals", text="")
 
-        col2.prop(importer_prop, "use_imported_normals", text="Use Imported Normals")
-
-        col2.prop(importer_prop, "use_custom_transform", text="Custom Transform")
+        col1.label(text="Custom Transform")
+        col2.prop(importer_prop, "use_custom_transform", text="")
 
         if importer_prop.use_custom_transform:
             split = layout.split(factor=0.33)
