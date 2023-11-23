@@ -13,7 +13,7 @@ class BSEQ_UL_Obj_List(bpy.types.UIList):
         #  not sure if I understand correctly about this
         #  see reference from https://docs.blender.org/api/current/bpy.types.UIList.html#advanced-uilist-example-filtering-and-reordering
         for o in objs:
-            if o.BSEQ.init:
+            if o.BSEQ.init and len(o.users_collection)>0 and len(o.users_scene)>0:
                 flt_flags.append(self.bitflag_filter_item)
             else:
                 flt_flags.append(0)

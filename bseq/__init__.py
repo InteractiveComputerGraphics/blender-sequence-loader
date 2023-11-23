@@ -12,9 +12,13 @@ from .globals import *
 @persistent
 def BSEQ_initialize(scene):
     if update_obj not in bpy.app.handlers.frame_change_post:
-        bpy.app.handlers.frame_change_post.append(auto_refresh_active)
-        bpy.app.handlers.frame_change_post.append(auto_refresh_all)
         bpy.app.handlers.frame_change_post.append(update_obj)
+    if auto_refresh_active not in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.append(auto_refresh_active)
+    if auto_refresh_all not in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.append(auto_refresh_all)
+    if clean_unused_bseq_data not in bpy.app.handlers.save_pre:
+        bpy.app.handlers.save_pre.append(clean_unused_bseq_data)
     subscribe_to_selected()
     if print_information not in bpy.app.handlers.render_init:
         bpy.app.handlers.render_init.append(print_information)
