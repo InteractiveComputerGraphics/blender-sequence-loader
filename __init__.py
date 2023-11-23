@@ -2,8 +2,8 @@ bl_info = {
     "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Interactive Computer Graphics",
-    "version": (0, 1, 5),
-    "blender": (3, 4, 0),
+    "version": (0, 2, 0),
+    "blender": (3, 6, 0),
     "warning": "",
     "support": "COMMUNITY",
     "category": "Import-Export",
@@ -21,7 +21,7 @@ if bpy.context.preferences.filepaths.use_relative_paths == True:
     bpy.context.preferences.filepaths.use_relative_paths = False
 
 from bseq import *
-from bseq.operators import menu_func_import
+from bseq.operators import menu_func_import, add_keymap, delete_keymap
 
 classes = [
     BSEQ_obj_property,
@@ -32,10 +32,14 @@ classes = [
     BSEQ_OT_resetpt,
     BSEQ_OT_resetins,
     BSEQ_OT_resetmesh,
-    BSEQ_Import,
+    BSEQ_PT_Import,
+    BSEQ_PT_Import_Child1,
+    BSEQ_PT_Import_Child2,
+    BSEQ_Globals_Panel,
     BSEQ_List_Panel,
     BSEQ_UL_Obj_List,
     BSEQ_Settings,
+    BSEQ_Advanced_Panel,
     BSEQ_Templates,
     BSEQ_UL_Att_List,
     BSEQ_OT_set_as_split_norm,
@@ -47,10 +51,14 @@ classes = [
     BSEQ_OT_enable_all,
     BSEQ_OT_refresh_sequences,
     BSEQ_OT_set_start_end_frames,
-    WM_OT_batchSequences,
-    WM_OT_MeshioObject
+    BSEQ_OT_batch_sequences,
+    BSEQ_PT_batch_sequences_settings,
+    BSEQ_OT_meshio_object,
+    # BSEQ_OT_import_zip,
+    # BSEQ_OT_delete_zips,
+    # BSEQ_addon_preferences,
+    BSEQ_OT_load_all
 ]
-
 
 def register():
     bpy.app.handlers.load_post.append(BSEQ_initialize)
@@ -60,8 +68,8 @@ def register():
     bpy.types.Scene.BSEQ = bpy.props.PointerProperty(type=BSEQ_scene_property)
     bpy.types.Object.BSEQ = bpy.props.PointerProperty(type=BSEQ_obj_property)
     bpy.types.Mesh.BSEQ = bpy.props.PointerProperty(type=BSEQ_mesh_property)
-
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    add_keymap()
 
     # manually call this function once
     # so when addon being installed, it can run correctly
@@ -76,10 +84,9 @@ def unregister():
     del bpy.types.Object.BSEQ
     bpy.app.handlers.load_post.remove(BSEQ_initialize)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    delete_keymap()
     unsubscribe_to_selected()
 
-
 if __name__ == "__main__":
-
     # unregister()
     register()

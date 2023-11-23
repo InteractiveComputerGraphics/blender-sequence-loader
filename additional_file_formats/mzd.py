@@ -22,6 +22,7 @@ def readMZD_to_meshio(filepath):
 
     with open(filepath, 'rb') as file:
         byte = file.read(24)
+        # check if mzd file is empty
         if byte != head:
             return -4
         while 1:
@@ -49,7 +50,7 @@ def readMZD_to_meshio(filepath):
                 if out_numVertices < 0:
                     return -127
                 if out_numVertices == 0:
-                    break
+                    return meshio.Mesh(points=np.array([]), cells={})
 
                 byte = file.read(12 * out_numVertices)
                 out_vertPositions = np.frombuffer(byte, dtype=np.float32)

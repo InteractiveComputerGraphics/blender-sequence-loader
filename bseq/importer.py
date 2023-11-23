@@ -4,7 +4,7 @@ import meshio
 import traceback
 import fileseq
 import os
-from .utils import show_message_box
+from .utils import show_message_box, get_relative_path, get_absolute_path
 import numpy as np
 from mathutils import Matrix
 import time
@@ -80,11 +80,37 @@ def apply_transformation(meshio_mesh, obj, depsgraph):
 
     # evaluate the rigid body transformations (only relevant for .bin format)
     rigid_body_transformation = mathutils.Matrix.Identity(4)
-    if meshio_mesh.field_data.get("transformation_matrix") is not None:
-        rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
+    if meshio_mesh is not None:
+        if "transformation_matrix" in meshio_mesh.field_data:
+            rigid_body_transformation = meshio_mesh.field_data["transformation_matrix"]
 
     # multiply everything together (with custom transform matrix)
     obj.matrix_world = rigid_body_transformation @ eval_transform_matrix
+
+# function to create a single custom Blender mesh attribute
+def create_or_retrieve_attribute(mesh, k, v):
+    if k not in mesh.attributes:
+        if len(v) == 0:
+            return mesh.attributes.new(k, "FLOAT", "POINT")
+        if len(v.shape) == 1:
+            # one dimensional attribute
+            return mesh.attributes.new(k, "FLOAT", "POINT")
+        if len(v.shape) == 2:
+            dim = v.shape[1]
+            if dim > 3:
+                show_message_box('higher than 3 dimensional attribue, ignored')
+                return None
+            if dim == 1:
+                return mesh.attributes.new(k, "FLOAT", "POINT")
+            if dim == 2:
+                return mesh.attributes.new(k, "FLOAT2", "POINT")
+            if dim == 3:
+                return mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
+        if len(v.shape) > 2:
+            show_message_box('more than 2 dimensional tensor, ignored')
+            return None
+    else:
+        return mesh.attributes[k]
 
 def update_mesh(meshio_mesh, mesh):
     # extract information from the meshio mesh
@@ -94,6 +120,9 @@ def update_mesh(meshio_mesh, mesh):
     n_loop = 0
     n_verts = len(mesh_vertices)
     if n_verts == 0:
+        mesh.clear_geometry()
+        mesh.update()
+        mesh.validate()
         return
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
@@ -115,7 +144,7 @@ def update_mesh(meshio_mesh, mesh):
         # Add a zero as first entry
         faces_loop_start = np.roll(faces_loop_start, 1)
         faces_loop_start[0] = 0
-
+    
     if len(mesh.vertices) == n_verts and len(mesh.polygons) == n_poly and len(mesh.loops) == n_loop:
         pass
     else:
@@ -130,34 +159,25 @@ def update_mesh(meshio_mesh, mesh):
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
 
+    # newer function but is about 4 times slower
+    # mesh.clear_geometry()
+    # mesh.from_pydata(mesh_vertices, [], data)
+
     mesh.update()
     mesh.validate()
 
+    if bpy.context.scene.BSEQ.use_imported_normals:
+        if "obj:vn" in meshio_mesh.point_data:
+            mesh.BSEQ.split_norm_att_name = "bseq_obj:vn"
+        elif "normals" in meshio_mesh.point_data and len(meshio_mesh.point_data["normals"]) == len(mesh.vertices):
+            mesh.BSEQ.split_norm_att_name = "bseq_normals"
+        elif "obj:vn" in meshio_mesh.field_data and "obj:vn_face_idx" in meshio_mesh.cell_data:
+            mesh.BSEQ.split_norm_att_name = "obj:vn"
+
     #  copy attributes
-    attributes = mesh.attributes
     for k, v in meshio_mesh.point_data.items():
         k = "bseq_" + k
-        attribute = None
-        if k not in attributes:
-            if len(v.shape) == 1:
-                # one dimensional attribute
-                attribute = mesh.attributes.new(k, "FLOAT", "POINT")
-            if len(v.shape) == 2:
-                dim = v.shape[1]
-                if dim > 3:
-                    show_message_box('higher than 3 dimensional attribue, ignored')
-                    continue
-                if dim == 1:
-                    attribute = mesh.attributes.new(k, "FLOAT", "POINT")
-                if dim == 2:
-                    attribute = mesh.attributes.new(k, "FLOAT2", "POINT")
-                if dim == 3:
-                    attribute = mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
-            if len(v.shape) > 2:
-                show_message_box('more than 2 dimensional tensor, ignored')
-                continue
-        else:
-            attribute = attributes[k]
+        attribute = create_or_retrieve_attribute(mesh, k, v)
         name_string = None
         if attribute.data_type == "FLOAT":
             name_string = "value"
@@ -166,10 +186,21 @@ def update_mesh(meshio_mesh, mesh):
 
         attribute.data.foreach_set(name_string, v.ravel())
 
-        # set as split norm
+        # set as split normal per vertex
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
+
+    for k, v in meshio_mesh.field_data.items():
+        if k not in mesh.attributes:
+            attribute = create_or_retrieve_attribute(mesh, k, [])
+        
+        # set split normal per loop per vertex
+        if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
+            # Currently hard-coded for .obj files
+            mesh.use_auto_smooth = True
+            indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
+            mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
 
 # function to create a single meshio object
 def create_meshio_obj(filepath):
@@ -180,7 +211,7 @@ def create_meshio_obj(filepath):
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                          "Meshio Loading Error" + str(e),
                          icon="ERROR")
-        
+        return
     #  create the object
     name = os.path.basename(filepath) 
     mesh = bpy.data.meshes.new(name)
@@ -190,8 +221,7 @@ def create_meshio_obj(filepath):
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
 
-
-def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])):
+def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identity(4)):
 
     current_frame = bpy.context.scene.frame_current
     filepath = fileseq[current_frame % len(fileseq)]
@@ -202,22 +232,23 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
         meshio_mesh = meshio.read(filepath)
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                         "Meshio Loading Error" + str(e),
-                         icon="ERROR")
+                        "Meshio Loading Error" + str(e),
+                        icon="ERROR")
         enabled = False
 
-    #  create the object
     name = fileseq.basename() + "@" + fileseq.extension()
     mesh = bpy.data.meshes.new(name)
     object = bpy.data.objects.new(name, mesh)
-    object.BSEQ.use_relative = use_relative
+
+    #  create the object
     if use_relative:
-        if root_path != "":
-            object.BSEQ.pattern = bpy.path.relpath(str(fileseq), start=root_path)
-        else:
-            object.BSEQ.pattern = bpy.path.relpath(str(fileseq))
+        full_path = get_relative_path(str(fileseq), root_path)
     else:
-        object.BSEQ.pattern = str(fileseq)
+        full_path = str(fileseq)
+    # path is only the directory in which the file is located
+    object.BSEQ.path = os.path.dirname(full_path)
+    object.BSEQ.pattern = os.path.basename(full_path)
+    object.BSEQ.current_file = filepath
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled
     object.BSEQ.start_end_frame = (fileseq.start(), fileseq.end())
@@ -230,9 +261,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix([[1, 0,
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
 
-
 def update_obj(scene, depsgraph=None):
-
     for obj in bpy.data.objects:
         start_time = time.perf_counter()
 
@@ -249,17 +278,12 @@ def update_obj(scene, depsgraph=None):
             show_message_box("Warning: Might not be able load the correct frame because the dependency graph is not available.", "BSEQ Warning")
             current_frame = obj.BSEQ.frame
         meshio_mesh = None
-        pattern = obj.BSEQ.pattern
-        if obj.BSEQ.use_relative:
-            if scene.BSEQ.root_path != "":
-                pattern = bpy.path.abspath(pattern, start=scene.BSEQ.root_path)
-            else:
-                pattern = bpy.path.abspath(pattern)
-
+        
         # in case the blender file was created on windows system, but opened in linux system
-        pattern = bpy.path.native_pathsep(pattern)
-        fs = fileseq.FileSequence(pattern)
+        full_path = get_absolute_path(obj, scene)
 
+        fs = fileseq.FileSequence(full_path)
+        
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
             try:
@@ -273,6 +297,7 @@ def update_obj(scene, depsgraph=None):
             user_process = locals()['process']
             try:
                 user_process(fs, current_frame, obj.data)
+                obj.BSEQ.current_file = "Controlled by user process"
             except Exception as e:
                 show_message_box("Error when calling user process: " + traceback.format_exc(), icon="ERROR")
             del locals()['process']
@@ -283,6 +308,7 @@ def update_obj(scene, depsgraph=None):
             user_preprocess = locals()['preprocess']
             try:
                 meshio_mesh = user_preprocess(fs, current_frame)
+                obj.BSEQ.current_file = "Controlled by user preprocess"
             except Exception as e:
                 show_message_box("Error when calling user preprocess: " + traceback.format_exc(), icon="ERROR")
                 # this continue means only if error occures, then goes to next bpy.object
@@ -291,8 +317,10 @@ def update_obj(scene, depsgraph=None):
                 del locals()['preprocess']
         else:
             filepath = fs[current_frame % len(fs)]
+            filepath = os.path.normpath(filepath)
             try:
                 meshio_mesh = meshio.read(filepath)
+                obj.BSEQ.current_file = filepath
             except Exception as e:
                 show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                                  "Meshio Loading Error" + str(e),
