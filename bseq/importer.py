@@ -8,9 +8,14 @@ from .utils import show_message_box, get_relative_path, get_absolute_path
 import numpy as np
 from mathutils import Matrix
 import time
+from itertools import chain
 # this import is not useless
 import additional_file_formats
 
+def extract_edges(cell: meshio.CellBlock):
+    if cell.type == "line":
+        return cell.data.astype(np.uint64)
+    return np.array([])
 
 def extract_faces(cell: meshio.CellBlock):
     if cell.type == "triangle":
@@ -50,6 +55,8 @@ def extract_faces(cell: meshio.CellBlock):
         faces = faces[indxs[count == 1]]
         return faces
     elif cell.type == "vertex":
+        return np.array([])
+    elif cell.type == "line":
         return np.array([])
     show_message_box(cell.type + " is unsupported mesh format yet")
     return np.array([])
@@ -124,21 +131,27 @@ def update_mesh(meshio_mesh, mesh):
         mesh.update()
         mesh.validate()
         return
+    edges = np.array([], dtype=np.uint64)
     faces_loop_start = np.array([], dtype=np.uint64)
     faces_loop_total = np.array([], dtype=np.uint64)
     loops_vert_idx = np.array([], dtype=np.uint64)
     shade_scheme = False
     if mesh.polygons:
         shade_scheme = mesh.polygons[0].use_smooth
+
     for cell in meshio_mesh.cells:
-        data = extract_faces(cell)
-        # np array can't be simply written as `if not data:`,
-        if not data.any():
-            continue
-        n_poly += len(data)
-        n_loop += data.shape[0] * data.shape[1]
-        loops_vert_idx = np.append(loops_vert_idx, data.ravel())
-        faces_loop_total = np.append(faces_loop_total, np.ones((len(data)), dtype=np.uint64) * data.shape[1])
+        edge_data = extract_edges(cell)
+        face_data = extract_faces(cell)
+
+        if edge_data.any():
+            edges = np.append(edges, edge_data)
+
+        if face_data.any():
+            n_poly += len(face_data)
+            n_loop += face_data.shape[0] * face_data.shape[1]
+            loops_vert_idx = np.append(loops_vert_idx, face_data.ravel())
+            faces_loop_total = np.append(faces_loop_total, np.ones((len(face_data)), dtype=np.uint64) * face_data.shape[1])
+
     if faces_loop_total.size > 0:
         faces_loop_start = np.cumsum(faces_loop_total)
         # Add a zero as first entry
@@ -150,10 +163,12 @@ def update_mesh(meshio_mesh, mesh):
     else:
         mesh.clear_geometry()
         mesh.vertices.add(n_verts)
+        mesh.edges.add(len(edge_data))
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
     mesh.vertices.foreach_set("co", mesh_vertices.ravel())
+    mesh.edges.foreach_set("vertices", edges)
     mesh.loops.foreach_set("vertex_index", loops_vert_idx)
     mesh.polygons.foreach_set("loop_start", faces_loop_start)
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
@@ -161,7 +176,7 @@ def update_mesh(meshio_mesh, mesh):
 
     # newer function but is about 4 times slower
     # mesh.clear_geometry()
-    # mesh.from_pydata(mesh_vertices, [], data)
+    # mesh.from_pydata(mesh_vertices, edge_data, face_data)
 
     mesh.update()
     mesh.validate()
