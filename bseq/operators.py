@@ -22,7 +22,7 @@ def get_transform_matrix(importer_prop):
 def create_obj_wrapper(seq, importer_prop):
     create_obj(seq, importer_prop.use_relative, importer_prop.root_path, transform_matrix=get_transform_matrix(importer_prop))
 
-#  Here are load and delete operations
+# Legacy import operator (this is what the "Import from folder" button does)
 class BSEQ_OT_load(bpy.types.Operator):
     '''This operator loads a sequence'''
     bl_label = "Load Sequence"
@@ -345,6 +345,7 @@ from pathlib import Path
 import meshio
 from bpy_extras.io_utils import ImportHelper
 
+# This is what the button "Import Sequences" does
 class BSEQ_OT_batch_sequences(bpy.types.Operator, ImportHelper):
     """Batch Import Sequences"""
     bl_idname = "wm.seq_import_batch"

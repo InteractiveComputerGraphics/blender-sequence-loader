@@ -124,6 +124,7 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
     current_file: bpy.props.StringProperty()
     frame: bpy.props.IntProperty()
     start_end_frame: bpy.props.IntVectorProperty(name="Start and end frames", size=2, default=(0, 0))
+    match_frames: bpy.props.BoolProperty(default=False)
     last_benchmark: bpy.props.FloatProperty(name="Last loading time")
 
 # set this property for mesh, not object (maybe change later?)
