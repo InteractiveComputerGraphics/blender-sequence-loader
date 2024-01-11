@@ -24,7 +24,7 @@ def create_obj_wrapper(seq, importer_prop):
 
 # Legacy import operator (this is what the "Import from folder" button does)
 class BSEQ_OT_load(bpy.types.Operator):
-    '''This operator loads a sequence'''
+    '''Load selected sequence'''
     bl_label = "Load Sequence"
     bl_idname = "sequence.load"
     bl_options = {"UNDO"}
@@ -59,8 +59,8 @@ class BSEQ_OT_load(bpy.types.Operator):
 
 
 class BSEQ_OT_edit(bpy.types.Operator):
-    '''This operator changes a sequence'''
-    bl_label = "Edit Sequence's Path"
+    '''Edit Sequence'''
+    bl_label = "Edit the path of the sequence"
     bl_idname = "sequence.edit"
     bl_options = {"UNDO"}
 
@@ -217,7 +217,7 @@ class BSEQ_OT_resetins(bpy.types.Operator):
 
 
 class BSEQ_OT_set_as_split_norm(bpy.types.Operator):
-    '''This operator sets the vertex attributes as vertex split normals'''
+    '''Set vertex attribute as vertex split normals'''
     bl_label = "Set as split normal per vertex"
     bl_idname = "bseq.setsplitnorm"
     bl_options = {"UNDO"}
@@ -236,7 +236,7 @@ class BSEQ_OT_set_as_split_norm(bpy.types.Operator):
 
 
 class BSEQ_OT_remove_split_norm(bpy.types.Operator):
-    '''This operator removes the vertex attributes as vertex split normals'''
+    '''Remove vertex attribute as vertex split normals'''
     bl_label = "Remove split normal per vertex"
     bl_idname = "bseq.removesplitnorm"
     bl_options = {"UNDO"}
@@ -252,8 +252,8 @@ class BSEQ_OT_remove_split_norm(bpy.types.Operator):
 
 
 class BSEQ_OT_disable_selected(bpy.types.Operator):
-    '''This operator disables all selected sequence'''
-    bl_label = "Disable selected sequence"
+    '''Deactivate selected sequences'''
+    bl_label = "Deactivate sequence"
     bl_idname = "bseq.disableselected"
     bl_options = {"UNDO"}
 
@@ -265,8 +265,8 @@ class BSEQ_OT_disable_selected(bpy.types.Operator):
 
 
 class BSEQ_OT_enable_selected(bpy.types.Operator):
-    '''This operator enables all selected sequence'''
-    bl_label = "Enable selected sequence"
+    '''Activate selected sequences'''
+    bl_label = "Activate sequence"
     bl_idname = "bseq.enableselected"
     bl_options = {"UNDO"}
 
@@ -278,7 +278,7 @@ class BSEQ_OT_enable_selected(bpy.types.Operator):
 
 
 class BSEQ_OT_refresh_seq(bpy.types.Operator):
-    '''This operator refreshes the sequence'''
+    '''Refresh selected sequences'''
     bl_label = "Refresh sequence"
     bl_idname = "bseq.refresh"
 
@@ -290,8 +290,8 @@ class BSEQ_OT_refresh_seq(bpy.types.Operator):
         return {"FINISHED"}
 
 class BSEQ_OT_disable_all(bpy.types.Operator):
-    '''This operator disables all selected sequence'''
-    bl_label = "Disable all sequences"
+    '''Deactivate all sequences'''
+    bl_label = "Deactivate all sequences"
     bl_idname = "bseq.disableall"
     bl_options = {"UNDO"}
 
@@ -302,8 +302,8 @@ class BSEQ_OT_disable_all(bpy.types.Operator):
         return {"FINISHED"}
 
 class BSEQ_OT_enable_all(bpy.types.Operator):
-    '''This operator enables all selected sequence'''
-    bl_label = "Enable all sequences"
+    '''Activate all sequences'''
+    bl_label = "Activate all sequences"
     bl_idname = "bseq.enableall"
     bl_options = {"UNDO"}
 
@@ -314,8 +314,8 @@ class BSEQ_OT_enable_all(bpy.types.Operator):
         return {"FINISHED"}
 
 class BSEQ_OT_refresh_sequences(bpy.types.Operator):
-    '''This operator refreshes all found sequences'''
-    bl_label = "Refresh all sequences"
+    '''Refresh all sequences'''
+    bl_label = "Reloads everything in selected folder"
     bl_idname = "bseq.refreshall"
     bl_options = {"UNDO"}
 
@@ -347,7 +347,7 @@ from bpy_extras.io_utils import ImportHelper
 
 # This is what the button "Import Sequences" does
 class BSEQ_OT_batch_sequences(bpy.types.Operator, ImportHelper):
-    """Batch Import Sequences"""
+    """Import one or multiple sequences"""
     bl_idname = "wm.seq_import_batch"
     bl_label = "Import Sequences"
     bl_options = {'PRESET', 'UNDO'}
@@ -521,7 +521,7 @@ class BSEQ_OT_delete_zips(bpy.types.Operator):
         return {'FINISHED'}
     
 class BSEQ_OT_load_all(bpy.types.Operator):
-    """Load all sequences"""
+    """Load all sequences from selected folder"""
     bl_idname = "bseq.load_all"
     bl_label = "Load All"
     bl_options = {'PRESET', 'UNDO'}
