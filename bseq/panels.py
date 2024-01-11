@@ -184,6 +184,9 @@ class BSEQ_Settings(BSEQ_Panel, bpy.types.Panel):
         col1.alignment = 'RIGHT'
         col2 = split.column(align=False)
 
+        col1.label(text='Match Blender frame numbers')
+        col2.prop(obj.BSEQ, 'match_frames', text="")
+
         col1.label(text='Path')
         col2.prop(obj.BSEQ, 'path', text="")
         col1.label(text='Pattern')

@@ -4,11 +4,10 @@ import meshio
 import traceback
 import fileseq
 import os
-from .utils import show_message_box, get_relative_path, get_absolute_path
+from .utils import show_message_box, get_relative_path, get_absolute_path, load_meshio_from_path
 import numpy as np
 from mathutils import Matrix
 import time
-from itertools import chain
 # this import is not useless
 import additional_file_formats
 
@@ -217,7 +216,7 @@ def update_mesh(meshio_mesh, mesh):
             indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
             mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
 
-# function to create a single meshio object
+# function to create a single meshio object (not a sequence, this just inports some file using meshio)
 def create_meshio_obj(filepath):
     meshio_mesh = None
     try:
@@ -331,16 +330,18 @@ def update_obj(scene, depsgraph=None):
             finally:
                 del locals()['preprocess']
         else:
-            filepath = fs[current_frame % len(fs)]
-            filepath = os.path.normpath(filepath)
-            try:
-                meshio_mesh = meshio.read(filepath)
-                obj.BSEQ.current_file = filepath
-            except Exception as e:
-                show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
-                                 "Meshio Loading Error" + str(e),
-                                 icon="ERROR")
-                continue
+            if obj.BSEQ.match_frames:
+                fs_frames = fs.frameSet()
+                if current_frame in fs_frames:
+                    filepath = fs[fs_frames.index(current_frame)]
+                    filepath = os.path.normpath(filepath)
+                    meshio_mesh = load_meshio_from_path(fs, filepath, obj)
+                else:
+                    meshio_mesh = meshio.Mesh([], [])
+            else:
+                filepath = fs[current_frame % len(fs)]
+                filepath = os.path.normpath(filepath)
+                meshio_mesh = load_meshio_from_path(fs, filepath, obj)
 
         if not isinstance(meshio_mesh, meshio.Mesh):
             show_message_box('function preprocess does not return meshio object', "ERROR")
