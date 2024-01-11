@@ -145,7 +145,7 @@ This is where a new root directory can be set. All relative paths will be relati
 
 #### 2.2 Print Sequence Information
 
-Print some useful information for debugging in the console. For this, Blender has to be started from the console.
+Print some useful information during rendering in a file located in the same folder as the render output and in the console. For the latter, Blender has to be started from the console. 
 
 #### 2.3 Auto Refresh Active Sequences
 
