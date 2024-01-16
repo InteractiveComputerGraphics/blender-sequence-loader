@@ -184,6 +184,9 @@ class BSEQ_Settings(BSEQ_Panel, bpy.types.Panel):
         col1.alignment = 'RIGHT'
         col2 = split.column(align=False)
 
+        col1.label(text='Match Blender frame numbers')
+        col2.prop(obj.BSEQ, 'match_frames', text="")
+
         col1.label(text='Path')
         col2.prop(obj.BSEQ, 'path', text="")
         col1.label(text='Pattern')
@@ -235,10 +238,10 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
 
         # col2.prop(importer_prop, "filter_string", text="Filter String")
 
-        col1.label(text="Relative Path")
+        col1.label(text="Relative Paths")
         col2.prop(importer_prop, "use_relative", text="")
 
-        col1.label(text="Import Default Normals")
+        col1.label(text="Import Normals")
         col2.prop(importer_prop, "use_imported_normals", text="")
 
         col1.label(text="Custom Transform")

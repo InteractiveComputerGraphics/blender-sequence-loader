@@ -1,6 +1,8 @@
 import bpy
 import fileseq
 import os
+import meshio
+import traceback
 
 def show_message_box(message="", title="Message Box", icon="INFO"):
     '''
@@ -58,3 +60,16 @@ def refresh_obj(obj, scene):
         fs = get_relative_path(fs, scene.BSEQ.root_path)
     obj.BSEQ.path = os.path.dirname(fs)
     obj.BSEQ.pattern = os.path.basename(fs)
+
+def load_meshio_from_path(fileseq, filepath, obj = None):
+    try:
+        meshio_mesh = meshio.read(filepath)
+        if obj is not None:
+            obj.BSEQ.current_file = filepath
+    except Exception as e:
+        show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
+                        "Meshio Loading Error" + str(e),
+                        icon="ERROR")
+        meshio_mesh = meshio.Mesh([], [])
+    return meshio_mesh
+
