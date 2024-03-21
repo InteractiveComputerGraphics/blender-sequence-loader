@@ -104,7 +104,7 @@ def create_or_retrieve_attribute(mesh, k, v):
         if len(v.shape) == 2:
             dim = v.shape[1]
             if dim > 3:
-                show_message_box('higher than 3 dimensional attribue, ignored')
+                # show_message_box('higher than 3 dimensional attribue, ignored')
                 return None
             if dim == 1:
                 return mesh.attributes.new(k, "FLOAT", "POINT")
@@ -113,7 +113,7 @@ def create_or_retrieve_attribute(mesh, k, v):
             if dim == 3:
                 return mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
         if len(v.shape) > 2:
-            show_message_box('more than 2 dimensional tensor, ignored')
+            # show_message_box('more than 2 dimensional tensor, ignored')
             return None
     else:
         return mesh.attributes[k]
@@ -192,6 +192,8 @@ def update_mesh(meshio_mesh, mesh):
     for k, v in meshio_mesh.point_data.items():
         k = "bseq_" + k
         attribute = create_or_retrieve_attribute(mesh, k, v)
+        if attribute is None:
+            continue
         name_string = None
         if attribute.data_type == "FLOAT":
             name_string = "value"
