@@ -104,7 +104,7 @@ def create_or_retrieve_attribute(mesh, k, v):
         if len(v.shape) == 2:
             dim = v.shape[1]
             if dim > 3:
-                show_message_box('higher than 3 dimensional attribue, ignored')
+                # show_message_box('higher than 3 dimensional attribue, ignored')
                 return None
             if dim == 1:
                 return mesh.attributes.new(k, "FLOAT", "POINT")
@@ -113,7 +113,7 @@ def create_or_retrieve_attribute(mesh, k, v):
             if dim == 3:
                 return mesh.attributes.new(k, "FLOAT_VECTOR", "POINT")
         if len(v.shape) > 2:
-            show_message_box('more than 2 dimensional tensor, ignored')
+            # show_message_box('more than 2 dimensional tensor, ignored')
             return None
     else:
         return mesh.attributes[k]
@@ -192,6 +192,8 @@ def update_mesh(meshio_mesh, mesh):
     for k, v in meshio_mesh.point_data.items():
         k = "bseq_" + k
         attribute = create_or_retrieve_attribute(mesh, k, v)
+        if attribute is None:
+            continue
         name_string = None
         if attribute.data_type == "FLOAT":
             name_string = "value"
@@ -202,7 +204,11 @@ def update_mesh(meshio_mesh, mesh):
 
         # set as split normal per vertex
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-            mesh.use_auto_smooth = True
+            # If blender version is less than 4.1.0, then dont set auto smooth.
+            # It has been removed and normals will be used automatically if they are set.
+            # https://developer.blender.org/docs/release_notes/4.1/python_api/#mesh
+            if bpy.app.version < (4, 1, 0):
+                mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
 
     for k, v in meshio_mesh.field_data.items():

@@ -16,6 +16,14 @@ import sys
 current_folder = os.path.dirname(os.path.abspath(__file__))
 if current_folder not in sys.path:
     sys.path.append(current_folder)
+# add paths of external libraries to sys.path
+if os.path.exists(os.path.join(current_folder, "extern")):
+    external_libs = ["fileseq/src", "meshio/src", "python-future/src", "rich"]
+    for lib in external_libs:
+        lib_path = os.path.join(current_folder, "extern", lib)
+        if lib_path not in sys.path:
+            sys.path.append(lib_path)
+
 
 if bpy.context.preferences.filepaths.use_relative_paths == True:
     bpy.context.preferences.filepaths.use_relative_paths = False
