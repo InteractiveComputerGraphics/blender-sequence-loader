@@ -204,7 +204,11 @@ def update_mesh(meshio_mesh, mesh):
 
         # set as split normal per vertex
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-            mesh.use_auto_smooth = True
+            # If blender version is less than 4.1.0, then dont set auto smooth.
+            # It has been removed and normals will be used automatically if they are set.
+            # https://developer.blender.org/docs/release_notes/4.1/python_api/#mesh
+            if bpy.app.version < (4, 1, 0):
+                mesh.use_auto_smooth = True
             mesh.normals_split_custom_set_from_vertices(v)
 
     for k, v in meshio_mesh.field_data.items():
