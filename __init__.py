@@ -65,7 +65,8 @@ classes = [
     # BSEQ_OT_import_zip,
     # BSEQ_OT_delete_zips,
     # BSEQ_addon_preferences,
-    BSEQ_OT_load_all
+    BSEQ_OT_load_all,
+    BSEQ_OT_load_all_recursive
 ]
 
 def register():

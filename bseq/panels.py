@@ -292,11 +292,13 @@ class BSEQ_PT_Import_Child1(BSEQ_Panel, bpy.types.Panel):
             col3.prop(importer_prop, "fileseq", text="")
             col4.operator("bseq.refreshall", text='', icon="FILE_REFRESH")
 
-        split = layout.split(factor=0.7)
+        split = layout.split(factor=0.5)
         col1 = split.column()
         col2 = split.column()
         col1.operator("sequence.load")
-        col2.operator("bseq.load_all")
+        row = col2.row()
+        row.operator("bseq.load_all")
+        row.operator("bseq.load_all_recursive")
 
         # split = layout.split(factor=0.5)
         # col1 = split.column()
