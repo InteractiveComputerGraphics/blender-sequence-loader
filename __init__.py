@@ -2,7 +2,7 @@ bl_info = {
     "name": "Sequence Loader",
     "description": "Loader for meshio supported mesh files/ simulation sequences",
     "author": "Interactive Computer Graphics",
-    "version": (0, 3, 1),
+    "version": (0, 3, 2),
     "blender": (4, 0, 0),
     "warning": "",
     "support": "COMMUNITY",
@@ -65,7 +65,8 @@ classes = [
     # BSEQ_OT_import_zip,
     # BSEQ_OT_delete_zips,
     # BSEQ_addon_preferences,
-    BSEQ_OT_load_all
+    BSEQ_OT_load_all,
+    BSEQ_OT_load_all_recursive
 ]
 
 def register():

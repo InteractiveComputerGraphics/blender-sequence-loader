@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'blender-sequence-loader'
-copyright = '2022, InteractiveComputerGraphics'
+copyright = '2024, InteractiveComputerGraphics'
 author = 'InteractiveComputerGraphics'
-release = '0.3.1'
+release = '0.3.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

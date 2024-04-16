@@ -6,6 +6,7 @@ import traceback
 from .utils import refresh_obj, show_message_box, get_relative_path
 from .importer import create_obj, create_meshio_obj
 import numpy as np
+import os
 
 addon_name = "blendersequenceloader"
 
@@ -540,6 +541,52 @@ class BSEQ_OT_load_all(bpy.types.Operator):
 
         for s in seqs:
             create_obj_wrapper(s, importer_prop)
+        return {'FINISHED'}
+
+class BSEQ_OT_load_all_recursive(bpy.types.Operator):
+    """Load all sequences from selected folder recursively"""
+    bl_idname = "bseq.load_all_recursive"
+    bl_label = "Load All Recursive"
+    bl_options = {'PRESET', 'UNDO'}
+
+    def execute(self, context):
+        importer_prop = context.scene.BSEQ
+
+        if importer_prop.use_relative and not bpy.data.is_saved:
+            return relative_path_error()
+
+        root_dir = importer_prop.path
+        # Recurse through subdirectories
+        for root, dirs, files in os.walk(bpy.path.abspath(root_dir)):
+            for dir in sorted(dirs):
+                # Process subdirectory
+                subdirectory = os.path.join(root, dir)
+
+                seqs = fileseq.findSequencesOnDisk(subdirectory)
+                if len(seqs) == 0:
+                    continue
+
+                # Get list of directories from the root_dir to the current subdirectory
+                coll_list = bpy.path.relpath(subdirectory, start=root_dir).strip("//").split("/")
+
+                # Get or create a nested collection starting from the root
+                last_coll = bpy.context.scene.collection
+                layer_collection = bpy.context.view_layer.layer_collection
+                for coll in coll_list:
+                    cur_coll = bpy.data.collections.get(coll) if bpy.data.collections.get(coll) is not None else bpy.data.collections.new(coll)
+                    if last_coll is not None and cur_coll.name not in last_coll.children:
+                        last_coll.children.link(cur_coll)
+                    layer_collection = layer_collection.children[cur_coll.name]
+                    last_coll = cur_coll
+
+                # Set the last collection as the active collection by recursing through the collections
+                context.view_layer.active_layer_collection = layer_collection
+
+                # for s in seqs:
+                #     print(s)
+
+                for s in seqs:
+                    create_obj_wrapper(s, importer_prop)
         return {'FINISHED'}
     
 
