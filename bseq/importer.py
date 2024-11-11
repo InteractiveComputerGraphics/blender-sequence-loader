@@ -9,7 +9,7 @@ import numpy as np
 from mathutils import Matrix
 import time
 # this import is not useless
-import additional_file_formats
+from .additional_file_formats import *
 
 def extract_edges(cell: meshio.CellBlock):
     if cell.type == "line":

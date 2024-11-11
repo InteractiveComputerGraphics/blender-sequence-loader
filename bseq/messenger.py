@@ -20,7 +20,8 @@ def selected_callback():
         bpy.context.scene.BSEQ.edit_obj = bpy.context.active_object
 
 def subscribe_to_selected():
-    import bseq
+    # import bseq
+    bseq = __loader__
     
     # because current implementation may subscribe twice
     # so clear once to avoid duplication
@@ -37,5 +38,6 @@ def subscribe_to_selected():
 
 
 def unsubscribe_to_selected():
-    import bseq
+    # import bseq
+    bseq = __loader__
     bpy.msgbus.clear_by_owner(bseq)

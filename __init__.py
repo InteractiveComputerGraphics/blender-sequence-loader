@@ -1,14 +1,3 @@
-# bl_info = {
-#     "name": "Sequence Loader",
-#     "description": "Loader for meshio supported mesh files/ simulation sequences",
-#     "author": "Interactive Computer Graphics",
-#     "version": (0, 3, 2),
-#     "blender": (4, 0, 0),
-#     "warning": "",
-#     "support": "COMMUNITY",
-#     "category": "Import-Export",
-# }
-
 import bpy
 import os
 import sys
@@ -28,8 +17,8 @@ import sys
 # if bpy.context.preferences.filepaths.use_relative_paths == True:
 #     bpy.context.preferences.filepaths.use_relative_paths = False
 
-from bseq import *
-from bseq.operators import menu_func_import, add_keymap, delete_keymap
+from .bseq import *
+from .bseq.operators import menu_func_import, add_keymap, delete_keymap
 
 classes = [
     BSEQ_obj_property,
