@@ -6,7 +6,7 @@ id = "sequence_loader"
 version = "0.3.3"
 name = "Blender Sequence Loader"
 tagline = "Just-in-time loader for meshio-supported mesh file sequences"
-maintainer = "contact@srjeske.de"
+maintainer = "Stefan Rhys Jeske <contact@srjeske.de>"
 # Supported types: "add-on", "theme"
 type = "add-on"
 
