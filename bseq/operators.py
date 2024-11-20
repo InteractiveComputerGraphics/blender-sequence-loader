@@ -440,7 +440,7 @@ class BSEQ_PT_batch_sequences_settings(bpy.types.Panel):
         #     layout.prop(importer_prop, "root_path", text="Root Directory")
 
 class BSEQ_addon_preferences(bpy.types.AddonPreferences):
-    bl_idname = addon_name
+    bl_idname = __package__
 
     zips_folder: bpy.props.StringProperty(
             name="Zips Folder",
