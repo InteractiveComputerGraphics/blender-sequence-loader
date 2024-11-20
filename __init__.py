@@ -1,35 +1,24 @@
-bl_info = {
-    "name": "Sequence Loader",
-    "description": "Loader for meshio supported mesh files/ simulation sequences",
-    "author": "Interactive Computer Graphics",
-    "version": (0, 3, 2),
-    "blender": (4, 0, 0),
-    "warning": "",
-    "support": "COMMUNITY",
-    "category": "Import-Export",
-}
-
 import bpy
 import os
 import sys
 
-current_folder = os.path.dirname(os.path.abspath(__file__))
-if current_folder not in sys.path:
-    sys.path.append(current_folder)
-# add paths of external libraries to sys.path
-if os.path.exists(os.path.join(current_folder, "extern")):
-    external_libs = ["fileseq/src", "meshio/src", "python-future/src", "rich"]
-    for lib in external_libs:
-        lib_path = os.path.join(current_folder, "extern", lib)
-        if lib_path not in sys.path:
-            sys.path.append(lib_path)
+# current_folder = os.path.dirname(os.path.abspath(__file__))
+# if current_folder not in sys.path:
+#     sys.path.append(current_folder)
+# # add paths of external libraries to sys.path
+# if os.path.exists(os.path.join(current_folder, "extern")):
+#     external_libs = ["fileseq/src", "meshio/src", "python-future/src", "rich"]
+#     for lib in external_libs:
+#         lib_path = os.path.join(current_folder, "extern", lib)
+#         if lib_path not in sys.path:
+#             sys.path.append(lib_path)
 
 
-if bpy.context.preferences.filepaths.use_relative_paths == True:
-    bpy.context.preferences.filepaths.use_relative_paths = False
+# if bpy.context.preferences.filepaths.use_relative_paths == True:
+#     bpy.context.preferences.filepaths.use_relative_paths = False
 
-from bseq import *
-from bseq.operators import menu_func_import, add_keymap, delete_keymap
+from .bseq import *
+from .bseq.operators import menu_func_import, add_keymap, delete_keymap
 
 classes = [
     BSEQ_obj_property,

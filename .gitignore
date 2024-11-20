@@ -2,6 +2,7 @@ __pycache__/
 .DS_Store
 .vscode/
 *.zip
+*.whl
 
 # the following ignores are used to ignore the local softlink files
 # the extern folder won't be affected by this

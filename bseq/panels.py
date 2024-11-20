@@ -241,6 +241,11 @@ class BSEQ_PT_Import(BSEQ_Panel, bpy.types.Panel):
         col1.label(text="Relative Paths")
         col2.prop(importer_prop, "use_relative", text="")
 
+        if importer_prop.use_relative:
+            col1.label(text="Relative Root")
+            col2.prop(importer_prop, "root_path", text="")
+
+
         col1.label(text="Import Normals")
         col2.prop(importer_prop, "use_imported_normals", text="")
 

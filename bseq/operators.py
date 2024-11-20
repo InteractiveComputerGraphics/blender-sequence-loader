@@ -440,7 +440,7 @@ class BSEQ_PT_batch_sequences_settings(bpy.types.Panel):
         #     layout.prop(importer_prop, "root_path", text="Root Directory")
 
 class BSEQ_addon_preferences(bpy.types.AddonPreferences):
-    bl_idname = addon_name
+    bl_idname = __package__
 
     zips_folder: bpy.props.StringProperty(
             name="Zips Folder",
@@ -556,6 +556,9 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
             return relative_path_error()
 
         root_dir = importer_prop.path
+        root_coll = bpy.context.scene.collection
+        root_layer_collection = bpy.context.view_layer.layer_collection
+        unlinked_collections = []
         # Recurse through subdirectories
         for root, dirs, files in os.walk(bpy.path.abspath(root_dir)):
             for dir in sorted(dirs):
@@ -570,14 +573,33 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
                 coll_list = bpy.path.relpath(subdirectory, start=root_dir).strip("//").split("/")
 
                 # Get or create a nested collection starting from the root
-                last_coll = bpy.context.scene.collection
-                layer_collection = bpy.context.view_layer.layer_collection
+                last_coll = root_coll
+                layer_collection = root_layer_collection
                 for coll in coll_list:
-                    cur_coll = bpy.data.collections.get(coll) if bpy.data.collections.get(coll) is not None else bpy.data.collections.new(coll)
-                    if last_coll is not None and cur_coll.name not in last_coll.children:
+                    # If it already exists and is not in the children of the last collection, then the prefix has changed
+                    cur_coll = bpy.data.collections.get(coll)
+                    if cur_coll is not None and last_coll is not None:
+                        if cur_coll.name not in last_coll.children:
+                            # Get the old parent of the existing collection and move the children to the old parent
+                            parent = [c for c in bpy.data.collections if bpy.context.scene.user_of_id(cur_coll) and cur_coll.name in c.children]
+                            if len(parent) > 0:
+                                for child in cur_coll.children:
+                                    parent[0].children.link(child)
+                                for obj in cur_coll.objects:
+                                    parent[0].objects.link(obj)
+                                parent[0].children.unlink(cur_coll)
+                                unlinked_collections.append(cur_coll)
+                        else:
+                            layer_collection = layer_collection.children[cur_coll.name]
+                            last_coll = cur_coll
+
+
+                    # If it was newly created, link it to the last collection
+                    if cur_coll is None and last_coll is not None:
+                        cur_coll = bpy.data.collections.new(coll)
                         last_coll.children.link(cur_coll)
-                    layer_collection = layer_collection.children[cur_coll.name]
-                    last_coll = cur_coll
+                        layer_collection = layer_collection.children[cur_coll.name]
+                        last_coll = cur_coll
 
                 # Set the last collection as the active collection by recursing through the collections
                 context.view_layer.active_layer_collection = layer_collection
@@ -587,6 +609,10 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
 
                 for s in seqs:
                     create_obj_wrapper(s, importer_prop)
+            
+        # Make sure unused datablocks are freed
+        for coll in unlinked_collections:
+            bpy.data.collections.remove(coll)
         return {'FINISHED'}
     
 
