@@ -204,7 +204,7 @@ def update_mesh(meshio_mesh, mesh):
 
         # set as split normal per vertex
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-            # If blender version is less than 4.1.0, then dont set auto smooth.
+            # If blender version is greater than 4.1.0, then don't set auto smooth.
             # It has been removed and normals will be used automatically if they are set.
             # https://developer.blender.org/docs/release_notes/4.1/python_api/#mesh
             if bpy.app.version < (4, 1, 0):
@@ -217,8 +217,9 @@ def update_mesh(meshio_mesh, mesh):
         
         # set split normal per loop per vertex
         if mesh.BSEQ.split_norm_att_name and mesh.BSEQ.split_norm_att_name == k:
-            # Currently hard-coded for .obj files
-            mesh.use_auto_smooth = True
+            if bpy.app.version < (4, 1, 0):
+                mesh.use_auto_smooth = True
+            # currently hard-coded for .obj files
             indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
             mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
 
