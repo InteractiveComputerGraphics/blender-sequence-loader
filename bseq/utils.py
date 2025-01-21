@@ -51,7 +51,7 @@ def refresh_obj(obj, scene):
     is_relative = obj.BSEQ.path.startswith("//")
     fs = get_absolute_path(obj, scene)
     fs = fileseq.findSequenceOnDisk(fs)
-    fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
+    #fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
 
     full_path = str(fs)
     path = os.path.dirname(full_path)
