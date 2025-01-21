@@ -262,13 +262,14 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identit
     object = bpy.data.objects.new(name, mesh)
 
     #  create the object
+    full_path = str(fileseq)
+    path = os.path.dirname(full_path)
+    pattern = os.path.basename(full_path)
     if use_relative:
-        full_path = get_relative_path(str(fileseq), root_path)
-    else:
-        full_path = str(fileseq)
+        path = get_relative_path(path, root_path)
     # path is only the directory in which the file is located
-    object.BSEQ.path = os.path.dirname(full_path)
-    object.BSEQ.pattern = os.path.basename(full_path)
+    object.BSEQ.path = path
+    object.BSEQ.pattern = pattern
     object.BSEQ.current_file = filepath
     object.BSEQ.init = True
     object.BSEQ.enabled = enabled

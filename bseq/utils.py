@@ -21,7 +21,6 @@ def show_message_box(message="", title="Message Box", icon="INFO"):
     stop_animation()
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
-
 def stop_animation():
     if bpy.context.screen.is_animation_playing:
         #  if playing animation, then stop it, otherwise it will keep showing message box
@@ -29,17 +28,18 @@ def stop_animation():
 
 def get_relative_path(path, root_path):
     if root_path != "":
-        path = bpy.path.relpath(path, start=root_path)
+        rel_path = bpy.path.relpath(path, start=bpy.path.abspath(root_path))
     else:
-        path = bpy.path.relpath(path)    
-    return path
+        rel_path = bpy.path.relpath(path)    
+    return rel_path
 
 # convert relative path to absolute path
 def convert_to_absolute_path(path, root_path):
+    # Additional call to os.path.abspath removes any "/../"" in the path (can be a problem on Windows)
     if root_path != "":
-        path = bpy.path.abspath(path, start=root_path)
+        path = os.path.abspath(bpy.path.abspath(path, start=bpy.path.abspath(root_path)))
     else:
-        path = bpy.path.abspath(path)    
+        path = os.path.abspath(bpy.path.abspath(path))
     return path
 
 def get_absolute_path(obj, scene):
@@ -47,19 +47,21 @@ def get_absolute_path(obj, scene):
     full_path = convert_to_absolute_path(full_path, scene.BSEQ.root_path)
     return full_path
 
-
 def refresh_obj(obj, scene):
     is_relative = obj.BSEQ.path.startswith("//")
-    print("is_relative: ", is_relative)
     fs = get_absolute_path(obj, scene)
     fs = fileseq.findSequenceOnDisk(fs)
-    fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
-    obj.BSEQ.start_end_frame = (fs.start(), fs.end())
-    fs = str(fs)
+    #fs = fileseq.findSequenceOnDisk(fs.dirname() + fs.basename() + "@" + fs.extension())
+
+    full_path = str(fs)
+    path = os.path.dirname(full_path)
+    pattern = os.path.basename(full_path)
     if is_relative:
-        fs = get_relative_path(fs, scene.BSEQ.root_path)
-    obj.BSEQ.path = os.path.dirname(fs)
-    obj.BSEQ.pattern = os.path.basename(fs)
+        path = get_relative_path(path, scene.BSEQ.root_path)
+
+    obj.BSEQ.path = path
+    obj.BSEQ.pattern = pattern
+    obj.BSEQ.start_end_frame = (fs.start(), fs.end())
 
 def load_meshio_from_path(fileseq, filepath, obj = None):
     try:

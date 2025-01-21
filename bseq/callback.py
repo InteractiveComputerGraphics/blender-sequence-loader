@@ -1,30 +1,36 @@
 import bpy
 import fileseq
+import traceback
+
+from .utils import show_message_box
 
 #  Code here are mostly about the callback/update/items functions used in properties.py
 
 file_sequences = []
 
 def update_path(self, context):
+    '''
+    Detects all the file sequences in the directory
+    '''
+
     # When the path has been changed, reset the selected sequence to None
     context.scene.BSEQ['fileseq'] = 1
     context.scene.BSEQ.use_pattern = False
     context.scene.BSEQ.pattern = ""
-
-    '''
-    Detects all the file sequences in the directory
-    '''
+    file_sequences.clear()
     
     p = context.scene.BSEQ.path
     try:
-        f = fileseq.findSequencesOnDisk(p)
-    except:
-        return [("None", "No sequence detected", "", 1)]
+        f = fileseq.findSequencesOnDisk(bpy.path.abspath(p))
+    except Exception as e:
+        show_message_box("Error when reading path\n" + traceback.format_exc(),
+                         "fileseq Error" + str(e),
+                         icon="ERROR")
+        return None
 
     if not f:
-        return [("None", "No sequence detected", "", 1)]
+        return None
 
-    file_sequences.clear()
     if len(f) >= 30:
         file_sequences.append(("None", "Too much sequence detected, could be false detection, please use pattern below", "", 1))
     else:

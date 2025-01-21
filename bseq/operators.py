@@ -50,7 +50,8 @@ class BSEQ_OT_load(bpy.types.Operator):
             fs = importer_prop.path + '/' + importer_prop.pattern
 
         try:
-            fs = fileseq.findSequenceOnDisk(fs)
+            # Call os.path.abspath in addition because findSequenceOnDisk does not support \..\ components on Windows apparently
+            fs = fileseq.findSequenceOnDisk(os.path.abspath(bpy.path.abspath(fs)))
         except Exception as e:
             show_message_box(traceback.format_exc(), "Can't find sequence: " + str(fs), "ERROR")
             return {"CANCELLED"}
@@ -522,7 +523,7 @@ class BSEQ_OT_delete_zips(bpy.types.Operator):
         return {'FINISHED'}
     
 class BSEQ_OT_load_all(bpy.types.Operator):
-    """Load all sequences from selected folder"""
+    """Load all sequences from selected folder and its subfolders"""
     bl_idname = "bseq.load_all"
     bl_label = "Load All"
     bl_options = {'PRESET', 'UNDO'}
@@ -533,8 +534,8 @@ class BSEQ_OT_load_all(bpy.types.Operator):
         if importer_prop.use_relative and not bpy.data.is_saved:
             return relative_path_error()
 
-        dir = importer_prop.path
-        seqs = fileseq.findSequencesOnDisk(str(dir))
+        p = importer_prop.path
+        seqs = fileseq.findSequencesOnDisk(bpy.path.abspath(p))
 
         for s in seqs:
             print(s)
@@ -555,60 +556,56 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
         if importer_prop.use_relative and not bpy.data.is_saved:
             return relative_path_error()
 
-        root_dir = importer_prop.path
+        root_dir = bpy.path.abspath(importer_prop.path)
         root_coll = bpy.context.scene.collection
         root_layer_collection = bpy.context.view_layer.layer_collection
         unlinked_collections = []
-        # Recurse through subdirectories
-        for root, dirs, files in os.walk(bpy.path.abspath(root_dir)):
-            for dir in sorted(dirs):
-                # Process subdirectory
-                subdirectory = os.path.join(root, dir)
+        # Recurse through directory itself and subdirectories
+        for current_dir, subdirs, files in os.walk(root_dir):
+            seqs = fileseq.findSequencesOnDisk(current_dir)
+            if len(seqs) == 0:
+                continue
 
-                seqs = fileseq.findSequencesOnDisk(subdirectory)
-                if len(seqs) == 0:
-                    continue
+            # Get list of directories from the root_dir to the current directory
+            coll_list = bpy.path.relpath(current_dir, start=root_dir).strip("//").split("/")
 
-                # Get list of directories from the root_dir to the current subdirectory
-                coll_list = bpy.path.relpath(subdirectory, start=root_dir).strip("//").split("/")
-
-                # Get or create a nested collection starting from the root
-                last_coll = root_coll
-                layer_collection = root_layer_collection
-                for coll in coll_list:
-                    # If it already exists and is not in the children of the last collection, then the prefix has changed
-                    cur_coll = bpy.data.collections.get(coll)
-                    if cur_coll is not None and last_coll is not None:
-                        if cur_coll.name not in last_coll.children:
-                            # Get the old parent of the existing collection and move the children to the old parent
-                            parent = [c for c in bpy.data.collections if bpy.context.scene.user_of_id(cur_coll) and cur_coll.name in c.children]
-                            if len(parent) > 0:
-                                for child in cur_coll.children:
-                                    parent[0].children.link(child)
-                                for obj in cur_coll.objects:
-                                    parent[0].objects.link(obj)
-                                parent[0].children.unlink(cur_coll)
-                                unlinked_collections.append(cur_coll)
-                        else:
-                            layer_collection = layer_collection.children[cur_coll.name]
-                            last_coll = cur_coll
-
-
-                    # If it was newly created, link it to the last collection
-                    if cur_coll is None and last_coll is not None:
-                        cur_coll = bpy.data.collections.new(coll)
-                        last_coll.children.link(cur_coll)
+            # Get or create a nested collection starting from the root
+            last_coll = root_coll
+            layer_collection = root_layer_collection
+            for coll in coll_list:
+                # If it already exists and is not in the children of the last collection, then the prefix has changed
+                cur_coll = bpy.data.collections.get(coll)
+                if cur_coll is not None and last_coll is not None:
+                    if cur_coll.name not in last_coll.children:
+                        # Get the old parent of the existing collection and move the children to the old parent
+                        parent = [c for c in bpy.data.collections if bpy.context.scene.user_of_id(cur_coll) and cur_coll.name in c.children]
+                        if len(parent) > 0:
+                            for child in cur_coll.children:
+                                parent[0].children.link(child)
+                            for obj in cur_coll.objects:
+                                parent[0].objects.link(obj)
+                            parent[0].children.unlink(cur_coll)
+                            unlinked_collections.append(cur_coll)
+                    else:
                         layer_collection = layer_collection.children[cur_coll.name]
                         last_coll = cur_coll
 
-                # Set the last collection as the active collection by recursing through the collections
-                context.view_layer.active_layer_collection = layer_collection
 
-                # for s in seqs:
-                #     print(s)
+                # If it was newly created, link it to the last collection
+                if cur_coll is None and last_coll is not None:
+                    cur_coll = bpy.data.collections.new(coll)
+                    last_coll.children.link(cur_coll)
+                    layer_collection = layer_collection.children[cur_coll.name]
+                    last_coll = cur_coll
 
-                for s in seqs:
-                    create_obj_wrapper(s, importer_prop)
+            # Set the last collection as the active collection by recursing through the collections
+            context.view_layer.active_layer_collection = layer_collection
+
+            # for s in seqs:
+            #     print(s)
+
+            for s in seqs:
+                create_obj_wrapper(s, importer_prop)
             
         # Make sure unused datablocks are freed
         for coll in unlinked_collections:
