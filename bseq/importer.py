@@ -162,7 +162,7 @@ def update_mesh(meshio_mesh, mesh):
     else:
         mesh.clear_geometry()
         mesh.vertices.add(n_verts)
-        mesh.edges.add(len(edge_data))
+        mesh.edges.add(len(edges))
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
