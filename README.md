@@ -46,17 +46,32 @@ All data is loaded *just-in-time* when the Blender frame changes, in order to av
   - [1.2 Install Addon](#12-install-addon)
   - [1.3 FAQs](#13-faqs)
 - [2. How to use](#2-how-to-use)
-  - [2. Load the animation sequence you want](#2-load-the-animation-sequence-you-want)
-    - [2.1 Absolute vs. Relative Paths](#21-absolute-vs-relative-paths)
-    - [2.2 Sequence List View](#22-sequence-list-view)
-      - [2.2.1 Enable/ Disable](#221-enable-disable)
-      - [2.2.1 Refresh Sequence](#221-refresh-sequence)
-    - [2.3 Settings](#23-settings)
-    - [2.3.1 Geometry Nodes](#231-geometry-nodes)
-    - [2.3.2 Path Information](#232-path-information)
-    - [2.3.3 Attributes Settings](#233-attributes-settings)
-    - [2.3.4 Split Norm per Vertex](#234-split-norm-per-vertex)
-    - [2.3.5 Advanced Settings](#235-advanced-settings)
+  - [1. Load the animation sequence you want](#1-load-the-animation-sequence-you-want)
+    - [1.1 Relative Paths](#11-relative-paths)
+    - [1.2 Import Default Normals](#12-import-default-normals)
+    - [1.3 Custom Transformation Matrix](#13-custom-transformation-matrix)
+    - [1.4 Load sequences from folder (Legacy importer)](#14-load-sequences-from-folder-legacy-importer)
+  - [2. Global Settings](#2-global-settings)
+    - [2.1 Root Directory](#21-root-directory)
+    - [2.2 Print Sequence Information](#22-print-sequence-information)
+    - [2.3 Auto Refresh Active Sequences](#23-auto-refresh-active-sequences)
+    - [2.4 Auto Refresh All Sequences](#24-auto-refresh-all-sequences)
+  - [3. Sequence List View](#3-sequence-list-view)
+      - [3.1 Activate / Deactivate Sequences](#31-activate--deactivate-sequences)
+      - [3.2 Refresh Sequence](#32-refresh-sequence)
+    - [3.3 Activate / Deactivate All](#33-activate--deactivate-all)
+    - [3.4 Set Timeline](#34-set-timeline)
+  - [4. Sequence Properties](#4-sequence-properties)
+    - [4.1 Match Blender Frame Numbers](#41-match-blender-frame-numbers)
+    - [4.2 Path](#42-path)
+    - [4.3 Pattern](#43-pattern)
+    - [4.4 Current File](#44-current-file)
+    - [4.5 Last Loading Time](#45-last-loading-time)
+    - [4.6 Attributes Settings](#46-attributes-settings)
+    - [4.6.1 Split Norm per Vertex](#461-split-norm-per-vertex)
+  - [5. Advanced Settings](#5-advanced-settings)
+    - [5.1 Script](#51-script)
+    - [5.2 Geometry Nodes](#52-geometry-nodes)
 
 ## 1. Installation
 
@@ -70,8 +85,9 @@ git clone https://github.com/InteractiveComputerGraphics/blender-sequence-loader
 
 2. Build the installable `.zip` file by simply running the following command.  This should produce a file called `blender_sequence_loader_{date}.zip`, where `{date}` is replaced with todays date. No other dependency other than standard python3 libraries are needed to build the addon.
 
-```shell
-python3 build_addon.py
+```sh
+./download_wheels.sh
+blender --command extension build
 ```
 
 ### 1.2 Install Addon

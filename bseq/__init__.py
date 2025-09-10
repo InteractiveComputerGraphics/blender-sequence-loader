@@ -13,7 +13,9 @@ from bpy.app.handlers import persistent
 @persistent
 def BSEQ_initialize(scene):
     if update_obj not in bpy.app.handlers.frame_change_post:
-        bpy.app.handlers.frame_change_post.append(update_obj)
+        # Insert at the beginning, so that it runs before other frame change handlers.
+        # The other handlers don't need to be in the first position.
+        bpy.app.handlers.frame_change_post.insert(0, update_obj)
     if auto_refresh_active not in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.append(auto_refresh_active)
     if auto_refresh_all not in bpy.app.handlers.frame_change_post:
