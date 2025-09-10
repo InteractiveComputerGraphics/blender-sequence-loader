@@ -1,7 +1,6 @@
 import bpy
 import os
 
-
 class BSEQ_UL_Obj_List(bpy.types.UIList):
     '''
     This controls the list of imported sequences.
