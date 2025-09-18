@@ -7,6 +7,7 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                    subtype="DIR_PATH",
                                    description="You need to go to the folder with the sequence, then click \"Accept\"",
                                    update=update_path,
+                                   options={'PATH_SUPPORTS_BLEND_RELATIVE' if bpy.app.version >= (4, 5, 0) else ''}
                                    )
     
     use_relative: bpy.props.BoolProperty(name='Relative Paths', 
@@ -24,6 +25,7 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                         description="Select root folder for all relative paths. If empty, root is folder of the Blender file",
                                         update=update_path,
                                         default="",
+                                        options={'PATH_SUPPORTS_BLEND_RELATIVE' if bpy.app.version >= (4, 5, 0) else ''}
                                         )
     
     fileseq: bpy.props.EnumProperty(
@@ -120,7 +122,7 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
                                     description="If deactivated, sequence won't be updated each frame")
     use_advance: bpy.props.BoolProperty(default=False)
     script_name: bpy.props.StringProperty(name="Script name")
-    path: bpy.props.StringProperty(name="Path of sequence", subtype="DIR_PATH")
+    path: bpy.props.StringProperty(name="Path of sequence", subtype="DIR_PATH", options={'PATH_SUPPORTS_BLEND_RELATIVE' if bpy.app.version >= (4, 5, 0) else ''})
     pattern: bpy.props.StringProperty(name="Pattern of sequence")
     current_file: bpy.props.StringProperty(description="File of sequence that is currently loaded")
     frame: bpy.props.IntProperty(name="Frame")
