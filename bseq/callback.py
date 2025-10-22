@@ -1,6 +1,8 @@
 import bpy
 import fileseq
 import traceback
+from .preloader import init as preloader_init
+from .preloader import terminate as preloader_terminate
 
 from .utils import show_message_box
 
@@ -61,3 +63,9 @@ def poll_material(self, material):
 
 def poll_edit_obj(self, object):
     return object.BSEQ.init
+        
+def update_preloader(self, context) -> None:
+    if self.preload_next_frame:
+        preloader_init()
+    else:
+        preloader_terminate()

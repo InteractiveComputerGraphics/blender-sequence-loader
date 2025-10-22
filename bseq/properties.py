@@ -82,7 +82,8 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
     
     preload_next_frame: bpy.props.BoolProperty(name='Preload next frame while rendering',
                                              description="Starts loading the next sequence frame into the RAM while rendering the current frame",
-                                             default=True,
+                                             default=False,
+                                             update=update_preloader
                                          )
         
     use_custom_transform: bpy.props.BoolProperty(name='Custom Transform', 
