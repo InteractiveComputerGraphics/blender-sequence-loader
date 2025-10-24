@@ -283,6 +283,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identit
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = object
 
+# update happens here
 def update_obj(scene, depsgraph=None):
     for obj in bpy.data.objects:
         start_time = time.perf_counter()
@@ -360,3 +361,4 @@ def update_obj(scene, depsgraph=None):
 
         end_time = time.perf_counter()
         obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
+        print("update_obj(): ", obj.BSEQ.last_benchmark)

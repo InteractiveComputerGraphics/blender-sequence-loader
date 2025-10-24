@@ -3,7 +3,7 @@ from .operators import BSEQ_OT_load, BSEQ_OT_edit, BSEQ_OT_resetpt, BSEQ_OT_rese
 from .properties import BSEQ_scene_property, BSEQ_obj_property, BSEQ_mesh_property
 from .panels import BSEQ_UL_Obj_List, BSEQ_List_Panel, BSEQ_Settings, BSEQ_PT_Import, BSEQ_PT_Import_Child1, BSEQ_PT_Import_Child2, BSEQ_Globals_Panel, BSEQ_Advanced_Panel, BSEQ_Templates, BSEQ_UL_Att_List, draw_template
 from .messenger import subscribe_to_selected, unsubscribe_to_selected
-from .importer import update_obj
+from .callback import load_obj
 from .globals import *    
 
 import bpy
@@ -12,10 +12,10 @@ from bpy.app.handlers import persistent
 
 @persistent
 def BSEQ_initialize(scene):
-    if update_obj not in bpy.app.handlers.frame_change_post:
+    if load_obj not in bpy.app.handlers.frame_change_post:
         # Insert at the beginning, so that it runs before other frame change handlers.
         # The other handlers don't need to be in the first position.
-        bpy.app.handlers.frame_change_post.insert(0, update_obj)
+        bpy.app.handlers.frame_change_post.insert(0, load_obj)
     if auto_refresh_active not in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.append(auto_refresh_active)
     if auto_refresh_all not in bpy.app.handlers.frame_change_post:

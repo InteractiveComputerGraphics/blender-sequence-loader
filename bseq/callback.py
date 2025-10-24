@@ -1,8 +1,9 @@
 import bpy
 import fileseq
 import traceback
-from .preloader import init as preloader_init
-from .preloader import terminate as preloader_terminate
+import time
+from .preloader import init as preloader_init, terminate as preloader_terminate, queue_load as preloader_queue_load, flush_buffer as preloader_flush_buffer
+from .importer import update_obj
 
 from .utils import show_message_box
 
@@ -69,3 +70,10 @@ def update_preloader(self, context) -> None:
         preloader_init()
     else:
         preloader_terminate()
+
+def load_obj(scene, depsgraph=None):
+    if scene.BSEQ.preload_next_frame:
+        preloader_flush_buffer(scene, depsgraph)
+        preloader_queue_load(scene, depsgraph)
+        return None
+    update_obj(scene, depsgraph)
