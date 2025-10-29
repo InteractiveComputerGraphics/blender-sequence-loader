@@ -167,6 +167,7 @@ def update_mesh(meshio_mesh, mesh):
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
+    start_time = time.perf_counter()
     mesh.vertices.foreach_set("co", mesh_vertices.ravel())
     mesh.edges.foreach_set("vertices", edges)
     mesh.loops.foreach_set("vertex_index", loops_vert_idx)
@@ -174,6 +175,8 @@ def update_mesh(meshio_mesh, mesh):
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
 
+    end_time = time.perf_counter()
+    print("update mesh() took ", (end_time - start_time) * 1000, " ms")
     # newer function but is about 4 times slower
     # mesh.clear_geometry()
     # mesh.from_pydata(mesh_vertices, edge_data, face_data)
@@ -194,6 +197,7 @@ def update_mesh(meshio_mesh, mesh):
         k = "bseq_" + k
         attribute = create_or_retrieve_attribute(mesh, k, v)
         if attribute is None:
+            
             continue
         name_string = None
         if attribute.data_type == "FLOAT":
@@ -285,7 +289,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identit
     bpy.context.view_layer.objects.active = object
 
 
-def load_into_ram(obj, scene, depsgraph) -> Optional[meshio.Mesh]:
+def load_into_ram(obj, scene, depsgraph, *, target_frame = -1) -> Optional[meshio.Mesh]:
     if obj.BSEQ.init == False:
         return None
     if obj.BSEQ.enabled == False:
@@ -293,7 +297,9 @@ def load_into_ram(obj, scene, depsgraph) -> Optional[meshio.Mesh]:
     if obj.mode != "OBJECT":
         return None
 
-    if depsgraph is not None:
+    if target_frame != -1:
+        current_frame = target_frame
+    elif depsgraph is not None:
         current_frame = obj.evaluated_get(depsgraph).BSEQ.frame
     else:
         show_message_box("Warning: Might not be able load the correct frame because the dependency graph is not available.", "BSEQ Warning")
@@ -360,8 +366,6 @@ def update_scene(obj, meshio_mesh, scene, depsgraph):
     update_mesh(meshio_mesh, obj.data)
 
     apply_transformation(meshio_mesh, obj, depsgraph)
-
-    end_time = time.perf_counter()
 
 def update_obj(scene, depsgraph=None):
     for obj in bpy.data.objects:
