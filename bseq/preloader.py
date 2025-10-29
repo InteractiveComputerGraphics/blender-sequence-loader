@@ -2,7 +2,7 @@ import concurrent.futures
 import time
 import bpy
 import meshio
-from .importer import load_into_ram, update_scene, update_obj
+from .importer import load_into_ram, update_scene, update_obj, update_mesh, apply_transformation
 from bpy.app.handlers import persistent
 
 _executor: concurrent.futures.ThreadPoolExecutor
@@ -16,26 +16,40 @@ def init() -> None:
     _init = True
     print("init")
 
+def _load_data_into_buffer(meshio_mesh, buffer, object: bpy.types.Object):
+    buffer_data = object.data.copy()
+    update_mesh(meshio_mesh, buffer_data)
+    buffer[object.name_full] = buffer_data
+
 class Frame():
     _future: concurrent.futures.Future
-    _buffer_objs: dict[str, meshio.Mesh]
+    _buffer_meshes: dict[str, meshio.Mesh]
+    _buffer_data: dict[str, bpy.types.Mesh]
     _frame: int = -1
+
+    def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
+        if object.name_full in self._buffer_data:
+            object.data = self._buffer_data[object.name_full]
+            apply_transformation(meshio_mesh, object, depsgraph)
 
     def _load_objs(self, scene, depsgraph):
         start = time.perf_counter()
         self._frame = scene.frame_current + scene.frame_step
-        self._buffer_objs = {}
+        self._buffer_meshes = {}
+        self._buffer_data = {}
         for obj in bpy.data.objects:
             # TODO: Select next frame (currently seems to load the current frame again)
             mesh = load_into_ram(obj, scene, depsgraph, target_frame = self._frame)
             if isinstance(mesh, meshio.Mesh):
-                self._buffer_objs[obj.name_full] = mesh
+                self._buffer_meshes[obj.name_full] = mesh
+                _load_data_into_buffer(mesh, self._buffer_data, obj)
         end = time.perf_counter()
         print("load_objs() took ", (end - start) * 1000, " ms")
 
     def _delete_mesh(self, mesh: meshio.Mesh):
         mesh.point_data.clear()
         mesh.cell_data.clear()
+
         mesh.point_sets.clear()
         mesh.cell_sets.clear()
         mesh.cells.clear()
@@ -44,12 +58,13 @@ class Frame():
             mesh.attributes.clear()
 
     def _clear_buffer(self):
-        if not hasattr(self, "_buffer_objs") or len(self._buffer_objs) == 0:
+        if not hasattr(self, "_buffer_meshes") or len(self._buffer_meshes) == 0:
             print("buffer empty")
             return
-        for name, mesh in self._buffer_objs.items():
+        for name, mesh in self._buffer_meshes.items():
             self._delete_mesh(mesh)
-        self._buffer_objs.clear()
+        self._buffer_meshes.clear()
+        self._buffer_data.clear()
 
     def flush_buffer(self, scene, depsgraph, *, target_frame: int = -1):
         print()
@@ -64,8 +79,9 @@ class Frame():
         print("future done wait?: ", self._future.done())
         start_time = time.perf_counter()
         for obj in bpy.data.objects:
-            if obj.name_full in self._buffer_objs:
-                update_scene(obj, self._buffer_objs[obj.name_full], scene, depsgraph)
+            if obj.name_full in self._buffer_meshes:
+                # update_scene(obj, self._buffer_meshes[obj.name_full], scene, depsgraph)
+                self._load_buffer_to_data(obj, self._buffer_meshes[obj.name_full], depsgraph)
         end_time = time.perf_counter()
         print("update_scene() took ", (end_time - start_time) * 1000, " ms")
         self._clear_buffer()
