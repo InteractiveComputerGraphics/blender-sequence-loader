@@ -120,6 +120,7 @@ def create_or_retrieve_attribute(mesh, k, v):
         return mesh.attributes[k]
 
 def update_mesh(meshio_mesh, mesh):
+    start_time = time.perf_counter()
     # extract information from the meshio mesh
     mesh_vertices = meshio_mesh.points
 
@@ -167,16 +168,12 @@ def update_mesh(meshio_mesh, mesh):
         mesh.loops.add(n_loop)
         mesh.polygons.add(n_poly)
 
-    start_time = time.perf_counter()
     mesh.vertices.foreach_set("co", mesh_vertices.ravel())
     mesh.edges.foreach_set("vertices", edges)
     mesh.loops.foreach_set("vertex_index", loops_vert_idx)
     mesh.polygons.foreach_set("loop_start", faces_loop_start)
     mesh.polygons.foreach_set("loop_total", faces_loop_total)
     mesh.polygons.foreach_set("use_smooth", [shade_scheme] * len(faces_loop_total))
-
-    end_time = time.perf_counter()
-    print("update mesh() took ", (end_time - start_time) * 1000, " ms")
     # newer function but is about 4 times slower
     # mesh.clear_geometry()
     # mesh.from_pydata(mesh_vertices, edge_data, face_data)
@@ -227,6 +224,9 @@ def update_mesh(meshio_mesh, mesh):
             # currently hard-coded for .obj files
             indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
             mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
+
+    end_time = time.perf_counter()
+    print("update mesh() took ", (end_time - start_time) * 1000, " ms")
 
 # function to create a single meshio object (not a sequence, this just inports some file using meshio)
 def create_meshio_obj(filepath):
