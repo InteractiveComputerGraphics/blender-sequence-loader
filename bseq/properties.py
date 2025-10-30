@@ -85,6 +85,8 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                              default=False,
                                              update=update_preloader
                                          )
+    
+    loading_status: bpy.props.StringProperty(default="")
         
     use_custom_transform: bpy.props.BoolProperty(name='Custom Transform', 
                                                  description="Use a custom transformation matrix when importing", 

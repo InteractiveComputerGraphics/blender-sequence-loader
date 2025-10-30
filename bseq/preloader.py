@@ -26,6 +26,7 @@ class Frame():
     _buffer_meshes: dict[str, meshio.Mesh]
     _buffer_data: dict[str, bpy.types.Mesh]
     _frame: int = -1
+    loading_complete: bool = False
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
         if object.name_full in self._buffer_data:
@@ -37,7 +38,10 @@ class Frame():
         self._frame = scene.frame_current + scene.frame_step
         self._buffer_meshes = {}
         self._buffer_data = {}
+        n_loaded = 0
         for obj in bpy.data.objects:
+            scene.BSEQ.loading_status = f"{n_loaded}/{len(bpy.data.objects)}"
+            n_loaded += 1
             # TODO: Select next frame (currently seems to load the current frame again)
             mesh = load_into_ram(obj, scene, depsgraph, target_frame = self._frame)
             if isinstance(mesh, meshio.Mesh):
@@ -45,6 +49,7 @@ class Frame():
                 _load_data_into_buffer(mesh, self._buffer_data, obj)
         end = time.perf_counter()
         print("load_objs() took ", (end - start) * 1000, " ms")
+        scene.BSEQ.loading_status = "Complete"
 
     def _delete_mesh(self, mesh: meshio.Mesh):
         mesh.point_data.clear()
@@ -93,11 +98,12 @@ class Frame():
             init()
         copy_start = time.perf_counter()
         self._buffer = scene.copy()
+        
         copy_end = time.perf_counter()
         self._frame = scene.frame_current + scene.frame_step
         start_queue = time.perf_counter()
         self._future = _executor.submit(self._load_objs, scene, depsgraph)
-        end_submit = time.perf_counter()
+        scene.BSEQ.loading_status = "Queued"
         end = time.perf_counter()
         print("queue_load():\n\ttotal: ", (end - start) * 1000, "\n\tcopy: ", (copy_end - copy_start) * 1000, "\n\tqueuing:", (end - start_queue) * 1000)
 
