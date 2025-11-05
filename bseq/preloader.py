@@ -31,7 +31,9 @@ class Frame():
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
         if object.name_full in self._buffer_data:
+            old_mesh = object.data
             object.data = self._buffer_data[object.name_full]
+            bpy.data.meshes.remove(old_mesh, do_unlink=False)
             apply_transformation(meshio_mesh, object, depsgraph)
 
     def _obj_load(self, obj, scene, depsgraph):
