@@ -16,11 +16,6 @@ def init() -> None:
     _init = True
     print("init")
 
-def _load_data_into_buffer(meshio_mesh, buffer, object: bpy.types.Object):
-    buffer_data = object.data.copy()
-    update_mesh(meshio_mesh, buffer_data)
-    buffer[object.name_full] = buffer_data
-
 class Frame():
     _future: concurrent.futures.Future
     _loading_threads: list[concurrent.futures.Future]
@@ -28,6 +23,11 @@ class Frame():
     _buffer_data: dict[str, bpy.types.Mesh]
     _frame: int = -1
     loading_complete: bool = False
+
+    def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
+        buffer_data = object.data.copy()
+        update_mesh(meshio_mesh, buffer_data)
+        self._buffer_data[object.name_full] = buffer_data
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
         if object.name_full in self._buffer_data:
@@ -39,7 +39,7 @@ class Frame():
         mesh = load_into_ram(obj, scene, depsgraph, target_frame=self._frame)
         if isinstance(mesh, meshio.Mesh):
             self._buffer_meshes[obj.name_full] = mesh
-            _load_data_into_buffer(mesh, self._buffer_data, obj)
+            self._load_data_into_buffer(mesh, obj)
             end_time = time.perf_counter()
             obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
 
