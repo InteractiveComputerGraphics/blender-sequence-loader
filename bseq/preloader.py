@@ -136,10 +136,7 @@ class Frame():
         global _executor, _init
         if not _init:
             init()
-        copy_start = time.perf_counter()
-        self._buffer = scene.copy()
-        
-        copy_end = time.perf_counter()
+
         self._frame = scene.frame_current + scene.frame_step
         start_queue = time.perf_counter()
         self._future = _executor.submit(self._load_objs, scene, depsgraph)
