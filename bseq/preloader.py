@@ -8,6 +8,7 @@ from bpy.app.handlers import persistent
 _executor: concurrent.futures.ThreadPoolExecutor
 _init = False
 
+# This needs to be persistent to keep the executor
 @persistent
 def init() -> None:
     global _executor, _init
@@ -25,18 +26,22 @@ class Frame():
     loading_complete: bool = False
 
     def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
+        """ Applies the meshio data to a copy of the object mesh """
         buffer_data = object.data.copy()
         update_mesh(meshio_mesh, buffer_data)
         self._buffer_data[object.name_full] = buffer_data
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
+        """ Swaps the object mesh with the buffered mesh """
         if object.name_full in self._buffer_data:
             old_mesh = object.data
             object.data = self._buffer_data[object.name_full]
+            # We remove the old mesh data to prevent memory leaks
             bpy.data.meshes.remove(old_mesh, do_unlink=False)
             apply_transformation(meshio_mesh, object, depsgraph)
 
     def _obj_load(self, obj, scene, depsgraph):
+        """ Buffering Obj Job for the executor """
         start_time = time.perf_counter()
         mesh = load_into_ram(obj, scene, depsgraph, target_frame=self._frame)
         if isinstance(mesh, meshio.Mesh):
@@ -46,6 +51,9 @@ class Frame():
             obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
 
     def _load_objs(self, scene, depsgraph):
+        """ Job which submits all object buffering jobs
+            Also updates the buffering status in the UI
+        """
         start = time.perf_counter()
         self._frame = scene.frame_current + scene.frame_step
         self._buffer_meshes = {}
@@ -76,6 +84,8 @@ class Frame():
         if hasattr(mesh, "attributes"):
             mesh.attributes.clear()
 
+    # Needs testing if really needed
+    # Meshio might work with garbage collection
     def _clear_buffer(self):
         if not hasattr(self, "_buffer_meshes") or len(self._buffer_meshes) == 0:
             print("buffer empty")
@@ -88,14 +98,26 @@ class Frame():
         self._buffer_data.clear()
 
     def flush_buffer(self, scene, depsgraph, *, target_frame: int = -1):
+        """ Applies the buffer to the scene and clears the buffer afterwards
+        
+            target_frame -- indicates the current frame which is to be loaded, 
+            '-1' indicates do not use buffered frame
+
+            If target_frame does not coincide with the buffered frame, the buffer will be
+            invalidated and the scene is loaded without pre-buffering  
+        
+        """
         start_time = time.perf_counter()
         print()
+        # if no target_frame is specified or if the target_frame does not coincide
+        # with the buffered frame, invalidate the buffer and update the scene serially
         if target_frame == -1 or self._frame != target_frame:
             self._frame = -1
             update_obj(scene, depsgraph)            
             print("invalidate buffer")
             self._clear_buffer()
             return
+        # Barrier to wait until loading is actually completed
         concurrent.futures.wait([self._future])
         for obj in bpy.data.objects:
             if obj.name_full in self._buffer_meshes:
@@ -106,6 +128,10 @@ class Frame():
         print("update_scene() took ", (end_time - start_time) * 1000, " ms")
         
     def queue_load(self, scene, depsgraph):
+        """ Queues the next frame which is determined by the current frame and the set frame step
+
+            Also initialises the executor if not initialized already        
+        """
         start = time.perf_counter()
         global _executor, _init
         if not _init:
