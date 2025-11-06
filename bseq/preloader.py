@@ -27,9 +27,14 @@ class Frame():
 
     def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
         """ Applies the meshio data to a copy of the object mesh """
+        start_time = time.perf_counter()
+        
         buffer_data = object.data.copy()
         update_mesh(meshio_mesh, buffer_data)
         self._buffer_data[object.name_full] = buffer_data
+
+        end_time = time.perf_counter()
+        print("update mesh() took ", (end_time - start_time) * 1000, " ms")
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
         """ Swaps the object mesh with the buffered mesh """

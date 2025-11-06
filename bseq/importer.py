@@ -120,7 +120,6 @@ def create_or_retrieve_attribute(mesh, k, v):
         return mesh.attributes[k]
 
 def update_mesh(meshio_mesh, mesh):
-    start_time = time.perf_counter()
     # extract information from the meshio mesh
     mesh_vertices = meshio_mesh.points
 
@@ -224,9 +223,6 @@ def update_mesh(meshio_mesh, mesh):
             # currently hard-coded for .obj files
             indices = [item for sublist in meshio_mesh.cell_data["obj:vn_face_idx"][0] for item in sublist]
             mesh.normals_split_custom_set([meshio_mesh.field_data["obj:vn"][i - 1] for i in indices])
-
-    end_time = time.perf_counter()
-    print("update mesh() took ", (end_time - start_time) * 1000, " ms")
 
 # function to create a single meshio object (not a sequence, this just inports some file using meshio)
 def create_meshio_obj(filepath):
