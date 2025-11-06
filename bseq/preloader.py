@@ -72,17 +72,6 @@ class Frame():
         end = time.perf_counter()
         print("load_objs() took ", (end - start) * 1000, " ms")
 
-    def _delete_mesh(self, mesh: meshio.Mesh):
-        mesh.point_data.clear()
-        mesh.cell_data.clear()
-
-        mesh.point_sets.clear()
-        mesh.cell_sets.clear()
-        mesh.cells.clear()
-        mesh.field_data.clear()
-        del mesh.points
-        if hasattr(mesh, "attributes"):
-            mesh.attributes.clear()
 
     # Needs testing if really needed
     # Meshio might work with garbage collection
@@ -90,10 +79,6 @@ class Frame():
         if not hasattr(self, "_buffer_meshes") or len(self._buffer_meshes) == 0:
             print("buffer empty")
             return
-        for name, mesh in self._buffer_meshes.items():
-            self._delete_mesh(mesh)
-        for _, obj in self._buffer_data.items():
-            bpy.data.meshes.remove(obj, do_unlink=False)
         self._buffer_meshes.clear()
         self._buffer_data.clear()
 
