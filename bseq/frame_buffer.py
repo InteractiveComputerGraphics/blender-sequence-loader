@@ -22,8 +22,15 @@ class Frame():
     _loading_threads: list[concurrent.futures.Future]
     _buffer_meshes: dict[str, meshio.Mesh]
     _buffer_data: dict[str, bpy.types.Mesh]
+    _buffer_timings: dict[str, float]
     _frame: int = -1
     loading_complete: bool = False
+
+    def __init__(self):
+        self._buffer_meshes = {}
+        self._buffer_data = {}
+        self._buffer_timings = {}
+        self._loading_threads = []
 
     def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
         """ Applies the meshio data to a copy of the object mesh """
@@ -53,7 +60,8 @@ class Frame():
             self._buffer_meshes[obj.name_full] = mesh
             self._load_data_into_buffer(mesh, obj)
             end_time = time.perf_counter()
-            obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
+            # move to main threaded
+            self._buffer_timings[obj.name_full] = (end_time - start_time) * 1000
 
     def _load_objs(self, scene, depsgraph):
         """ Job which submits all object buffering jobs
@@ -63,6 +71,7 @@ class Frame():
         self._frame = scene.frame_current + scene.frame_step
         self._buffer_meshes = {}
         self._buffer_data = {}
+        self._buffer_timings = {}
         self._loading_threads = []
         n_loaded = 0
         for obj in bpy.data.objects:
@@ -70,7 +79,13 @@ class Frame():
             self._loading_threads.append(future)
         for future in concurrent.futures.as_completed(self._loading_threads):
             n_loaded += 1
-            scene.BSEQ.loading_status = f"{n_loaded}/{len(bpy.data.objects)}"
+            # Due to multithreading, Blender may forbid writing to the loading status while rendering
+            # In this case, we just skip the update
+            try:
+                scene.BSEQ.loading_status = f"{n_loaded}/{len(bpy.data.objects)}"
+            except Exception as e:
+                print("Skipped updating loading status")
+
         concurrent.futures.wait(self._loading_threads)
         scene.BSEQ.loading_status = "Complete"
         self._loading_threads.clear()
@@ -83,6 +98,7 @@ class Frame():
             return
         self._buffer_meshes.clear()
         self._buffer_data.clear()
+        self._buffer_timings.clear()
 
     def flush_buffer(self, scene, depsgraph, *, target_frame: int = -1):
         """ Applies the buffer to the scene and clears the buffer afterwards
@@ -109,6 +125,8 @@ class Frame():
         for obj in bpy.data.objects:
             if obj.name_full in self._buffer_meshes:
                 self._load_buffer_to_data(obj, self._buffer_meshes[obj.name_full], depsgraph)
+                obj.BSEQ.last_benchmark = self._buffer_timings[obj.name_full]
+
         self._clear_buffer()
         end_time = time.perf_counter()
         #print("update_scene() took ", (end_time - start_time) * 1000, " ms")

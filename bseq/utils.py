@@ -67,7 +67,12 @@ def load_meshio_from_path(fileseq, filepath, obj = None):
     try:
         meshio_mesh = meshio.read(filepath)
         if obj is not None:
-            obj.BSEQ.current_file = filepath
+            # While multithreading, this may raise an exception during rendering
+            # Since current_file seems not to be used elsewhere, we skip it when an exception occurs
+            try:
+                obj.BSEQ.current_file = filepath
+            except Exception as e:
+                print("Current file not updated")
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                         "Meshio Loading Error" + str(e),
