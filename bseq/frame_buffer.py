@@ -12,8 +12,7 @@ _init = False
 @persistent
 def init() -> None:
     global _executor, _init
-    _executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
-    _executor.submit(pow, 2, 2)
+    _executor = concurrent.futures.ThreadPoolExecutor()
     _init = True
     print("init")
 
@@ -24,7 +23,6 @@ class Frame():
     _buffer_data: dict[str, bpy.types.Mesh]
     _buffer_timings: dict[str, float]
     _frame: int = -1
-    loading_complete: bool = False
 
     def __init__(self):
         self._buffer_meshes = {}
