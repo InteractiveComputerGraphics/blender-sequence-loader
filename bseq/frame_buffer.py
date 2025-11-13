@@ -118,6 +118,8 @@ class Frame():
             self._frame = -1
             update_obj(scene, depsgraph)            
             print("invalidate buffer")
+            for _, obj in self._buffer_data.items():
+                bpy.data.meshes.remove(obj, do_unlink=False)
             self._clear_buffer()
             return
         # Barrier to wait until loading is actually completed
@@ -164,5 +166,7 @@ def terminate() -> None:
         return
     _executor.shutdown(wait=False, cancel_futures=True)
     _init = False
+    for _, obj in _frame._buffer_data.items():
+        bpy.data.meshes.remove(obj, do_unlink=False)
     _frame._clear_buffer()
     print("terminated")
