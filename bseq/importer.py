@@ -285,7 +285,7 @@ def create_obj(fileseq, use_relative, root_path, transform_matrix=Matrix.Identit
     bpy.context.view_layer.objects.active = object
 
 
-def load_into_ram(obj, scene, depsgraph, *, target_frame = -1) -> Optional[meshio.Mesh]:
+def load_into_ram(obj, scene, depsgraph, *, target_frame = -1, filepath_buffer = None) -> Optional[meshio.Mesh]:
     if obj.BSEQ.init == False:
         return None
     if obj.BSEQ.enabled == False:
@@ -344,14 +344,27 @@ def load_into_ram(obj, scene, depsgraph, *, target_frame = -1) -> Optional[meshi
             if current_frame in fs_frames:
                 filepath = fs[fs_frames.index(current_frame)]
                 filepath = os.path.normpath(filepath)
-                meshio_mesh = load_meshio_from_path(fs, filepath, obj)
+                if filepath_buffer is not None:
+                    # Since multithreaded writes to Blender properties may raise exceptions,
+                    # we offload the update to current_file to the flush_buffer() function
+                    # Passing None just disables the immediate update
+                    meshio_mesh = load_meshio_from_path(fs, filepath, None)
+                    filepath_buffer[obj.name_full] = filepath
+                else:
+                    meshio_mesh = load_meshio_from_path(fs, filepath, obj)
             else:
                 meshio_mesh = meshio.Mesh([], [])
         else:
-           filepath = fs[current_frame % len(fs)]
-           filepath = os.path.normpath(filepath)
-           meshio_mesh = load_meshio_from_path(fs, filepath, obj)
-
+            filepath = fs[current_frame % len(fs)]
+            filepath = os.path.normpath(filepath)
+            if filepath_buffer is not None:
+                # Since multithreaded writes to Blender properties may raise exceptions,
+                # we offload the update to current_file to the flush_buffer() function
+                # Passing None just disables the immediate update
+                meshio_mesh = load_meshio_from_path(fs, filepath, None)
+                filepath_buffer[obj.name_full] = filepath
+            else:
+                meshio_mesh = load_meshio_from_path(fs, filepath, obj)
     if not isinstance(meshio_mesh, meshio.Mesh):
         show_message_box('function preprocess does not return meshio object', "ERROR")
         return None

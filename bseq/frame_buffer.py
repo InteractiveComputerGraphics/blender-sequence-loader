@@ -22,6 +22,7 @@ class Frame():
     _buffer_meshes: dict[str, meshio.Mesh]
     _buffer_data: dict[str, bpy.types.Mesh]
     _buffer_timings: dict[str, float]
+    _buffer_file_path: dict[str, str]
     _frame: int = -1
 
     def __init__(self):
@@ -29,6 +30,7 @@ class Frame():
         self._buffer_data = {}
         self._buffer_timings = {}
         self._loading_threads = []
+        self._buffer_file_path = {}
 
     def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
         """ Applies the meshio data to a copy of the object mesh """
@@ -53,7 +55,7 @@ class Frame():
     def _obj_load(self, obj, scene, depsgraph):
         """ Buffering Obj Job for the executor """
         start_time = time.perf_counter()
-        mesh = load_into_ram(obj, scene, depsgraph, target_frame=self._frame)
+        mesh = load_into_ram(obj, scene, depsgraph, target_frame=self._frame, filepath_buffer=self._buffer_file_path)
         if isinstance(mesh, meshio.Mesh):
             self._buffer_meshes[obj.name_full] = mesh
             self._load_data_into_buffer(mesh, obj)
@@ -71,6 +73,7 @@ class Frame():
         self._buffer_data = {}
         self._buffer_timings = {}
         self._loading_threads = []
+        self._buffer_file_path = {}
         n_loaded = 0
         for obj in bpy.data.objects:
             future = _executor.submit(self._obj_load, obj, scene, depsgraph)
@@ -97,6 +100,7 @@ class Frame():
         self._buffer_meshes.clear()
         self._buffer_data.clear()
         self._buffer_timings.clear()
+        self._buffer_file_path.clear()
 
     def flush_buffer(self, scene, depsgraph, *, target_frame: int = -1):
         """ Applies the buffer to the scene and clears the buffer afterwards
@@ -126,6 +130,7 @@ class Frame():
             if obj.name_full in self._buffer_meshes:
                 self._load_buffer_to_data(obj, self._buffer_meshes[obj.name_full], depsgraph)
                 obj.BSEQ.last_benchmark = self._buffer_timings[obj.name_full]
+                obj.BSEQ.current_file = self._buffer_file_path[obj.name_full]
 
         self._clear_buffer()
         end_time = time.perf_counter()
