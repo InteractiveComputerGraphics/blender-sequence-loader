@@ -8,6 +8,15 @@ from bpy.app.handlers import persistent
 _executor: concurrent.futures.ThreadPoolExecutor
 _init = False
 
+# decorator for timing analysis
+def timing(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        func(*args, **kwargs)
+        end = time.perf_counter()
+        print(func.__name__, "took", (end - start) * 1000, "ms")
+    return wrapper
+
 # This needs to be persistent to keep the executor
 @persistent
 def init() -> None:
@@ -34,14 +43,9 @@ class Frame():
 
     def _load_data_into_buffer(self, meshio_mesh, object: bpy.types.Object):
         """ Applies the meshio data to a copy of the object mesh """
-        start_time = time.perf_counter()
-        
         buffer_data = object.data.copy()
         update_mesh(meshio_mesh, buffer_data)
         self._buffer_data[object.name_full] = buffer_data
-
-        end_time = time.perf_counter()
-        print("update mesh() took ", (end_time - start_time) * 1000, " ms")
 
     def _load_buffer_to_data(self, object: bpy.types.Object, meshio_mesh, depsgraph):
         """ Swaps the object mesh with the buffered mesh """
@@ -52,6 +56,7 @@ class Frame():
             bpy.data.meshes.remove(old_mesh, do_unlink=False)
             apply_transformation(meshio_mesh, object, depsgraph)
 
+    @timing
     def _obj_load(self, obj, scene, depsgraph):
         """ Buffering Obj Job for the executor """
         start_time = time.perf_counter()
@@ -63,11 +68,11 @@ class Frame():
             # move to main threaded
             self._buffer_timings[obj.name_full] = (end_time - start_time) * 1000
 
+    @timing
     def _load_objs(self, scene, depsgraph):
         """ Job which submits all object buffering jobs
             Also updates the buffering status in the UI
         """
-        start = time.perf_counter()
         self._frame = scene.frame_current + scene.frame_step
         self._buffer_meshes = {}
         self._buffer_data = {}
@@ -90,8 +95,6 @@ class Frame():
         concurrent.futures.wait(self._loading_threads)
         scene.BSEQ.loading_status = "Complete"
         self._loading_threads.clear()
-        end = time.perf_counter()
-        #print("load_objs() took ", (end - start) * 1000, " ms")
 
     def _clear_buffer(self):
         if not hasattr(self, "_buffer_meshes") or len(self._buffer_meshes) == 0:
@@ -102,6 +105,7 @@ class Frame():
         self._buffer_timings.clear()
         self._buffer_file_path.clear()
 
+    @timing
     def flush_buffer(self, scene, depsgraph, *, target_frame: int = -1):
         """ Applies the buffer to the scene and clears the buffer afterwards
         
@@ -112,8 +116,6 @@ class Frame():
             invalidated and the scene is loaded without pre-buffering  
         
         """
-        start_time = time.perf_counter()
-        #print()
         # if no target_frame is specified or if the target_frame does not coincide
         # with the buffered frame, invalidate the buffer and update the scene serially
         if target_frame == -1 or self._frame != target_frame:
@@ -133,8 +135,6 @@ class Frame():
                 obj.BSEQ.current_file = self._buffer_file_path[obj.name_full]
 
         self._clear_buffer()
-        end_time = time.perf_counter()
-        #print("update_scene() took ", (end_time - start_time) * 1000, " ms")
     
     def queue_load(self, scene, depsgraph):
         """ Queues the next frame which is determined by the current frame and the set frame step
@@ -147,18 +147,13 @@ class Frame():
             init()
 
         self._frame = scene.frame_current + scene.frame_step
-        start_queue = time.perf_counter()
         self._future = _executor.submit(self._load_objs, scene, depsgraph)
         scene.BSEQ.loading_status = "Queued"
-        end = time.perf_counter()
-        #print("queue_load():\n\ttotal: ", (end - start) * 1000, "\n\tcopy: ", (copy_end - copy_start) * 1000, "\n\tqueuing:", (end - start_queue) * 1000)
 
 _frame = Frame()
 
 def queue_load(scene, depsgraph=None) -> None:
-    start_time = time.perf_counter()
     _frame.queue_load(scene, depsgraph)
-    #print("queue_load() took ", (time.perf_counter() - start_time) * 1000, " ms")
 
 def flush_buffer(scene, depsgraph) -> None:
     _frame.flush_buffer(scene, depsgraph, target_frame=scene.frame_current)
