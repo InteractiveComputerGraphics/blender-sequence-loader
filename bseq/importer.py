@@ -387,4 +387,3 @@ def update_obj(scene, depsgraph=None):
 
         end_time = time.perf_counter()
         obj.BSEQ.last_benchmark = (end_time - start_time) * 1000
-        # print("update_obj(): ", obj.BSEQ.last_benchmark)

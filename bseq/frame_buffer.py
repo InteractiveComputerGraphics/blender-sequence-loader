@@ -23,7 +23,6 @@ def init() -> None:
     global _executor, _init
     _executor = concurrent.futures.ThreadPoolExecutor()
     _init = True
-    print("init")
 
 class Frame():
     _future: concurrent.futures.Future
@@ -86,11 +85,11 @@ class Frame():
         for future in concurrent.futures.as_completed(self._loading_threads):
             n_loaded += 1
             # Due to multithreading, Blender may forbid writing to the loading status while rendering
-            # In this case, we just skip the update
+            # In this case, we just skip the update as it is only a progress indication anyway
             try:
                 scene.BSEQ.loading_status = f"{n_loaded}/{len(bpy.data.objects)}"
             except Exception as e:
-                print("Skipped updating loading status")
+                pass
 
         concurrent.futures.wait(self._loading_threads)
         scene.BSEQ.loading_status = "Complete"
@@ -98,7 +97,6 @@ class Frame():
 
     def _clear_buffer(self):
         if not hasattr(self, "_buffer_meshes") or len(self._buffer_meshes) == 0:
-            print("buffer empty")
             return
         self._buffer_meshes.clear()
         self._buffer_data.clear()
@@ -120,8 +118,7 @@ class Frame():
         # with the buffered frame, invalidate the buffer and update the scene serially
         if target_frame == -1 or self._frame != target_frame:
             self._frame = -1
-            update_obj(scene, depsgraph)            
-            print("invalidate buffer")
+            update_obj(scene, depsgraph)
             for _, obj in self._buffer_data.items():
                 bpy.data.meshes.remove(obj, do_unlink=False)
             self._clear_buffer()
@@ -167,4 +164,3 @@ def terminate() -> None:
     for _, obj in _frame._buffer_data.items():
         bpy.data.meshes.remove(obj, do_unlink=False)
     _frame._clear_buffer()
-    print("terminated")
