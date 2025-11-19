@@ -3,8 +3,8 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "sequence_loader"
-version = "0.3.6"
-name = "Blender Sequence Loader"
+version = "0.3.7"
+name = "Sequence Loader"
 tagline = "Just-in-time loader for meshio-supported mesh file sequences"
 maintainer = "Stefan Rhys Jeske <contact@srjeske.de>"
 # Supported types: "add-on", "theme"
@@ -25,7 +25,8 @@ blender_version_min = "4.2.0"
 # License conforming to https://spdx.org/licenses/ (use "SPDX: prefix)
 # https://docs.blender.org/manual/en/dev/advanced/extensions/licenses.html
 license = [
-  "SPDX:MIT",
+  # "SPDX:MIT",
+  "SPDX:GPL-3.0-or-later",
 ]
 # # Optional: required by some licenses.
 # copyright = [
