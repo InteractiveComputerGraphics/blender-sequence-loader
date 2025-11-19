@@ -1,4 +1,4 @@
-![](images/logo_as_path.svg)
+![](images/logo_new.svg)
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/InteractiveComputerGraphics/blender-sequence-loader)
 [![Documentation Status](https://readthedocs.org/projects/blender-sequence-loader/badge/?version=latest)](https://blender-sequence-loader.readthedocs.io/en/latest/?badge=latest)
