@@ -3,41 +3,22 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/InteractiveComputerGraphics/blender-sequence-loader)
 [![Documentation Status](https://readthedocs.org/projects/blender-sequence-loader/badge/?version=latest)](https://blender-sequence-loader.readthedocs.io/en/latest/?badge=latest)
 
-This is an addon for Blender 4.0+ (might work with 2.8+ but is not extensively tested on less recent versions) that enables loading of file sequences. All data is loaded *just-in-time* when the Blender frame changes, in order to avoid excessive memory consumption. By default, the addon is able to load vertices, lines, triangles and quads. It is also able to automatically extract triangle and quad surface meshes from tetrahedral and hexahedral volume meshes. Scalar and vector attributes on vertices are also imported for visualization purposes. 
+This is an addon for Blender 4.2+ (might work with 2.8+ but is not extensively tested on less recent versions) that enables loading of file sequences. All data is loaded *just-in-time* when the Blender frame changes, in order to avoid excessive memory consumption. By default, the addon is able to load vertices, lines, triangles and quads. It is also able to automatically extract triangle and quad surface meshes from tetrahedral and hexahedral volume meshes. Scalar and vector attributes on vertices are also imported for visualization purposes. 
 
 The addon comes bundled together with [meshio](https://github.com/nschloe/meshio) which enables the loading of geometric data from a multitude of file formats. As stated there, the supported formats are listed in the following. Note that not all of the formats have been tested and some issues may still occur.
 
-> [Abaqus](http://abaqus.software.polimi.it/v6.14/index.html) (`.inp`),
-> ANSYS msh (`.msh`),
-> [AVS-UCD](https://lanl.github.io/LaGriT/pages/docs/read_avs.html) (`.avs`),
-> [CGNS](https://cgns.github.io/) (`.cgns`),
-> [DOLFIN XML](https://manpages.ubuntu.com/manpages/jammy/en/man1/dolfin-convert.1.html) (`.xml`),
-> [Exodus](https://nschloe.github.io/meshio/exodus.pdf) (`.e`, `.exo`),
-> [FLAC3D](https://www.itascacg.com/software/flac3d) (`.f3grid`),
-> [H5M](https://www.mcs.anl.gov/~fathom/moab-docs/h5mmain.html) (`.h5m`),
-> [Kratos/MDPA](https://github.com/KratosMultiphysics/Kratos/wiki/Input-data) (`.mdpa`),
-> [Medit](https://people.sc.fsu.edu/~jburkardt/data/medit/medit.html) (`.mesh`, `.meshb`),
-> [MED/Salome](https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/med-file.html) (`.med`),
-> [Nastran](https://help.autodesk.com/view/NSTRN/2019/ENU/?guid=GUID-42B54ACB-FBE3-47CA-B8FE-475E7AD91A00) (bulk data, `.bdf`, `.fem`, `.nas`),
-> [Netgen](https://github.com/ngsolve/netgen) (`.vol`, `.vol.gz`),
-> [Neuroglancer precomputed format](https://github.com/google/neuroglancer/tree/master/src/neuroglancer/datasource/precomputed#mesh-representation-of-segmented-object-surfaces),
-> [Gmsh](https://gmsh.info/doc/texinfo/gmsh.html#File-formats) (format versions 2.2, 4.0, and 4.1, `.msh`),
-> [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) (`.obj`),
-> [OFF](https://segeval.cs.princeton.edu/public/off_format.html) (`.off`),
-> [PERMAS](https://www.intes.de) (`.post`, `.post.gz`, `.dato`, `.dato.gz`),
-> [PLY](<https://en.wikipedia.org/wiki/PLY_(file_format)>) (`.ply`),
-> [STL](<https://en.wikipedia.org/wiki/STL_(file_format)>) (`.stl`),
-> [Tecplot .dat](http://paulbourke.net/dataformats/tp/),
-> [TetGen .node/.ele](https://wias-berlin.de/software/tetgen/fformats.html),
-> [SVG](https://www.w3.org/TR/SVG/) (2D output only) (`.svg`),
-> [SU2](https://su2code.github.io/docs_v7/Mesh-File/) (`.su2`),
-> [UGRID](https://www.simcenter.msstate.edu/software/documentation/ug_io/3d_grid_file_type_ugrid.html) (`.ugrid`),
-> [VTK](https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf) (`.vtk`),
-> [VTU](https://vtk.org/Wiki/VTK_XML_Formats) (`.vtu`),
-> [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) ([TIN](https://en.wikipedia.org/wiki/Triangulated_irregular_network)) (`.wkt`),
-> [XDMF](https://xdmf.org/index.php/XDMF_Model_and_Format) (`.xdmf`, `.xmf`).
+Confirmed to support:
 
-[fileseq](https://github.com/justinfx/fileseq) is used to identify and load file sequences, while [rich](https://github.com/Textualize/rich) and [python-future](https://github.com/PythonCharmers/python-future) are included to satisfy unmet dependencies of the other packages.
+- `.obj`
+- `.ply`
+- `.vtk`
+  - points
+  - triangles
+  - quads
+  - tets (only surface, automatic extraction)
+  - hex (only surface, automatic extraction)
+
+It also loads any additional supported data as geometry node attributes that can be used for shading etc.[fileseq](https://github.com/justinfx/fileseq) is used to identify and load file sequences, while [rich](https://github.com/Textualize/rich) and [python-future](https://github.com/PythonCharmers/python-future) are included to satisfy unmet dependencies of the other packages.
 
 **DISCLAIMER: This project is still very much under development, so breaking changes may occur at any time!**
 
