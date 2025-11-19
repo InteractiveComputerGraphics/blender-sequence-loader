@@ -6,10 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'blender-sequence-loader'
+project = 'Sequence Loader'
 copyright = '2025, InteractiveComputerGraphics'
 author = 'InteractiveComputerGraphics'
-release = '0.3.6'
+release = '0.3.7'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
