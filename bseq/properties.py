@@ -79,6 +79,14 @@ class BSEQ_scene_property(bpy.types.PropertyGroup):
                                          description="Auto refresh all sequences every frame",
                                          default=False,
                                          )
+    
+    buffer_next_frame: bpy.props.BoolProperty(name='Buffer next frame while rendering',
+                                             description="Starts loading the next sequence frame into the RAM while rendering the current frame",
+                                             default=False,
+                                             update=update_framebuffer
+                                         )
+    
+    loading_status: bpy.props.StringProperty(default="")
         
     use_custom_transform: bpy.props.BoolProperty(name='Custom Transform', 
                                                  description="Use a custom transformation matrix when importing", 

@@ -92,6 +92,14 @@ class BSEQ_Globals_Panel(BSEQ_Panel, bpy.types.Panel):
         col2.prop(sim_loader, "auto_refresh_active", text="")
         col1.label(text="Auto Refresh All")
         col2.prop(sim_loader, "auto_refresh_all", text="")
+        col1.label(text="Buffer Next Frame")
+        col2.prop(sim_loader, "buffer_next_frame", text="")
+        if sim_loader.buffer_next_frame:
+            col1.label(text="Loading Status")
+            row2 = col2.row()
+            row2.enabled = False
+            row2.prop(sim_loader, "loading_status", text="")
+
 
 class BSEQ_Advanced_Panel(BSEQ_Panel, bpy.types.Panel):
     bl_label = "Advanced Settings"

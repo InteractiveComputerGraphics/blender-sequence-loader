@@ -1,6 +1,9 @@
 import bpy
 import fileseq
 import traceback
+import time
+from .frame_buffer import init as framebuffer_init, terminate as framebuffer_terminate, queue_load as framebuffer_queue_load, flush_buffer as framebuffer_flush_buffer
+from .importer import update_obj
 
 from .utils import show_message_box
 
@@ -61,3 +64,16 @@ def poll_material(self, material):
 
 def poll_edit_obj(self, object):
     return object.BSEQ.init
+        
+def update_framebuffer(self, context) -> None:
+    if self.buffer_next_frame:
+        framebuffer_init()
+    else:
+        framebuffer_terminate()
+
+def load_obj(scene, depsgraph=None):
+    if scene.BSEQ.buffer_next_frame:
+        framebuffer_flush_buffer(scene, depsgraph)
+        framebuffer_queue_load(scene, depsgraph)
+        return
+    update_obj(scene, depsgraph)
