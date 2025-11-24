@@ -1,3 +1,14 @@
+"""
+This template script allows you to render each sequence in a specified collection. It toggles the visibility of each sequence one at a time, disabling all others and rendering them individually.
+
+This is mainly useful for creating comparison renders of different sequences in a scene, such as for different models of a physical simulation that were run outside of Blender.
+
+The path is automatically set to `<original_path>/<sequence_name>/` for each render, where `<original_path>` is the original render output path set in the scene settings, and `<sequence_name>` is the name of the sequence being rendered.
+
+Usage:
+1. Set the `comparison_collection` variable to the name of the collection containing the sequences you want to render.
+2. Run the script in Blender's scripting environment.
+"""
 import bpy
 
 # Utilities for comparison rendering

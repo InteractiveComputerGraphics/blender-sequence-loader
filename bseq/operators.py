@@ -440,87 +440,87 @@ class BSEQ_PT_batch_sequences_settings(bpy.types.Panel):
         # if importer_prop.use_relative:
         #     layout.prop(importer_prop, "root_path", text="Root Directory")
 
-class BSEQ_addon_preferences(bpy.types.AddonPreferences):
-    bl_idname = __package__
+# class BSEQ_addon_preferences(bpy.types.AddonPreferences):
+#     bl_idname = __package__
 
-    zips_folder: bpy.props.StringProperty(
-            name="Zips Folder",
-            subtype='DIR_PATH',
-            )
+#     zips_folder: bpy.props.StringProperty(
+#             name="Zips Folder",
+#             subtype='DIR_PATH',
+#             )
 
-    def draw(self, context):
-        # layout = self.layout
-        # layout.label(text="Please set a folder to store the extracted zip files")
-        # layout.prop(self, "zips_folder", text="Zips Folder")
-        pass
+#     def draw(self, context):
+#         # layout = self.layout
+#         # layout.label(text="Please set a folder to store the extracted zip files")
+#         # layout.prop(self, "zips_folder", text="Zips Folder")
+#         pass
 
-zip_folder_name = '/tmp_zips'
+# zip_folder_name = '/tmp_zips'
 
-class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
-    """Import a zip file"""
-    bl_idname = "bseq.import_zip"
-    bl_label = "Import Zip"
-    bl_options = {'PRESET', 'UNDO'}
+# class BSEQ_OT_import_zip(bpy.types.Operator, ImportHelper):
+#     """Import a zip file"""
+#     bl_idname = "bseq.import_zip"
+#     bl_label = "Import Zip"
+#     bl_options = {'PRESET', 'UNDO'}
 
-    filename_ext = ".zip"
-    filter_glob: bpy.props.StringProperty(
-        default="*.zip",
-        options={'HIDDEN', 'LIBRARY_EDITABLE'},
-    )
+#     filename_ext = ".zip"
+#     filter_glob: bpy.props.StringProperty(
+#         default="*.zip",
+#         options={'HIDDEN', 'LIBRARY_EDITABLE'},
+#     )
 
-    files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+#     files: bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     
-    def execute(self, context):
-        importer_prop = context.scene.BSEQ
+#     def execute(self, context):
+#         importer_prop = context.scene.BSEQ
 
-        import zipfile
-        zip_file = zipfile.ZipFile(self.filepath)
+#         import zipfile
+#         zip_file = zipfile.ZipFile(self.filepath)
 
-        addon_prefs = context.preferences.addons[addon_name].preferences
-        # Check if a string is empty:
-        if not addon_prefs.zips_folder:
-            show_message_box("Please set a folder to store the extracted zip files", icon="ERROR")
-            return {"CANCELLED"}
-        zips_folder = addon_prefs.zips_folder + zip_folder_name
+#         addon_prefs = context.preferences.addons[addon_name].preferences
+#         # Check if a string is empty:
+#         if not addon_prefs.zips_folder:
+#             show_message_box("Please set a folder to store the extracted zip files", icon="ERROR")
+#             return {"CANCELLED"}
+#         zips_folder = addon_prefs.zips_folder + zip_folder_name
 
-        valid_files = [info.filename for info in zip_file.infolist() if not info.filename.startswith('__MACOSX/')]
-        zip_file.extractall(zips_folder, members=valid_files)
-        zip_file.close()    
+#         valid_files = [info.filename for info in zip_file.infolist() if not info.filename.startswith('__MACOSX/')]
+#         zip_file.extractall(zips_folder, members=valid_files)
+#         zip_file.close()    
 
-        folder = str(zips_folder) + '/' + str(Path(self.filepath).name)[:-4]
-        print(folder)
+#         folder = str(zips_folder) + '/' + str(Path(self.filepath).name)[:-4]
+#         print(folder)
 
-        seqs = fileseq.findSequencesOnDisk(str(folder))
-        if not seqs:
-            show_message_box("No sequences found in the zip file", icon="ERROR")
-            return {"CANCELLED"}
+#         seqs = fileseq.findSequencesOnDisk(str(folder))
+#         if not seqs:
+#             show_message_box("No sequences found in the zip file", icon="ERROR")
+#             return {"CANCELLED"}
 
-        for s in seqs:
-            # Import it with absolute paths
-            create_obj(s, False, folder, transform_matrix=get_transform_matrix(importer_prop))
+#         for s in seqs:
+#             # Import it with absolute paths
+#             create_obj(s, False, folder, transform_matrix=get_transform_matrix(importer_prop))
         
-        # created_folder = context.scene.BSEQ.imported_zips.add()
-        # created_folder.path = folder
+#         # created_folder = context.scene.BSEQ.imported_zips.add()
+#         # created_folder.path = folder
 
-        return {'FINISHED'}
+#         return {'FINISHED'}
 
-class BSEQ_OT_delete_zips(bpy.types.Operator):
-    """Delete a zip file"""
-    bl_idname = "bseq.delete_zips"
-    bl_label = "Delete Zip"
-    bl_options = {'PRESET', 'UNDO'}
+# class BSEQ_OT_delete_zips(bpy.types.Operator):
+#     """Delete a zip file"""
+#     bl_idname = "bseq.delete_zips"
+#     bl_label = "Delete Zip"
+#     bl_options = {'PRESET', 'UNDO'}
 
-    def execute(self, context):
-        # folders = context.scene.BSEQ.imported_zips
-        # for folder in folders:
+#     def execute(self, context):
+#         # folders = context.scene.BSEQ.imported_zips
+#         # for folder in folders:
 
-        addon_prefs = context.preferences.addons[addon_name].preferences
-        zips_folder = addon_prefs.zips_folder + zip_folder_name
+#         addon_prefs = context.preferences.addons[addon_name].preferences
+#         zips_folder = addon_prefs.zips_folder + zip_folder_name
 
-        import shutil
-        shutil.rmtree(zips_folder)
+#         import shutil
+#         shutil.rmtree(zips_folder)
 
-        return {'FINISHED'}
+#         return {'FINISHED'}
     
 class BSEQ_OT_load_all(bpy.types.Operator):
     """Load all sequences from selected folder and its subfolders"""
