@@ -308,12 +308,14 @@ def update_obj(scene, depsgraph=None):
         
         if obj.BSEQ.use_advance and obj.BSEQ.script_name:
             script = bpy.data.texts[obj.BSEQ.script_name]
-            try:
-                exec(script.as_string())
-            except Exception as e:
-                show_message_box(traceback.format_exc(), "running script: " + obj.BSEQ.script_name + " failed: " + str(e),
-                                 "ERROR")
-                continue
+            show_message_box(f"Cannot run custom script {obj.BSEQ.script_name} using extension from Blender extensions. Use a custom build to enable. Removing script file..." + str(e), "INFO")
+            obj.BSEQ.script_name = ""
+            # try:
+            #     exec(script.as_string())
+            # except Exception as e:
+            #     show_message_box(traceback.format_exc(), "running script: " + obj.BSEQ.script_name + " failed: " + str(e),
+            #                      "ERROR")
+            #     continue
 
         if 'process' in locals():
             user_process = locals()['process']
@@ -337,6 +339,7 @@ def update_obj(scene, depsgraph=None):
                 continue
             finally:
                 del locals()['preprocess']
+
         else:
             if obj.BSEQ.match_frames:
                 fs_frames = fs.frameSet()
