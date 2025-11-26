@@ -3,6 +3,12 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/InteractiveComputerGraphics/blender-sequence-loader)
 [![Documentation Status](https://readthedocs.org/projects/blender-sequence-loader/badge/?version=latest)](https://blender-sequence-loader.readthedocs.io/en/latest/?badge=latest)
 
+## News
+
+* Now available for installation as an extension from the [Blender Marketplace](https://extensions.blender.org/add-ons/sequence-loader/)!
+
+***
+
 This is an addon for Blender 4.2+ (might work with 2.8+ but is not extensively tested on less recent versions) that enables loading of file sequences. All data is loaded *just-in-time* when the Blender frame changes, in order to avoid excessive memory consumption. By default, the addon is able to load vertices, lines, triangles and quads. It is also able to automatically extract triangle and quad surface meshes from tetrahedral and hexahedral volume meshes. Scalar and vector attributes on vertices are also imported for visualization purposes. 
 
 The addon comes bundled together with [meshio](https://github.com/nschloe/meshio) which enables the loading of geometric data from a multitude of file formats. As stated there, the supported formats are listed in the following. Note that not all of the formats have been tested and some issues may still occur.
@@ -22,9 +28,11 @@ It also loads any additional supported data as geometry node attributes that can
 
 **DISCLAIMER: This project is still very much under development, so breaking changes may occur at any time!**
 
+- [News](#news)
 - [1. Installation](#1-installation)
-  - [1.1 Build from source (optional)](#11-build-from-source-optional)
-  - [1.2 Install Addon](#12-install-addon)
+  - [1.1 Install within blender.](#11-install-within-blender)
+  - [1.2 Build from source (optional)](#12-build-from-source-optional)
+  - [1.3 Install Addon](#13-install-addon)
   - [1.3 FAQs](#13-faqs)
 - [2. How to use](#2-how-to-use)
   - [1. Load the animation sequence you want](#1-load-the-animation-sequence-you-want)
@@ -56,7 +64,15 @@ It also loads any additional supported data as geometry node attributes that can
 
 ## 1. Installation
 
-### 1.1 Build from source (optional)
+### 1.1 Install within blender.
+
+1. Go to `Preferences->Get Extensions` tab within Blender.
+2. Search for `Sequence Loader`
+3. Click install.
+
+![](images/install_marketplace.png)
+
+### 1.2 Build from source (optional)
 
 1. Clone the project to download both project and dependencies
 
@@ -71,7 +87,7 @@ git clone https://github.com/InteractiveComputerGraphics/blender-sequence-loader
 blender --command extension build
 ```
 
-### 1.2 Install Addon
+### 1.3 Install Addon
 
 After obtaining an installable `.zip` file either from the releases page or from manually building the addon, this should be installed into blender. For more information on how to install addons see [here](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons) for more details.
 
