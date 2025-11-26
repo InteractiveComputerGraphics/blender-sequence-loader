@@ -112,9 +112,6 @@ class BSEQ_Advanced_Panel(BSEQ_Panel, bpy.types.Panel):
         if not obj.BSEQ.init:
             return
 
-        col1.label(text='Script')
-        col2.prop_search(obj.BSEQ, 'script_name', bpy.data, 'texts', text="")
-
         # geometry nodes settings
         layout.label(text="Geometry Nodes (select sequence first)")
 

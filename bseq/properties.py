@@ -121,7 +121,6 @@ class BSEQ_obj_property(bpy.types.PropertyGroup):
                                     name="Activate/Deactivate",
                                     description="If deactivated, sequence won't be updated each frame")
     use_advance: bpy.props.BoolProperty(default=False)
-    script_name: bpy.props.StringProperty(name="Script name")
     path: bpy.props.StringProperty(name="Path of sequence", subtype="DIR_PATH", options={'PATH_SUPPORTS_BLEND_RELATIVE' if bpy.app.version >= (4, 5, 0) else ''})
     pattern: bpy.props.StringProperty(name="Pattern of sequence")
     current_file: bpy.props.StringProperty(description="File of sequence that is currently loaded")

@@ -306,57 +306,19 @@ def update_obj(scene, depsgraph=None):
 
         fs = fileseq.FileSequence(full_path)
         
-        if obj.BSEQ.use_advance and obj.BSEQ.script_name:
-            script = bpy.data.texts[obj.BSEQ.script_name]
-            show_message_box(f"Cannot run custom script {obj.BSEQ.script_name} using extension from Blender extensions. Use a custom build to enable. Removing script file..." + str(e), "INFO")
-            obj.BSEQ.script_name = ""
-            # try:
-            #     exec(script.as_string())
-            # except Exception as e:
-            #     show_message_box(traceback.format_exc(), "running script: " + obj.BSEQ.script_name + " failed: " + str(e),
-            #                      "ERROR")
-            #     continue
-
-        if 'process' in locals():
-            user_process = locals()['process']
-            try:
-                user_process(fs, current_frame, obj.data)
-                obj.BSEQ.current_file = "Controlled by user process"
-            except Exception as e:
-                show_message_box("Error when calling user process: " + traceback.format_exc(), icon="ERROR")
-            del locals()['process']
-            # this continue means if process exist, all the remaining code will be ignored, whethere or not error occurs
-            continue
-
-        elif 'preprocess' in locals():
-            user_preprocess = locals()['preprocess']
-            try:
-                meshio_mesh = user_preprocess(fs, current_frame)
-                obj.BSEQ.current_file = "Controlled by user preprocess"
-            except Exception as e:
-                show_message_box("Error when calling user preprocess: " + traceback.format_exc(), icon="ERROR")
-                # this continue means only if error occures, then goes to next bpy.object
-                continue
-            finally:
-                del locals()['preprocess']
-
-        else:
-            if obj.BSEQ.match_frames:
-                fs_frames = fs.frameSet()
-                if current_frame in fs_frames:
-                    filepath = fs[fs_frames.index(current_frame)]
-                    filepath = os.path.normpath(filepath)
-                    meshio_mesh = load_meshio_from_path(fs, filepath, obj)
-                else:
-                    meshio_mesh = meshio.Mesh([], [])
-            else:
-                filepath = fs[current_frame % len(fs)]
+        if obj.BSEQ.match_frames:
+            fs_frames = fs.frameSet()
+            if current_frame in fs_frames:
+                filepath = fs[fs_frames.index(current_frame)]
                 filepath = os.path.normpath(filepath)
                 meshio_mesh = load_meshio_from_path(fs, filepath, obj)
+            else:
+                meshio_mesh = meshio.Mesh([], [])
+        else:
+            filepath = fs[current_frame % len(fs)]
+            filepath = os.path.normpath(filepath)
+            meshio_mesh = load_meshio_from_path(fs, filepath, obj)
 
-        if not isinstance(meshio_mesh, meshio.Mesh):
-            show_message_box('function preprocess does not return meshio object', "ERROR")
-            continue
         update_mesh(meshio_mesh, obj.data)
 
         apply_transformation(meshio_mesh, obj, depsgraph)
