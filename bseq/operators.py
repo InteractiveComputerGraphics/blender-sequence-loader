@@ -556,6 +556,8 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
         if importer_prop.use_relative and not bpy.data.is_saved:
             return relative_path_error()
 
+        include_patterns = importer_prop.pattern.split(';') if importer_prop.pattern != '' else None
+
         root_dir = bpy.path.abspath(importer_prop.path)
         root_coll = bpy.context.scene.collection
         root_layer_collection = bpy.context.view_layer.layer_collection
@@ -564,6 +566,8 @@ class BSEQ_OT_load_all_recursive(bpy.types.Operator):
         for current_dir, subdirs, files in os.walk(root_dir):
             seqs = fileseq.findSequencesOnDisk(current_dir)
             if len(seqs) == 0:
+                continue
+            if include_patterns is not None and all([p not in s.basename() and p not in s.extension() for p in include_patterns for s in seqs]):
                 continue
 
             # Get list of directories from the root_dir to the current directory
