@@ -67,7 +67,10 @@ def load_meshio_from_path(fileseq, filepath, obj = None):
     try:
         meshio_mesh = meshio.read(filepath)
         if obj is not None:
-            obj.BSEQ.current_file = filepath
+            try:
+                obj.BSEQ.current_file = filepath
+            except AttributeError:
+                pass
     except Exception as e:
         show_message_box("Error when reading: " + filepath + ",\n" + traceback.format_exc(),
                         "Meshio Loading Error" + str(e),
