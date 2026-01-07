@@ -9,7 +9,7 @@
 project = 'Sequence Loader'
 copyright = '2025, InteractiveComputerGraphics'
 author = 'InteractiveComputerGraphics'
-release = '0.3.9'
+release = '0.4.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
